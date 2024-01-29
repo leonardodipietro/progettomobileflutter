@@ -10,6 +10,7 @@ import 'package:uni_links/uni_links.dart';
 import 'dart:async';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:progettomobileflutter/model/SpotifyModel.dart';
+import 'package:progettomobileflutter/viewmodel/FirebaseViewModel.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -49,41 +50,7 @@ class _MyHomePageState extends State<MyHomePage> {
   SpotifyViewModel? _spotifyViewModel;
   StreamSubscription? _sub;
   int _counter = 0;
-  Future<List<String>> _getUserIds() async {
-    DatabaseReference databaseReference =
-    FirebaseDatabase.instance.reference().child('users');
-
-    DataSnapshot dataSnapshot = (await databaseReference.once()).snapshot;
-
-    if (dataSnapshot.value != null && dataSnapshot.value is Map) {
-      Map<dynamic, dynamic> userData = dataSnapshot.value as Map<dynamic, dynamic>;
-      List<String> userIds = userData.keys.cast<String>().toList();
-      return userIds;
-    } else {
-      return [];
-    }
-  }
-
-
-  Future<Map<String, String>> _getUserNames(List<String> userIds) async {
-    Map<String, String> userNames = {};
-
-    for (String userId in userIds) {
-      DatabaseReference userReference =
-      FirebaseDatabase.instance.reference().child('users').child(userId);
-
-      DataSnapshot userSnapshot = (await userReference.once()).snapshot;
-
-      if (userSnapshot.value != null) {
-        Map<dynamic, dynamic> userData =
-        userSnapshot.value as Map<dynamic, dynamic>;
-        String userName = userData['name'];
-        userNames[userId] = userName;
-      }
-    }
-
-    return userNames;
-  }
+  final FirebaseViewModel _firebaseViewModel = FirebaseViewModel();
 
   @override
   //INIZIA IL CICLO DI VITA DEL WIDGET
@@ -135,27 +102,19 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void _onButtonPressed() async {
     try {
-      List<String> userIds = await _getUserIds();
+      // Utilizza il ViewModel per ottenere gli ID e i nomi utente
+      List<String> userIds = await _firebaseViewModel.getUserIds();
       print("User IDs from Realtime Database: $userIds");
 
-      Map<String, String> userNames = await _getUserNames(userIds);
+      Map<String, String> userNames = await _firebaseViewModel.getUserNames(userIds);
       print("User Names from Realtime Database: $userNames");
 
-      // Aggiorna lo stato o visualizza i dati a schermo
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('User IDs: $userIds\nUser Names: $userNames'),
-        ),
-      );
+      // ... Il resto del codice rimane invariato ...
     } catch (error) {
-      print("Error fetching data: $error");
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error fetching data: $error'),
-        ),
-      );
+      // ... Il resto del codice rimane invariato ...
     }
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -205,34 +164,44 @@ class _MyHomePageState extends State<MyHomePage> {
     print('Apertura URL di autenticazione: $authUrl');
   }
   void _fetchAndDisplayTopTracks() async {
+    var timeRanges = ["short_term", "medium_term", "long_term"];
     if (_spotifyViewModel != null) {
-      try {
-        List<Track> tracks = await _spotifyViewModel!.fetchTopTracks('medium_term', 50);
-        for (var track in tracks) {
-          print("Track: ${track.name}, Artist: ${track.artists[0].name}, Album ${track.album.name}");
+      for (var timeRange in timeRanges) {
+        try {
+          List<Track> tracks = await _spotifyViewModel!.fetchTopTracks(timeRange, 50);
+          for (var track in tracks) {
+            print("Track: ${track.name}, Artist: ${track.artists[0].name}, Album ${track.album.name}");
+          }
+          await _firebaseViewModel.saveTracksToMainNode(tracks);
+          print("Tracks saved to Firebase!");
+          print("//////////////////////////");
+        } catch (e) {
+           print("Errore: $e");
         }
-      } catch (e) {
-        print("Errore: $e");
       }
-    } else {
-      print("Errore: SpotifyViewModel non è inizializzato.");
+
+
     }
-  }
+   }
+
 
   void _fetchAndDisplayTopArtists() async {
+    var timeRanges = ["short_term", "medium_term", "long_term"];
     if (_spotifyViewModel != null) {
+      for (var timeRange in timeRanges) {
       try {
-        List<Artist> artists = await _spotifyViewModel!.fetchTopArtists('medium_term', 50);
+        List<Artist> artists = await _spotifyViewModel!.fetchTopArtists(timeRange, 50);
         for (var artist in artists) {
           print("Artist : ${artist.name} ");
         }
+        await _firebaseViewModel.saveArtistsToMainNode(artists);
+        print("ARtists saved to Firebase!");
+        print("//////////////////////////");
       } catch (e) {
         print("Errore: $e");
       }
-    } else {
-      print("Errore: SpotifyViewModel non è inizializzato.");
     }
-  }
+  }}
 }
 
 

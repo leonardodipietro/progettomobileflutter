@@ -63,10 +63,10 @@ class SpotifyRepository {
         List<dynamic> data = response.data['items'];
         return data.map((trackJson) => Track.fromJson(trackJson)).toList();
       } else {
-        throw Exception('Failed to get top tracks: ${response.statusCode}');
+        throw Exception('eerroe nelle toptrack: ${response.statusCode}');
       }
     } catch (e) {
-      throw Exception('Error getting top tracks: $e');
+      throw Exception('eerroe nelle toptrack: $e');
     }
   }
 
@@ -89,10 +89,10 @@ class SpotifyRepository {
         List<dynamic> data = response.data['items'];
         return data.map((trackJson) => Artist.fromJson(trackJson)).toList();
       } else {
-        throw Exception('Failed to get top artists: ${response.statusCode}');
+        throw Exception('errore nel top artist ${response.statusCode}');
       }
     } catch (e) {
-      throw Exception('Error getting top artists: $e');
+      throw Exception('Errorre nel top artistss: $e');
     }
   }
 

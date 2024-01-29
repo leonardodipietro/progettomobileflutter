@@ -40,6 +40,7 @@ class SpotifyViewModel with ChangeNotifier {
     print("Token di Accesso: ${_spotifyTokenResponse?.accessToken}");
     return _spotifyTokenResponse?.accessToken;
   }
+
   Future<List<Track>> fetchTopTracks(String timeRange, int limit) async {
     String? accessToken = _spotifyTokenResponse?.accessToken;
     if (accessToken != null) {

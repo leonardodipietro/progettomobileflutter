@@ -33,13 +33,13 @@ class Album {
 class Artist {
   final String name;
   final String id;
-  final String imageUrl;
+  final List<Image> images;
   final List<String> genres;
 
   Artist({
     required this.name,
     required this.id,
-    required this.imageUrl,
+    required this.images,
     required this.genres,
   });
 
@@ -53,12 +53,13 @@ class Artist {
     List<String> genres = [];
     if (json['genres'] != null) {
       genres = List<String>.from(json['genres'].map((genre) => genre.toString()));
-    } //  probabilmente sarà sbagliato
+    }//  probabilmente sarà sbagliato
 
+    List<Image> imagesList = imageUrl.isNotEmpty ? [Image(url: imageUrl)] : [];
     return Artist(
       name: json['name'],
       id: json['id'],
-      imageUrl: imageUrl,
+      images: imagesList,
       genres: genres,
     );
   }
