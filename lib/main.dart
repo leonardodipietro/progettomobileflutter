@@ -12,11 +12,82 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:progettomobileflutter/model/SpotifyModel.dart';
 import 'package:progettomobileflutter/viewmodel/FirebaseViewModel.dart';
 
+import 'package:firebase_auth/firebase_auth.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   runApp(const MyApp());
+}
+
+// Function to create a new user account with email and password
+void registerWithEmailAndPassword(context, String email, String password) async {
+  try {
+    // Create a new user account with email and password
+    final credential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
+      email: email,
+      password: password,
+    );
+
+    // Optionally, you can handle additional steps after successful account creation here,
+    // such as sending a verification email or storing additional user information.
+
+    print('Account created successfully! User ID: ${credential.user?.uid}');
+
+    // After registration, navigate to the home page
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => MyHomePage(title: 'Home')),
+    );
+  } on FirebaseAuthException catch (e) {
+    // Handle FirebaseAuthException errors
+    if (e.code == 'weak-password') {
+      print('The password provided is too weak.');
+    } else if (e.code == 'email-already-in-use') {
+      print('The account already exists for that email.');
+    } else {
+      // Handle other FirebaseAuthException errors
+      print('Error creating account: ${e.message}');
+    }
+  } catch (e) {
+    // Handle other errors
+    print('Error creating account: $e');
+  }
+}
+
+// Function to sign in a user with email and password
+void signInWithEmailAndPassword(BuildContext context, String email, String password) async {
+  try {
+    // Sign in the user with email and password
+    final credential = await FirebaseAuth.instance.signInWithEmailAndPassword(
+      email: email,
+      password: password,
+    );
+
+    // Optionally, you can handle additional steps after successful sign-in here.
+
+    print('User signed in successfully! User ID: ${credential.user?.uid}');
+
+    // After signing in, navigate to the home page or any other desired screen
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => MyHomePage(title: 'Home')),
+    );
+  } on FirebaseAuthException catch (e) {
+    // Handle FirebaseAuthException errors
+    if (e.code == 'user-not-found') {
+      print('No user found for that email.');
+    } else if (e.code == 'wrong-password') {
+      print('Wrong password provided for that user.');
+    } else {
+      // Handle other FirebaseAuthException errors
+      print('Error signing in: ${e.message}');
+    }
+  } catch (e) {
+    // Handle other errors
+    print('Error signing in: $e');
+  }
 }
 
 class MyApp extends StatelessWidget {
@@ -30,10 +101,66 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: RegistrationPage(),
 
     );
 
+  }
+}
+
+class RegistrationPage extends StatelessWidget {
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Registrazione'),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            TextField(
+              controller: emailController,
+              decoration: InputDecoration(labelText: 'Email'),
+            ),
+            TextField(
+              controller: passwordController,
+              decoration: InputDecoration(labelText: 'Password'),
+              obscureText: true,
+            ),
+            SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: () {
+                // Call the signInWithEmailAndPassword function with the email and password entered by the user
+                signInWithEmailAndPassword(
+                  context,
+                  emailController.text,
+                  passwordController.text,
+                );
+              },
+              child: Text('Accedi'),
+            ),
+            SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: () {
+                // Call the registerWithEmailAndPassword function with the email and password entered by the user
+                registerWithEmailAndPassword(
+                  context,
+                  emailController.text,
+                  passwordController.text,
+                );
+              },
+              child: Text('Registrati'),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 
