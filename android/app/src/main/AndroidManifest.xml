@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+
     <application
         android:label="progettomobileflutter"
         android:name="${applicationName}"
@@ -20,6 +24,9 @@
                 android:name="io.flutter.embedding.android.NormalTheme"
                 android:resource="@style/NormalTheme"
                 />
+            <meta-data
+                android:name="com.google.android.gms.auth.api.credentials.api_key"
+                android:value="AIzaSyBhyxUFAhSDIlO0_eVA-v1mvFL-NPOpe7k" />
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>

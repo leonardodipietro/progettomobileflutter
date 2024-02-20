@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_database/firebase_database.dart';
 import 'firebase_options.dart';
-import 'package:flutter/material.dart';
 import 'package:progettomobileflutter/viewmodel/SpotifyViewModel.dart';
 import 'package:progettomobileflutter/api/SpotifyRepository.dart';
 import 'package:progettomobileflutter/api/SpotifyConfig.dart';
@@ -11,14 +9,48 @@ import 'dart:async';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:progettomobileflutter/model/SpotifyModel.dart';
 import 'package:progettomobileflutter/viewmodel/FirebaseViewModel.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
 
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   runApp(const MyApp());
+}
+
+Future<UserCredential> signInWithGoogle(BuildContext context) async {
+  // Avvia il flusso di autenticazione
+  final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+
+  // Ottieni i dettagli di autenticazione dalla richiesta
+  final GoogleSignInAuthentication? googleAuth = await googleUser?.authentication;
+
+  // Crea una nuova credenziale
+  final credential = GoogleAuthProvider.credential(
+    accessToken: googleAuth?.accessToken,
+    idToken: googleAuth?.idToken,
+  );
+
+  // Una volta autenticato, restituisci il UserCredential
+  return await FirebaseAuth.instance.signInWithCredential(credential);
+}
+
+Future<void> logCheckoutEvent() async {
+  await FirebaseAnalytics.instance.logBeginCheckout(
+      value: 10.0,
+      currency: 'USD',
+      items: [
+        AnalyticsEventItem(
+            itemName: 'Socks',
+            itemId: 'xjw73ndnw',
+            price: 10.0
+        ),
+      ],
+      coupon: '10PERCENTOFF'
+  );
 }
 
 // Function to create a new user account with email and password
@@ -38,7 +70,7 @@ void registerWithEmailAndPassword(context, String email, String password) async 
     // After registration, navigate to the home page
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(builder: (context) => MyHomePage(title: 'Home')),
+      MaterialPageRoute(builder: (context) => const MyHomePage(title: 'Home')),
     );
   } on FirebaseAuthException catch (e) {
     // Handle FirebaseAuthException errors
@@ -72,7 +104,7 @@ void signInWithEmailAndPassword(BuildContext context, String email, String passw
     // After signing in, navigate to the home page or any other desired screen
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(builder: (context) => MyHomePage(title: 'Home')),
+      MaterialPageRoute(builder: (context) => const MyHomePage(title: 'Home')),
     );
   } on FirebaseAuthException catch (e) {
     // Handle FirebaseAuthException errors
@@ -112,11 +144,13 @@ class RegistrationPage extends StatelessWidget {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
 
+  RegistrationPage({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Registrazione'),
+        title: const Text('Registrazione'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -126,14 +160,14 @@ class RegistrationPage extends StatelessWidget {
           children: [
             TextField(
               controller: emailController,
-              decoration: InputDecoration(labelText: 'Email'),
+              decoration: const InputDecoration(labelText: 'Email'),
             ),
             TextField(
               controller: passwordController,
-              decoration: InputDecoration(labelText: 'Password'),
+              decoration: const InputDecoration(labelText: 'Password'),
               obscureText: true,
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             ElevatedButton(
               onPressed: () {
                 // Call the signInWithEmailAndPassword function with the email and password entered by the user
@@ -143,9 +177,9 @@ class RegistrationPage extends StatelessWidget {
                   passwordController.text,
                 );
               },
-              child: Text('Accedi'),
+              child: const Text('Accedi'),
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             ElevatedButton(
               onPressed: () {
                 // Call the registerWithEmailAndPassword function with the email and password entered by the user
@@ -155,7 +189,15 @@ class RegistrationPage extends StatelessWidget {
                   passwordController.text,
                 );
               },
-              child: Text('Registrati'),
+              child: const Text('Registrati'),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: () {
+                // Call the registerWithGoogle function
+                signInWithGoogle(context);
+              },
+              child: const Text('Registrati con Google'),
             ),
           ],
         ),
@@ -242,6 +284,68 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
+  // Funzione per il sign-out
+  void _signOut() async {
+    try {
+      await FirebaseAuth.instance.signOut();
+      // Dopo il sign-out, puoi navigare l'utente alla pagina di login o ad un'altra schermata
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => RegistrationPage()), // Esempio di navigazione alla pagina di login
+      );
+    } catch (e) {
+      // Gestisci eventuali errori durante il sign-out
+      print('Errore durante il sign-out: $e');
+    }
+  }
+
+  void _deleteAccount() async {
+    try {
+      // Ottieni l'utente attualmente autenticato
+      User? user = FirebaseAuth.instance.currentUser;
+
+      // Chiedi conferma all'utente prima di procedere con l'eliminazione dell'account
+      bool confirm = await showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text("Conferma"),
+            content: const Text("Sei sicuro di voler eliminare completamente il tuo account? Questa azione non può essere annullata."),
+            actions: <Widget>[
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop(false); // Chiudi il dialog e ritorna false
+                },
+                child: const Text("Annulla"),
+              ),
+              TextButton(
+                onPressed: () async {
+                  Navigator.of(context).pop(true); // Chiudi il dialog e ritorna true
+                },
+                child: const Text("Elimina"),
+              ),
+            ],
+          );
+        },
+      );
+
+      // Se l'utente ha confermato l'eliminazione, procedi con la rimozione dell'account
+      if (confirm == true) {
+        // Elimina l'account dell'utente
+        await user?.delete();
+
+        // Dopo l'eliminazione dell'account, puoi navigare l'utente alla pagina di login o ad altre schermate
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => RegistrationPage()), // Esempio di navigazione alla pagina di login
+        );
+      }
+    } catch (e) {
+      // Gestisci eventuali errori durante l'eliminazione dell'account
+      print('Errore durante l\'eliminazione dell\'account: $e');
+    }
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -257,11 +361,19 @@ class _MyHomePageState extends State<MyHomePage> {
             const Text('User IDs and Names from Realtime Database:'),
             ElevatedButton(
               onPressed: _onButtonPressed,
-              child: Text('Get User Data'),
+              child: const Text('Get User Data'),
             ),
             ElevatedButton(
               onPressed: () => _startAuthenticationProcess(context),
               child: const Text('Autentica con Spotify'),
+            ),
+            ElevatedButton( // Aggiunto il nuovo bottone per il sign-out
+              onPressed: _signOut,
+              child: const Text('Sign Out'),
+            ),
+            ElevatedButton( // Aggiunto il nuovo bottone per eliminare l'account
+              onPressed: _deleteAccount,
+              child: const Text('Delete Account'),
             ),
           ],
         ),

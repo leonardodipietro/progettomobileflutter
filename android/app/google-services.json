@@ -1,9 +1,9 @@
 {
   "project_info": {
     "project_number": "127169780369",
+    "firebase_url": "https://progetto-mobile-flutter-default-rtdb.europe-west1.firebasedatabase.app",
     "project_id": "progetto-mobile-flutter",
-    "storage_bucket": "progetto-mobile-flutter.appspot.com",
-    "google_app_id": "1:127169780369:android:71e3b5b90541252162fd30"
+    "storage_bucket": "progetto-mobile-flutter.appspot.com"
   },
   "client": [
     {
@@ -13,7 +13,20 @@
           "package_name": "com.example.progettomobileflutter"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "127169780369-d13bnnfa1jt753vis7hhm5os6sklfi45.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.progettomobileflutter",
+            "certificate_hash": "8856ad6e3866728eef7f4462c4be01341bf1b98d"
+          }
+        },
+        {
+          "client_id": "127169780369-gtcei4f5a10erpm0uns1dph9iq7j1c4n.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyBhyxUFAhSDIlO0_eVA-v1mvFL-NPOpe7k"
@@ -21,7 +34,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "127169780369-a7jcmrl1me6hgcojsnimbrs1hlgn93pl.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "127169780369-thnvkr7i7doidok18vs1km9ggagvom6o.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.progettomobileflutter"
+              }
+            }
+          ]
         }
       }
     }
