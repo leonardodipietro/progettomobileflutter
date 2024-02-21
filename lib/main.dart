@@ -9,19 +9,36 @@ import 'dart:async';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:progettomobileflutter/model/SpotifyModel.dart';
 import 'package:progettomobileflutter/viewmodel/FirebaseViewModel.dart';
-import 'package:firebase_analytics/firebase_analytics.dart';
 
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:google_sign_in/google_sign_in.dart';
+//import 'package:google_sign_in/google_sign_in.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
-  runApp(const MyApp());
+  // Verifica lo stato di autenticazione dell'utente
+  User? user = FirebaseAuth.instance.currentUser;
+  Widget initialPage;
+
+  // Se l'utente è già autenticato, vai direttamente alla schermata principale
+  if (user != null) {
+    initialPage = MyHomePage(title: 'Home');
+  } else {
+    initialPage = RegistrationPage();
+  }
+
+  runApp(MaterialApp(
+    title: 'Flutter Demo',
+    theme: ThemeData(
+      colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+      useMaterial3: true,
+    ),
+    home: initialPage,
+  ));
 }
 
-Future<UserCredential> signInWithGoogle(BuildContext context) async {
+/*Future<UserCredential> signInWithGoogle(BuildContext context) async {
   // Avvia il flusso di autenticazione
   final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
 
@@ -36,22 +53,8 @@ Future<UserCredential> signInWithGoogle(BuildContext context) async {
 
   // Una volta autenticato, restituisci il UserCredential
   return await FirebaseAuth.instance.signInWithCredential(credential);
-}
+}*/
 
-Future<void> logCheckoutEvent() async {
-  await FirebaseAnalytics.instance.logBeginCheckout(
-      value: 10.0,
-      currency: 'USD',
-      items: [
-        AnalyticsEventItem(
-            itemName: 'Socks',
-            itemId: 'xjw73ndnw',
-            price: 10.0
-        ),
-      ],
-      coupon: '10PERCENTOFF'
-  );
-}
 
 // Function to create a new user account with email and password
 void registerWithEmailAndPassword(context, String email, String password) async {
@@ -191,14 +194,14 @@ class RegistrationPage extends StatelessWidget {
               },
               child: const Text('Registrati'),
             ),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: () {
-                // Call the registerWithGoogle function
-                signInWithGoogle(context);
-              },
-              child: const Text('Registrati con Google'),
-            ),
+            // const SizedBox(height: 16),
+            // ElevatedButton(
+            //   onPressed: () {
+            //     // Call the registerWithGoogle function
+            //     signInWithGoogle(context);
+            //   },
+            //   child: const Text('Registrati con Google'),
+            // ),
           ],
         ),
       ),
@@ -216,6 +219,8 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  bool _isLoggedIn = false; // Variabile di stato per gestire l'autenticazione
+
   SpotifyViewModel? _spotifyViewModel;
   StreamSubscription? _sub;
   int _counter = 0;
@@ -225,6 +230,9 @@ class _MyHomePageState extends State<MyHomePage> {
   //INIZIA IL CICLO DI VITA DEL WIDGET
   void initState() {
     super.initState();
+    // Verifica se l'utente è già autenticato all'avvio dell'app
+    checkUserLoggedIn();
+
     _spotifyViewModel = SpotifyViewModel(
         SpotifyRepository(),
         SpotifyConfig.clientId,
@@ -232,6 +240,24 @@ class _MyHomePageState extends State<MyHomePage> {
         SpotifyConfig.redirectUri
     );
     _initUniLinks();
+  }
+
+  // Funzione per verificare se l'utente è già autenticato
+  void checkUserLoggedIn() {
+    // Utilizza FirebaseAuth per controllare lo stato di autenticazione dell'utente
+    FirebaseAuth.instance.authStateChanges().listen((User? user) {
+      if (user != null) {
+        // Se l'utente è autenticato, imposta _isLoggedIn su true
+        setState(() {
+          _isLoggedIn = true;
+        });
+      } else {
+        // Se l'utente non è autenticato, imposta _isLoggedIn su false
+        setState(() {
+          _isLoggedIn = false;
+        });
+      }
+    });
   }
 
   void _initUniLinks() async {
@@ -288,6 +314,10 @@ class _MyHomePageState extends State<MyHomePage> {
   void _signOut() async {
     try {
       await FirebaseAuth.instance.signOut();
+      // Aggiorna lo stato di autenticazione
+      setState(() {
+        _isLoggedIn = false;
+      });
       // Dopo il sign-out, puoi navigare l'utente alla pagina di login o ad un'altra schermata
       Navigator.pushReplacement(
         context,
@@ -367,10 +397,11 @@ class _MyHomePageState extends State<MyHomePage> {
               onPressed: () => _startAuthenticationProcess(context),
               child: const Text('Autentica con Spotify'),
             ),
-            ElevatedButton( // Aggiunto il nuovo bottone per il sign-out
-              onPressed: _signOut,
-              child: const Text('Sign Out'),
-            ),
+            if (_isLoggedIn) // Mostra il bottone "Sign Out" solo se l'utente è autenticato
+              ElevatedButton(
+                onPressed: _signOut,
+                child: const Text('Sign Out'),
+              ),
             ElevatedButton( // Aggiunto il nuovo bottone per eliminare l'account
               onPressed: _deleteAccount,
               child: const Text('Delete Account'),
