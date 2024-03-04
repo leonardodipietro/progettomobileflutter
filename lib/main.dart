@@ -11,15 +11,22 @@ import 'package:progettomobileflutter/model/SpotifyModel.dart';
 import 'package:progettomobileflutter/viewmodel/FirebaseViewModel.dart';
 
 import 'package:firebase_auth/firebase_auth.dart';
+import 'cerca_utenti.dart';
+import 'profilo_personale.dart';
+import 'notifiche.dart';
 //import 'package:google_sign_in/google_sign_in.dart';
 
 void main() async {
+  // Assicura che i binding Flutter siano inizializzati correttamente
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Inizializza Firebase
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   // Verifica lo stato di autenticazione dell'utente
   User? user = FirebaseAuth.instance.currentUser;
-  Widget initialPage;
+
+  Widget initialPage; // Pagina iniziale dell'applicazione
 
   // Se l'utente è già autenticato, vai direttamente alla schermata principale
   if (user != null) {
@@ -28,14 +35,8 @@ void main() async {
     initialPage = RegistrationPage();
   }
 
-  runApp(MaterialApp(
-    title: 'Flutter Demo',
-    theme: ThemeData(
-      colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-      useMaterial3: true,
-    ),
-    home: initialPage,
-  ));
+  // Avvia l'applicazione Flutter passando la pagina iniziale
+  runApp(MyApp(initialPage: initialPage));
 }
 
 /*Future<UserCredential> signInWithGoogle(BuildContext context) async {
@@ -125,21 +126,91 @@ void signInWithEmailAndPassword(BuildContext context, String email, String passw
   }
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class MyApp extends StatefulWidget {
+  final Widget initialPage; // Pagina iniziale dell'applicazione
+
+  // Costruttore della classe MyApp
+  const MyApp({required this.initialPage, Key? key}) : super(key: key);
+
+  @override
+  // Metodo per creare lo stato associato all'istanza di MyApp
+  _MyAppState createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  // Indice corrente per gestire la navigazione
+  int _currentIndex = 0;
+
+  late BuildContext materialAppContext; // Contesto dell'applicazione MaterialApp
+  late GlobalKey<NavigatorState> navigatorKey; // Chiave globale per il navigatore
+
+  @override
+  void initState() {
+    super.initState();
+    // Inizializzazione della chiave del navigatore
+    navigatorKey = GlobalKey<NavigatorState>();
+    // Inizializzazione del contesto dell'applicazione MaterialApp
+    materialAppContext = context;
+  }
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      navigatorKey: navigatorKey, // Assegna la chiave globale al navigatore
       title: 'Flutter Demo',
       theme: ThemeData(
+        // Impostazione del tema dell'applicazione
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
+        // Imposta il colore delle icone nella barra di navigazione
+        bottomNavigationBarTheme: BottomNavigationBarThemeData(
+          selectedItemColor: Colors.deepPurple, // Colore delle icone selezionate
+          unselectedItemColor: Colors.grey, // Colore delle icone non selezionate
+        ),
       ),
-      home: RegistrationPage(),
-
+      home: Scaffold(
+        body: IndexedStack( // Utilizziamo IndexedStack per mantenere lo stato delle pagine
+          index: _currentIndex, // L'indice corrente determina quale pagina viene visualizzata
+          children: [
+            MyHomePage(title: 'Home'),
+            CercaUtentiPage(),
+            ProfiloPersonale(),
+            NotifichePage(),
+          ],
+        ),
+        bottomNavigationBar: BottomNavigationBar( // Barra di navigazione nella parte inferiore dello schermo
+          items: const <BottomNavigationBarItem>[ // Elementi della barra di navigazione
+            BottomNavigationBarItem(
+              icon: Icon(Icons.home),
+              label: 'Home',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.search),
+              label: 'Search',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.person),
+              label: 'Profile',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.notifications),
+              label: 'Notifiche',
+            ),
+          ],
+          currentIndex: _currentIndex, // Indice corrente della barra di navigazione
+          // Gestisce il tap sugli elementi della barra di navigazione
+          onTap: (index) {
+            // Verifica se l'indice selezionato è diverso dall'indice corrente
+            if (index != _currentIndex) {
+              setState(() {
+                // Aggiorna l'indice corrente con l'indice selezionato
+                _currentIndex = index;
+              });
+            }
+          },
+        ),
+      ),
     );
-
   }
 }
 
@@ -389,10 +460,6 @@ class _MyHomePageState extends State<MyHomePage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             const Text('User IDs and Names from Realtime Database:'),
-            ElevatedButton(
-              onPressed: _onButtonPressed,
-              child: const Text('Get User Data'),
-            ),
             ElevatedButton(
               onPressed: () => _startAuthenticationProcess(context),
               child: const Text('Autentica con Spotify'),
