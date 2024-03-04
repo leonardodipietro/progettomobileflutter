@@ -56,7 +56,6 @@ void main() async {
   return await FirebaseAuth.instance.signInWithCredential(credential);
 }*/
 
-
 // Function to create a new user account with email and password
 void registerWithEmailAndPassword(context, String email, String password) async {
   try {
@@ -366,88 +365,6 @@ class _MyHomePageState extends State<MyHomePage> {
     super.dispose();
   }
 
-  void _onButtonPressed() async {
-    try {
-      // Utilizza il ViewModel per ottenere gli ID e i nomi utente
-      List<String> userIds = await _firebaseViewModel.getUserIds();
-      print("User IDs from Realtime Database: $userIds");
-
-      Map<String, String> userNames = await _firebaseViewModel.getUserNames(userIds);
-      print("User Names from Realtime Database: $userNames");
-
-      // ... Il resto del codice rimane invariato ...
-    } catch (error) {
-      // ... Il resto del codice rimane invariato ...
-    }
-  }
-
-  // Funzione per il sign-out
-  void _signOut() async {
-    try {
-      await FirebaseAuth.instance.signOut();
-      // Aggiorna lo stato di autenticazione
-      setState(() {
-        _isLoggedIn = false;
-      });
-      // Dopo il sign-out, puoi navigare l'utente alla pagina di login o ad un'altra schermata
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => RegistrationPage()), // Esempio di navigazione alla pagina di login
-      );
-    } catch (e) {
-      // Gestisci eventuali errori durante il sign-out
-      print('Errore durante il sign-out: $e');
-    }
-  }
-
-  void _deleteAccount() async {
-    try {
-      // Ottieni l'utente attualmente autenticato
-      User? user = FirebaseAuth.instance.currentUser;
-
-      // Chiedi conferma all'utente prima di procedere con l'eliminazione dell'account
-      bool confirm = await showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: const Text("Conferma"),
-            content: const Text("Sei sicuro di voler eliminare completamente il tuo account? Questa azione non può essere annullata."),
-            actions: <Widget>[
-              TextButton(
-                onPressed: () {
-                  Navigator.of(context).pop(false); // Chiudi il dialog e ritorna false
-                },
-                child: const Text("Annulla"),
-              ),
-              TextButton(
-                onPressed: () async {
-                  Navigator.of(context).pop(true); // Chiudi il dialog e ritorna true
-                },
-                child: const Text("Elimina"),
-              ),
-            ],
-          );
-        },
-      );
-
-      // Se l'utente ha confermato l'eliminazione, procedi con la rimozione dell'account
-      if (confirm == true) {
-        // Elimina l'account dell'utente
-        await user?.delete();
-
-        // Dopo l'eliminazione dell'account, puoi navigare l'utente alla pagina di login o ad altre schermate
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => RegistrationPage()), // Esempio di navigazione alla pagina di login
-        );
-      }
-    } catch (e) {
-      // Gestisci eventuali errori durante l'eliminazione dell'account
-      print('Errore durante l\'eliminazione dell\'account: $e');
-    }
-  }
-
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -463,15 +380,6 @@ class _MyHomePageState extends State<MyHomePage> {
             ElevatedButton(
               onPressed: () => _startAuthenticationProcess(context),
               child: const Text('Autentica con Spotify'),
-            ),
-            if (_isLoggedIn) // Mostra il bottone "Sign Out" solo se l'utente è autenticato
-              ElevatedButton(
-                onPressed: _signOut,
-                child: const Text('Sign Out'),
-              ),
-            ElevatedButton( // Aggiunto il nuovo bottone per eliminare l'account
-              onPressed: _deleteAccount,
-              child: const Text('Delete Account'),
             ),
           ],
         ),
@@ -540,5 +448,3 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }}
 }
-
-
