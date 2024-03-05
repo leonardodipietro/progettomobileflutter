@@ -9,7 +9,7 @@ import 'dart:async';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:progettomobileflutter/model/SpotifyModel.dart';
 import 'package:progettomobileflutter/viewmodel/FirebaseViewModel.dart';
-
+import 'package:firebase_auth/firebase_auth.dart' as auth;
 import 'package:firebase_auth/firebase_auth.dart';
 import 'cerca_utenti.dart';
 import 'profilo_personale.dart';
@@ -26,7 +26,16 @@ void main() async {
   // Verifica lo stato di autenticazione dell'utente
   User? user = FirebaseAuth.instance.currentUser;
 
-  Widget initialPage; // Pagina iniziale dell'applicazione
+  Widget initialPage;
+
+  // Se l'utente è già autenticato, vai direttamente alla schermata principale
+  if (user != null) {
+    initialPage = const MyHomePage(title: 'Home');
+  } else {
+    initialPage = RegistrationPage();
+  }
+
+  // Pagina iniziale dell'applicazione
 
   // Se l'utente è già autenticato, vai direttamente alla schermata principale
   if (user != null) {
@@ -291,11 +300,12 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   bool _isLoggedIn = false; // Variabile di stato per gestire l'autenticazione
 
+  final FirebaseAuth _auth = FirebaseAuth.instance;
   SpotifyViewModel? _spotifyViewModel;
   StreamSubscription? _sub;
   int _counter = 0;
   final FirebaseViewModel _firebaseViewModel = FirebaseViewModel();
-
+  String filter='short_term';
   @override
   //INIZIA IL CICLO DI VITA DEL WIDGET
   void initState() {
@@ -330,6 +340,7 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
+  /*
   void _initUniLinks() async {
     // Ascolta gli URI in arrivo quando l'app è già aperta è UN LISTENER
     _sub = getUriLinksStream().listen((Uri? uri) { //TODO IN FUTURO POTREBBE ESSERE DEPRECATA
@@ -358,7 +369,7 @@ class _MyHomePageState extends State<MyHomePage> {
       _fetchAndDisplayTopArtists();
     }
   }
-
+*/
   @override
   void dispose() {
     _sub?.cancel();
@@ -377,9 +388,26 @@ class _MyHomePageState extends State<MyHomePage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             const Text('User IDs and Names from Realtime Database:'),
-            ElevatedButton(
+            /*ElevatedButton(
               onPressed: () => _startAuthenticationProcess(context),
               child: const Text('Autentica con Spotify'),
+            ),*/
+            ElevatedButton(
+              onPressed: () =>
+                  _onHandleStartAuthButtonClick(),
+              child: const Text('Autentica con Spotify'),
+            ),
+            ElevatedButton(
+              onPressed: () => selectFilter(),
+              child: Text('Seleziona Filtro'),
+            ),
+            ElevatedButton(
+              onPressed: () => handleTrackButtonClicked(),
+              child: Text('Mostra Top Tracks'),
+            ),
+            ElevatedButton(
+                onPressed: () => handleArtistButtonClicked(),
+                child: Text('Mostra Top Artist')
             ),
           ],
         ),
@@ -395,6 +423,99 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
     );
   }
+
+  void selectFilter() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text("Seleziona Filtro"),
+          content: SingleChildScrollView(
+            child: ListBody(
+              children: <Widget>[
+                GestureDetector(
+                  child: Text('Short Term'),
+                  onTap: () {
+                    setState(() {
+                      filter = 'short_term';
+                    });
+                    Navigator.of(context).pop();
+                  },
+                ),
+                Padding(padding: EdgeInsets.all(8.0)),
+                GestureDetector(
+                  child: Text('Medium Term'),
+                  onTap: () {
+                    setState(() {
+                      filter = 'medium_term';
+                    });
+                    Navigator.of(context).pop();
+                  },
+                ),
+                Padding(padding: EdgeInsets.all(8.0)),
+                GestureDetector(
+                  child: Text('Long Term'),
+                  onTap: () {
+                    setState(() {
+                      filter = 'long_term';
+                    });
+                    Navigator.of(context).pop();
+                  },
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> handleTrackButtonClicked() async {
+    print("Handle track button clicked chiamata");
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+    await _firebaseViewModel.fetchTopTracksFromFirebase(filter);
+  }
+
+  Future<void> handleArtistButtonClicked() async {
+    final userId= FirebaseAuth.instance.currentUser?.uid;
+    print("Handle artist button clicked chiamata");
+    await _firebaseViewModel.fetchTopArtistsFromFirebase(filter);
+  }
+
+
+
+
+
+
+
+  void checkAndSaveUserCredentials() async {
+    final auth.User? user = auth.FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      String userId = user.uid;
+      // Utilizza il FirebaseViewModel per verificare lo stato di registrazione
+      bool isRegistered = await _firebaseViewModel.checkUserIdInFirebase(userId);
+      if (!isRegistered) {
+        // L'utente non è registrato, quindi salva le sue credenziali
+        await _firebaseViewModel.saveUserIdToFirebase(userId);
+        // Aggiorna la UI o esegui altre azioni necessarie
+      }
+    }
+  }
+
+  void _onHandleStartAuthButtonClick() {
+
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+    //se è null non si brucia l applicazione
+    if (userId == null) return;
+    _startAuthenticationProcess(context);
+    _spotifyViewModel?.accessToken;
+    getTopTracks(_spotifyViewModel?.accessToken,userId);
+    //_spotifyViewModel.fetchTopTracks(timeRange, limit)
+    getTopArtists(_spotifyViewModel?.accessToken,userId);
+    //_observeToken();
+
+  }
+
   void _startAuthenticationProcess(BuildContext context) {
     // Costruisci l'URL di autenticazione
     final String authUrl = 'https://accounts.spotify.com/authorize'
@@ -408,43 +529,233 @@ class _MyHomePageState extends State<MyHomePage> {
 
     print('Apertura URL di autenticazione: $authUrl');
   }
-  void _fetchAndDisplayTopTracks() async {
-    var timeRanges = ["short_term", "medium_term", "long_term"];
-    if (_spotifyViewModel != null) {
-      for (var timeRange in timeRanges) {
-        try {
-          List<Track> tracks = await _spotifyViewModel!.fetchTopTracks(timeRange, 50);
-          for (var track in tracks) {
-            print("Track: ${track.name}, Artist: ${track.artists[0].name}, Album ${track.album.name}");
-          }
-          await _firebaseViewModel.saveTracksToMainNode(tracks);
-          print("Tracks saved to Firebase!");
-          print("//////////////////////////");
-        } catch (e) {
-           print("Errore: $e");
+  void getTopTracks(String? token, String userId) {
+    print('gettotracks chiamato');
+    List<String> timeRanges = ['short_term', 'medium_term', 'long_term'];
+    for (var timeRange in timeRanges) {
+      // Esegue fetchTopTracks in background
+      Future(() async {
+        await _spotifyViewModel?.fetchTopTracks(timeRange, 50);
+      }).then((_) {
+        // A seconda del timeRange, ascolta il rispettivo stream
+        switch (timeRange) {
+          case 'short_term':
+            _spotifyViewModel?.shortTermTracksStream.listen(
+                  (response) {
+                handleResponseTrack(response, userId, timeRange);
+              },
+              onError: (error) {
+                // Gestisci l'errore qui
+                print('Errore nello stream: $error');
+              },
+            );
+            break;
+          case 'medium_term':
+            _spotifyViewModel?.mediumTermTracksStream.listen(
+                  (response) {
+                handleResponseTrack(response, userId, timeRange);
+              },
+              onError: (error) {
+                // Gestisci l'errore qui
+                print('Errore nello stream: $error');
+              },
+            );
+            break;
+
+
+          case 'long_term':
+            _spotifyViewModel?.longTermTracksStream.listen(
+                  (response) {
+                handleResponseTrack(response, userId, timeRange);
+              },
+              onError: (error) {
+                // Gestisci l'errore qui
+                print('Errore nello stream: $error');
+              },
+            );
+            break;
+            break;
         }
-      }
-
-
+      });
     }
-   }
+  }
+
+  void getTopArtists(String? token, String userId) {
+    print('gettoartists chiamato');
+    List<String> timeRanges = ['short_term', 'medium_term', 'long_term'];
+    for (var timeRange in timeRanges) {
+      // Esegue fetchTopTracks in background
+      Future(() async {
+        await _spotifyViewModel?.fetchTopArtists(timeRange, 50);
+      }).then((_) {
+        // A seconda del timeRange, ascolta il rispettivo stream
+        switch (timeRange) {
+          case 'short_term':
+            _spotifyViewModel?.shortTermArtistsStream.listen(
+                  (response) {
+                handleResponseArtist(response, userId, timeRange);
+              },
+              onError: (error) {
+                // Gestisci l'errore qui
+                print('Errore nello stream: $error');
+              },
+            );
+            break;
+          case 'medium_term':
+            _spotifyViewModel?.mediumTermArtistsStream.listen(
+                  (response) {
+                handleResponseArtist(response, userId, timeRange);
+              },
+              onError: (error) {
+                // Gestisci l'errore qui
+                print('Errore nello stream: $error');
+              },
+            );
+            break;
 
 
-  void _fetchAndDisplayTopArtists() async {
-    var timeRanges = ["short_term", "medium_term", "long_term"];
-    if (_spotifyViewModel != null) {
-      for (var timeRange in timeRanges) {
+          case 'long_term':
+            _spotifyViewModel?.longTermArtistsStream.listen(
+                  (response) {
+                handleResponseArtist(response, userId, timeRange);
+              },
+              onError: (error) {
+                // Gestisci l'errore qui
+                print('Errore nello stream: $error');
+              },
+            );
+            break;
+            break;
+        }
+      });
+    }
+  }
+
+  void _initUniLinks() async {
+    // Ascolta gli URI in arrivo quando l'app è già aperta è UN LISTENER
+    _sub = getUriLinksStream().listen((Uri? uri) { //TODO IN FUTURO POTREBBE ESSERE DEPRECATA
+      print('URI in arrivo: $uri');
+      if (uri != null) {
+        // Esegui l'autenticazione con il codice di autorizzazione dopo che è arrivato l uri
+        _handleIncomingUri(uri);
+      }
+    }, onError: (err) {
+      print('Errore nel listener URI: $err');
+
+    });
+
+
+  }
+
+  void _handleIncomingUri(Uri uri) async {
+    print('Gestione URI: $uri');
+    // Estrai il codice di autorizzazione dall'URI
+    final code = uri.queryParameters['code'];
+    if (code != null) {
+      // Utilizza il ViewModel per autenticare con il codice
+      await _spotifyViewModel?.authenticate(code);
+      print('Autenticazione completata');//uso l await per aspettare che venga recuperato il codice prima di chiamare fetch
+      // _fetchAndDisplayTopTracks();
+      //_fetchAndDisplayTopArtists();
+    }
+  }
+
+/*// Assumendo che handleResponseTrack sia definito da qualche parte nel tuo codice Dart.
+  void handleResponseTrack(dynamic response, String userId, String timeRange) {
+    // Implementazione...
+  }*/
+
+  void handleResponseTrack(trackResponse,userId,timeRange) {
+    print("trackresponse su handle $trackResponse");
+    print("userId $userId");
+    if(trackResponse!= null && userId != null) {
+      //vediamo qui
       try {
-        List<Artist> artists = await _spotifyViewModel!.fetchTopArtists(timeRange, 50);
-        for (var artist in artists) {
-          print("Artist : ${artist.name} ");
-        }
-        await _firebaseViewModel.saveArtistsToMainNode(artists);
-        print("ARtists saved to Firebase!");
-        print("//////////////////////////");
+        print("trackResponse è nullo? ${trackResponse == null}");
+        print("userId è nullo? ${userId == null}");
+        print("trackResponse.items è nullo? ${trackResponse == null}");
+        print("trackResponse.items è vuoto? ${trackResponse.isEmpty}");
       } catch (e) {
-        print("Errore: $e");
+        print("Si è verificata un'eccezione: $e");
+      }
+
+
+      print("altro per sicurezzaGGG $trackResponse ");
+      if(trackResponse.isNotEmpty) {
+        print("primo test contenuto $trackResponse");
+        _firebaseViewModel.saveTracksToMainNode(trackResponse);
+        _firebaseViewModel.saveUserTopTracks(userId,trackResponse,timeRange);
       }
     }
-  }}
+  }
+
+  void handleResponseArtist(artistResponse,userId,timeRange) {
+    print("trackresponse su handle $artistResponse");
+    print("userId $userId");
+    if(artistResponse!= null && userId != null) {
+      //vediamo qui
+      try {
+        print("tartistResponse è nullo? ${artistResponse == null}");
+        print("userId è nullo? ${userId == null}");
+        print("trackResponse.items è nullo? ${artistResponse == null}");
+        print("trackResponse.items è vuoto? ${artistResponse.isEmpty}");
+      } catch (e) {
+        print("Si è verificata un'eccezione: $e");
+      }
+
+
+      print("altro per sicurezzaGGG $artistResponse ");
+      if(artistResponse.isNotEmpty) {
+        print("primo test contenuto $artistResponse");
+        _firebaseViewModel.saveArtistsToMainNode(artistResponse);
+        _firebaseViewModel.saveUserTopArtists(userId,artistResponse,timeRange);
+      }
+    }
+  }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 }
+
+
+/*
+  void _initUniLinks() async {
+    // Ascolta gli URI in arrivo quando l'app è già aperta è UN LISTENER
+    _sub = getUriLinksStream().listen((Uri? uri) { //TODO IN FUTURO POTREBBE ESSERE DEPRECATA
+      print('URI in arrivo: $uri');
+      if (uri != null) {
+        // Esegui l'autenticazione con il codice di autorizzazione dopo che è arrivato l uri
+        _handleIncomingUri(uri);
+      }
+    }, onError: (err) {
+      print('Errore nel listener URI: $err');
+
+    });
+
+
+  }
+
+  void _handleIncomingUri(Uri uri) async {
+    print('Gestione URI: $uri');
+    // Estrai il codice di autorizzazione dall'URI
+    final code = uri.queryParameters['code'];
+    if (code != null) {
+      // Utilizza il ViewModel per autenticare con il codice
+      await _spotifyViewModel?.authenticate(code);
+      print('Autenticazione completata');//uso l await per aspettare che venga recuperato il codice prima di chiamare fetch
+      _fetchAndDisplayTopTracks();
+      _fetchAndDisplayTopArtists();
+    }
+  }
+ */
