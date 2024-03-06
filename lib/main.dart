@@ -116,7 +116,7 @@ void signInWithEmailAndPassword(BuildContext context, String email, String passw
     // After signing in, navigate to the home page or any other desired screen
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(builder: (context) => const MyHomePage(title: 'Home')),
+      MaterialPageRoute(builder: (context) => MyApp(initialPage: MyHomePage(title: 'Home'))),
     );
   } on FirebaseAuthException catch (e) {
     // Handle FirebaseAuthException errors
@@ -712,20 +712,6 @@ class _MyHomePageState extends State<MyHomePage> {
       }
     }
   }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 }
 
 

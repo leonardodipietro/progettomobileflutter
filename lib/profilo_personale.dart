@@ -1,9 +1,48 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'main.dart';
+import 'dart:async';
 
-class ProfiloPersonale extends StatelessWidget {
+class ProfiloPersonale extends StatefulWidget {
   const ProfiloPersonale({Key? key}) : super(key: key);
+
+  @override
+  _ProfiloPersonaleState createState() => _ProfiloPersonaleState();
+}
+
+class _ProfiloPersonaleState extends State<ProfiloPersonale> {
+  bool _isLoggedIn = false;
+  late StreamSubscription<User?> _authSubscription;
+
+  @override
+  void initState() {
+    super.initState();
+    // Verifica lo stato di autenticazione all'inizio
+    checkUserLoggedIn();
+  }
+
+  // Funzione per verificare se l'utente è già autenticato
+  void checkUserLoggedIn() {
+    _authSubscription = FirebaseAuth.instance.authStateChanges().listen((User? user) {
+      if (user != null) {
+        // Se l'utente è autenticato, imposta _isLoggedIn su true
+        setState(() {
+          _isLoggedIn = true;
+        });
+      } else {
+        // Se l'utente non è autenticato, imposta _isLoggedIn su false
+        setState(() {
+          _isLoggedIn = false;
+        });
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _authSubscription?.cancel(); // Rimuovi il listener
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -33,13 +72,17 @@ class ProfiloPersonale extends StatelessWidget {
   void _signOut(BuildContext context) async {
     try {
       await FirebaseAuth.instance.signOut();
-      // Dopo il sign-out, puoi navigare l'utente alla pagina di login o ad un'altra schermata
+      // Reset dello stato dell'autenticazione
+      setState(() {
+        _isLoggedIn = false;
+      });
+      // Navigazione alla pagina di registrazione
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => RegistrationPage()), // Esempio di navigazione alla pagina di login
+        MaterialPageRoute(builder: (context) => RegistrationPage()),
       );
     } catch (e) {
-      // Gestisci eventuali errori durante il sign-out
+      // Gestione degli errori
       print('Errore durante il sign-out: $e');
     }
   }
