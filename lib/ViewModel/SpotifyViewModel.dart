@@ -148,7 +148,7 @@ class SpotifyViewModel with ChangeNotifier {
         print ( "vediamo se qui arriva $_topArtistsController");
       } catch (e) {
         // Gestione degli errori
-        print('Errore durante la fetchTopTracks: $e');
+        print('Errore durante la fetchTopARtist: $e');
         _errorControllerART.sink.add(e as Exception);
       }
     }

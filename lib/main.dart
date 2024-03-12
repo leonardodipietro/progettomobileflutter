@@ -1,19 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:provider/provider.dart';
 import 'firebase_options.dart';
-import 'package:progettomobileflutter/viewmodel/SpotifyViewModel.dart';
+import 'package:progettomobileflutter/viewmodel/SpotifyViewModel.dart' ;
 import 'package:progettomobileflutter/api/SpotifyRepository.dart';
 import 'package:progettomobileflutter/api/SpotifyConfig.dart';
 import 'package:uni_links/uni_links.dart';
 import 'dart:async';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:progettomobileflutter/model/SpotifyModel.dart';
+import 'package:progettomobileflutter/model/SpotifyModel.dart' as Spotify;
 import 'package:progettomobileflutter/viewmodel/FirebaseViewModel.dart';
 import 'package:firebase_auth/firebase_auth.dart' as auth;
 import 'package:firebase_auth/firebase_auth.dart';
 import 'cerca_utenti.dart';
+import 'model/SpotifyModel.dart';
 import 'profilo_personale.dart';
 import 'notifiche.dart';
+import 'package:progettomobileflutter/BranoSelezionato.dart';
+import 'package:progettomobileflutter/ArtistaSelezionato.dart';
+//Importante
+import 'package:flutter/material.dart' hide Image;//Utilizza un alias per non avere conflitto con l'Image di SpotifyModel
+import 'package:flutter/widgets.dart' as fw;
 //import 'package:google_sign_in/google_sign_in.dart';
 
 void main() async {
@@ -296,10 +303,12 @@ class MyHomePage extends StatefulWidget {
   @override
   State<MyHomePage> createState() => _MyHomePageState();
 }
-
+enum ContentType { tracks, artists }//per salvare l ultima delle lista selezionate tra tracks e artists
 class _MyHomePageState extends State<MyHomePage> {
   bool _isLoggedIn = false; // Variabile di stato per gestire l'autenticazione
-
+  List<Track> _tracksToShow=[];
+  List<Artist> _artistsToShow=[];
+  ContentType _contentType = ContentType.tracks;
   final FirebaseAuth _auth = FirebaseAuth.instance;
   SpotifyViewModel? _spotifyViewModel;
   StreamSubscription? _sub;
@@ -312,6 +321,7 @@ class _MyHomePageState extends State<MyHomePage> {
     super.initState();
     // Verifica se l'utente è già autenticato all'avvio dell'app
     checkUserLoggedIn();
+
 
     _spotifyViewModel = SpotifyViewModel(
         SpotifyRepository(),
@@ -378,40 +388,141 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return ChangeNotifierProvider<FirebaseViewModel>.value(
+      // Fornisce l'istanza esistente di FirebaseViewModel
+        value: _firebaseViewModel,
+
+    child: Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         title: Text(widget.title),
       ),
       body: Center(
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.start,
+
           children: <Widget>[
-            const Text('User IDs and Names from Realtime Database:'),
+            //const Text('User IDs and Names from Realtime Database:'),
             /*ElevatedButton(
               onPressed: () => _startAuthenticationProcess(context),
               child: const Text('Autentica con Spotify'),
-            ),*/
-            ElevatedButton(
-              onPressed: () =>
-                  _onHandleStartAuthButtonClick(),
-              child: const Text('Autentica con Spotify'),
             ),
-            ElevatedButton(
-              onPressed: () => selectFilter(),
-              child: Text('Seleziona Filtro'),
+            */
+           Center(
+            child: ElevatedButton(
+                   onPressed: () => _onHandleStartAuthButtonClick(),
+                   child: const Text('Autentica con Spotify'),
             ),
-            ElevatedButton(
-              onPressed: () => handleTrackButtonClicked(),
-              child: Text('Mostra Top Tracks'),
+           ),
+            Container(
+              width: double.infinity, // Occupa tutta la larghezza possibile
+              color: Theme.of(context).colorScheme.secondary, // Colore di sfondo
+              padding: EdgeInsets.symmetric(vertical: 8, horizontal: 16), // Padding interno
+              child: Row( // Usa Row per allineare i bottoni orizzontalmente
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly, // Spazia uniformemente i bottoni
+                children: [
+                  ElevatedButton(
+                    onPressed: () => selectFilter(),
+                    child: Text('Filtro'),
+                  ),
+                  ElevatedButton(
+                    onPressed: () => handleTrackButtonClicked(),
+                    child: Text('Top Tracks'),
+                  ),
+                  ElevatedButton(
+                    onPressed: () => handleArtistButtonClicked(),
+                    child: Text('Top Artist'),
+                  ),
+                  /*DA METTERE ElevatedButton(
+                    child:Text('stile'),
+                    onPressed:() => print('bottone premuto'),
+                  ),*/
+                ],
+              ),
             ),
-            ElevatedButton(
-                onPressed: () => handleArtistButtonClicked(),
-                child: Text('Mostra Top Artist')
-            ),
+            SizedBox(height: 15),
+            Expanded(
+              child: _contentType == ContentType.tracks ? GridView.count(
+                crossAxisCount: 3,
+                children: List.generate(_tracksToShow.length, (index) {
+                  // Widget per tracce
+                  Spotify.Track track = _tracksToShow[index];
+                  return InkWell(//widget che rende cliccabile elemento
+                      onTap: () {
+                        print("Traccia selezionata: ${track.name}");
+                        _navigateToBranoSelezionato(track);
+                      },
+                  child: Center(
+                    child: Column(
+                      children: [
+                        track.album.images.isNotEmpty
+                            ? fw.Image.network(track.album.images[0].url, height: 100, width: 100) // Utilizza l'alias fw per Image di Flutter
+                            : Container(height: 100, width: 100, color: Colors.grey),
+                        Flexible(
+                          child:Text(
+                            track.name,
+                            overflow: TextOverflow.ellipsis,//serve per evitare l overflow del testo
+                          )
+                          /*VEDIAMO se LASCIARLO
+                          child:Column(
+                          children: [Text(_tracksToShow[index].name,
+                                          overflow: TextOverflow.ellipsis),
+                                     Text(_tracksToShow[index].artists.map((artist) => artist.name).join(", "),
+                                       overflow: TextOverflow.ellipsis,
+                                       ),
+                                      Text(_tracksToShow[index].album.name,
+                                        overflow: TextOverflow.ellipsis,
+                                        ),
+                         ])*/
+                       )
+                      ],
+                    ),
+                  ),
+                  );
+                }),
+              ) : GridView.count(
+                crossAxisCount: 3,
+                children: List.generate(_artistsToShow.length, (index) {
+                  // Widget per artisti
+                  Spotify.Artist artist = _artistsToShow[index];
+                  return InkWell(
+                      onTap: () {
+                        print("Traccia selezionata: ${artist.name}");
+                        _navigateToArtistaSelezionato(artist);
+                      },
+
+                   child: Center(
+                    child: Column(
+                      children: [
+                        artist.images.isNotEmpty
+                            ? fw.Image.network(artist.images[0].url, height: 100, width: 100) // Utilizza l'alias fw per Image di Flutter
+                            : Container(height: 100, width: 100, color: Colors.grey),
+                        Flexible(
+                          child: Text(
+                            artist.name,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        )
+
+                      ],
+                    ),
+                  ),);
+
+                  //HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH
+                }),
+              ),
+            )
+
+
+
+
           ],
         ),
+
       ),
+
+
+
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           setState(() {
@@ -421,7 +532,8 @@ class _MyHomePageState extends State<MyHomePage> {
         tooltip: 'Increment',
         child: const Icon(Icons.add),
       ),
-    );
+    ));
+
   }
 
   void selectFilter() {
@@ -435,32 +547,52 @@ class _MyHomePageState extends State<MyHomePage> {
               children: <Widget>[
                 GestureDetector(
                   child: Text('Short Term'),
-                  onTap: () {
-                    setState(() {
-                      filter = 'short_term';
-                    });
-                    Navigator.of(context).pop();
+                  onTap: () async {
+
+                    applyFilter('short_term');
+                    Navigator.of(context).pop(); // Chiude la finestra di dialogo dopo l'azione
                   },
+                    /*{
+                  Navigator.of(context).pop();
+                    /*setState(()  {
+                      /*filter = 'short_term';
+                      await _firebaseViewModel.fetchTopTracksFromFirebase(filter);
+                      _tracksToShow= _firebaseViewModel.tracksFromDb;*/
+                    });*/
+                    Navigator.of(context).pop();
+                  },*/
                 ),
                 Padding(padding: EdgeInsets.all(8.0)),
                 GestureDetector(
                   child: Text('Medium Term'),
-                  onTap: () {
-                    setState(() {
-                      filter = 'medium_term';
-                    });
-                    Navigator.of(context).pop();
+                  onTap: () async {
+
+                    applyFilter('medium_term');
+                    Navigator.of(context).pop(); // Chiude la finestra di dialogo dopo l'azione
                   },
+                  /*{
+                    /*setState(()  {
+                    //  filter = 'medium_term';
+                    //  _firebaseViewModel.fetchTopTracksFromFirebase(filter);
+                    //  _tracksToShow= _firebaseViewModel.tracksFromDb;
+                    });*/
+                    Navigator.of(context).pop();
+                  },*/
                 ),
                 Padding(padding: EdgeInsets.all(8.0)),
                 GestureDetector(
                   child: Text('Long Term'),
-                  onTap: () {
-                    setState(() {
-                      filter = 'long_term';
-                    });
-                    Navigator.of(context).pop();
+                  onTap: () async{
+                    applyFilter('long_term');
+                    Navigator.of(context).pop(); // Chiude la finestra di dialogo dopo l'azione
                   },
+                   /* setState(()  {
+                     /* filter = 'long_term';
+                      _firebaseViewModel.fetchTopTracksFromFirebase(filter);
+                      _tracksToShow= _firebaseViewModel.tracksFromDb;*/
+                    });*/
+                   // Navigator.of(context).pop();
+
                 ),
               ],
             ),
@@ -469,17 +601,42 @@ class _MyHomePageState extends State<MyHomePage> {
       },
     );
   }
+  void applyFilter(String newFilter) async {
+    showDialog(
+      context: context,
+      builder: (context) => Center(child: CircularProgressIndicator()), // Mostra un indicatore di caricamento
+    );
+
+
+    await _firebaseViewModel.fetchTopTracksFromFirebase(newFilter);
+    await _firebaseViewModel.fetchTopArtistsFromFirebase(newFilter);
+
+    setState(() {
+      _tracksToShow = _firebaseViewModel.tracksFromDb;
+      _artistsToShow =_firebaseViewModel.artistsFromDb;
+    });
+
+
+  }
 
   Future<void> handleTrackButtonClicked() async {
     print("Handle track button clicked chiamata");
     final userId = FirebaseAuth.instance.currentUser?.uid;
     await _firebaseViewModel.fetchTopTracksFromFirebase(filter);
+    setState(() {
+      _contentType = ContentType.tracks;
+      _tracksToShow= _firebaseViewModel.tracksFromDb;
+    });
   }
 
   Future<void> handleArtistButtonClicked() async {
     final userId= FirebaseAuth.instance.currentUser?.uid;
     print("Handle artist button clicked chiamata");
     await _firebaseViewModel.fetchTopArtistsFromFirebase(filter);
+    setState(() {
+      _contentType = ContentType.artists;
+      _artistsToShow= _firebaseViewModel.artistsFromDb;
+    });
   }
 
 
@@ -682,7 +839,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
       print("altro per sicurezzaGGG $trackResponse ");
       if(trackResponse.isNotEmpty) {
-        print("primo test contenuto $trackResponse");
+        print("primo test contenuto $userId");
         _firebaseViewModel.saveTracksToMainNode(trackResponse);
         _firebaseViewModel.saveUserTopTracks(userId,trackResponse,timeRange);
       }
@@ -712,6 +869,19 @@ class _MyHomePageState extends State<MyHomePage> {
       }
     }
   }
+  void _navigateToBranoSelezionato(Spotify.Track track) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => BranoSelezionato(track: track )),
+    );
+  }
+  void _navigateToArtistaSelezionato(Spotify.Artist artist)  {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => ArtistaSelezionato(artist: artist )),
+    );
+  }
+
 }
 
 

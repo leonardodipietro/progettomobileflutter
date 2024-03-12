@@ -2,7 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart' as auth;
 
 
 class Utente {
-  final String userId;
+  final String? userId;
   final String? email;
   final String? name;
 
@@ -19,7 +19,7 @@ class Utente {
 
   Map<String, dynamic> toMap() {
     return {
-      'userId': userId,
+      'userId': userId ?? '',
       'email': email ?? '',
       'name': name ?? '',
     };
