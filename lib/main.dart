@@ -12,6 +12,7 @@ import 'package:progettomobileflutter/model/SpotifyModel.dart' as Spotify;
 import 'package:progettomobileflutter/viewmodel/FirebaseViewModel.dart';
 import 'package:firebase_auth/firebase_auth.dart' as auth;
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'cerca_utenti.dart';
 import 'model/SpotifyModel.dart';
 import 'profilo_personale.dart';
@@ -73,7 +74,7 @@ void main() async {
 }*/
 
 // Function to create a new user account with email and password
-void registerWithEmailAndPassword(context, String email, String password) async {
+void registerWithEmailAndPassword(context, String name, String email, String password) async {
   try {
     // Create a new user account with email and password
     final credential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
@@ -83,6 +84,14 @@ void registerWithEmailAndPassword(context, String email, String password) async 
 
     // Optionally, you can handle additional steps after successful account creation here,
     // such as sending a verification email or storing additional user information.
+
+    // Update user profile with the provided name
+    await credential.user?.updateDisplayName(name);
+
+    // Save user details to Firestore
+    await FirebaseFirestore.instance.collection('users').doc(credential.user!.uid).set({
+      'name': name,
+    });
 
     print('Account created successfully! User ID: ${credential.user?.uid}');
 
@@ -230,6 +239,7 @@ class _MyAppState extends State<MyApp> {
 }
 
 class RegistrationPage extends StatelessWidget {
+  final TextEditingController nameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
 
@@ -247,6 +257,12 @@ class RegistrationPage extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            TextField(
+              controller: nameController,
+              decoration: InputDecoration(
+                labelText: 'Name',
+              ),
+            ),
             TextField(
               controller: emailController,
               decoration: const InputDecoration(labelText: 'Email'),
@@ -271,9 +287,10 @@ class RegistrationPage extends StatelessWidget {
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: () {
-                // Call the registerWithEmailAndPassword function with the email and password entered by the user
+                // Call the registerWithEmailAndPassword function with name, email, and password entered by the user
                 registerWithEmailAndPassword(
                   context,
+                  nameController.text,
                   emailController.text,
                   passwordController.text,
                 );
@@ -503,22 +520,14 @@ class _MyHomePageState extends State<MyHomePage> {
                             overflow: TextOverflow.ellipsis,
                           ),
                         )
-
                       ],
                     ),
                   ),);
-
-                  //HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH
                 }),
               ),
             )
-
-
-
-
           ],
         ),
-
       ),
 
 
@@ -881,7 +890,6 @@ class _MyHomePageState extends State<MyHomePage> {
       MaterialPageRoute(builder: (context) => ArtistaSelezionato(artist: artist )),
     );
   }
-
 }
 
 
