@@ -154,7 +154,7 @@ class FirebaseViewModel extends ChangeNotifier{
 
   Future<void> saveUserTopTracks(String userId, List<Track> topTracks, String timeRange) async {
     final DatabaseReference userTopTracksRef = _database.ref()
-        .child('user').child(userId).child('topTracks').child(timeRange);
+        .child('users').child(userId).child('topTracks').child(timeRange);
 
     final List<String> trackIds = topTracks.map((track) => track.id).toList();
 
@@ -171,7 +171,7 @@ class FirebaseViewModel extends ChangeNotifier{
         .child('users').child(userId).child('topArtists').child(timeRange);
 
     final List<String> artistIds = topArtists.map((artist) => artist.id).toList();
-
+    print("provasaveuser $userId ");
     try {
       await userTopArtistsRef.set(artistIds);
       print("IDs delle tracce salvate per l'utente $userId.");
@@ -182,7 +182,7 @@ class FirebaseViewModel extends ChangeNotifier{
   Future<void> fetchTopArtistsFromFirebase(String filter) async {
     final userId = auth.FirebaseAuth.instance.currentUser?.uid;
     if (userId != null) {
-      final userTopArtistsRef = FirebaseDatabase.instance.ref('user/$userId/topArtists/$filter');
+      final userTopArtistsRef = FirebaseDatabase.instance.ref('users/$userId/topArtists/$filter');
       try {
         print("Tentativo di recupero tracce per l'utente $userId con filtro $filter");
         DatabaseEvent event = await userTopArtistsRef.once();
@@ -285,7 +285,7 @@ class FirebaseViewModel extends ChangeNotifier{
     final userId = auth.FirebaseAuth.instance.currentUser?.uid;
     print("DDDD ${userId}");
     if (userId != null) {
-      final userTopTracksRef = FirebaseDatabase.instance.ref('user/$userId/topTracks/$filter');
+      final userTopTracksRef = FirebaseDatabase.instance.ref('users/$userId/topTracks/$filter');
       try {
         print("Tentativo di recupero tracce per l'utente $userId con filtro $filter");
         DatabaseEvent event = await userTopTracksRef.once();

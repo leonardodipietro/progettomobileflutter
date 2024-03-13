@@ -53,7 +53,105 @@ class RecensioneViewModel with ChangeNotifier {
     final DatabaseReference database = FirebaseDatabase.instance.ref();
     database.child("users").child(userId).child("comments").push().set(commentId);
   }
+  void fetchTracksReviewedByArtistAndRetrieveDetails(String artistId, Function(List<Track>) onComplete) {
+    fetchTracksReviewedByArtist(artistId, (List<String> trackIds) {
+      if (trackIds.isNotEmpty) {
+        retrieveTracksDetails(trackIds, (List<Track> tracks) {
+          onComplete(tracks); // Callback con i dettagli delle tracce
+        });
+      } else {
+        onComplete([]); // Callback con una lista vuota se non ci sono tracce recensite
+      }
+    });
+  }
 
+  void fetchTracksReviewedByArtist(String artistId, Function(List<String> trackIds) onComplete) {
+    List<String> tracksReviewedIds = [];
+    final DatabaseReference database = FirebaseDatabase.instance.ref();
+    database
+        .child("reviews")
+        .orderByChild("artistId")
+        .equalTo(artistId)
+        .onValue
+        .listen((event) {
+      tracksReviewedIds.clear(); // Pulisce la lista prima di riempirla con nuovi ID
+      final DataSnapshot dataSnapshot = event.snapshot;
+      if (dataSnapshot.exists) {
+        dataSnapshot.children.forEach((child) {
+          final recensione = Recensione.fromMap(child.value as Map<dynamic, dynamic>);
+          String trackId = recensione.trackId; // Assumendo che Recensione abbia un campo `trackId` che è una stringa
+          if (!tracksReviewedIds.contains(trackId)) {
+            tracksReviewedIds.add(trackId);
+          }
+        });
+        onComplete(tracksReviewedIds); // Richiama il callback passando gli ID delle tracce recensite
+      } else {
+        onComplete([]); // Richiama il callback con una lista vuota se non ci sono dati
+      }
+    });
+  }
+
+  void retrieveTracksDetails(List<String> trackIds, Function(List<Track>)? onComplete) async {
+    print("retrieve chiamata");
+    print("Inizio di retrieveTracksDetails con ${trackIds.length} ID di tracce");
+    final database = FirebaseDatabase.instance.ref();
+    final tracksRef = database.child('tracks');
+    final artistsRef = database.child('artists');
+    List<Track> tracks = [];
+
+    List<Future<Track>> trackFutures = trackIds.map((trackId) async {
+      print("Recupero dettagli per la traccia $trackId");
+      final trackSnapshot = await tracksRef.child(trackId).get();
+      print("Snapshot per traccia $trackId recuperato");
+
+      Map<String, dynamic> trackData;
+      try {
+        trackData = (trackSnapshot.value as Map?)?.cast<String, dynamic>() ?? {};
+      } catch (_) {
+        print("Il valore recuperato per la traccia $trackId non è una mappa valida, utilizzando valori predefiniti.");
+        trackData = {};
+      }
+
+      List<Future<Artist>> artistFutures = [];
+      if (trackData['artists'] != null) {
+        artistFutures = (trackData['artists'] as List).map((artistId) async {
+          final artistSnapshot = await artistsRef.child(artistId).get();
+          final artistData = (artistSnapshot.value as Map?)?.cast<String, dynamic>() ?? {};
+          return Artist.fromJson(artistData);
+        }).toList();
+      }
+
+      List<Artist> artists = await Future.wait(artistFutures);
+      print("Artisti per la traccia $trackId recuperati: ${artists.length}");
+
+      Track track;
+      try {
+        track = Track.fromJson({
+          'name': trackData['name'],
+          'album': {
+            'name': trackData['album'],
+            'images': [{'url': trackData['image_url'] ?? 'immagine mancante'}],
+            'release_date': trackData['release_date'] ?? 'release date mancante',
+          },
+          'artists': artists.map((artist) => artist.toJson()).toList(),
+          'id': trackId,
+        });
+        print("ultima prova ${track.album.images[0].url}");
+        print("ultima prova ${track.name}");
+
+      } catch (e) {
+        print('Errore durante la deserializzazione della traccia $trackId: $e');
+        rethrow;
+      }
+      return track;
+    }).toList();
+
+
+    tracks = await Future.wait(trackFutures);
+    print("Tutte le tracce sono state recuperate: ${tracks.length}");
+
+    onComplete?.call(tracks);
+  }
 
 
   void fetchRecensioniForTrack(String trackId, Function() onCompleted) {

@@ -16,23 +16,26 @@ class ArtistaSelezionato extends StatefulWidget {
 }
 
 class _ArtistaSelezionatoState extends State<ArtistaSelezionato> {
-
+  List<Track> _tracks=[];
   List<Recensione> _recensioni = [] ;
   final RecensioneViewModel _recensioneViewModel = RecensioneViewModel();
   @override
   void initState() {
     super.initState();
-    _loadRecensioniforArtist();
+    _loadTracksReviewedByArtistDetails();
   }
-  void _loadRecensioniforArtist() {
+  void _loadTracksReviewedByArtistDetails() {
     print("Pre-chiamata recensione");
-    _recensioneViewModel.fetchRecensioniForArtist(widget.artist.id, () {
+    _recensioneViewModel.fetchTracksReviewedByArtistAndRetrieveDetails(widget.artist.id, (List<Track> tracks) {
       setState(() {
-        _recensioni = List.from(_recensioneViewModel.recensioniList);
-        print("Recensioni caricate: ${_recensioni.length}");
+        // Assumendo che tu abbia definito una variabile _tracks nel tuo stato del widget
+        // per tenere traccia delle tracce recensite recuperate e dei loro dettagli
+        _tracks = tracks;
+        print("Dettagli di tutte le tracce recensite recuperati: ${_tracks.length}");
       });
     });
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -57,21 +60,42 @@ class _ArtistaSelezionatoState extends State<ArtistaSelezionato> {
               "recensioni",
               textAlign: TextAlign.center,
             ),
-            /*RIFARE DOPOExpanded(
+            Expanded(
 
               child: ListView.builder(
-                itemCount: _recensioni.length,
+                itemCount: _tracks.length,
                 itemBuilder: (context, index) {
-                  final recensione = _recensioni[index];
+                  final track = _tracks[index];
+                  return InkWell(
+                    onTap: () {
+                      print("Traccia selezionata: ${track.name}");
+                    },
+                    child: Container(
+                      height: 120, // Fornisce una dimensione esplicita
+                      child: Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            if (track.album.images.isNotEmpty)
+                              fw.Image.network(track.album.images[0].url, height: 100, width: 100)
+                            else
+                              Container(height: 100, width: 100, color: Colors.grey),
+                            Text(
+                              track.name,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              )
 
-                }
             )
-            )
-*/
-
           ],
-        ),
-      ),
+    ),
+    ),
     );
   }
 
