@@ -22,6 +22,7 @@ import 'package:progettomobileflutter/ArtistaSelezionato.dart';
 //Importante
 import 'package:flutter/material.dart' hide Image;//Utilizza un alias per non avere conflitto con l'Image di SpotifyModel
 import 'package:flutter/widgets.dart' as fw;
+import 'model/themes.dart';
 //import 'package:google_sign_in/google_sign_in.dart';
 
 void main() async {
@@ -188,7 +189,7 @@ class _MyAppState extends State<MyApp> {
         useMaterial3: true,
         // Imposta il colore delle icone nella barra di navigazione
         bottomNavigationBarTheme: BottomNavigationBarThemeData(
-          selectedItemColor: Colors.deepPurple, // Colore delle icone selezionate
+          selectedItemColor: Colors.green, // Colore delle icone selezionate
           unselectedItemColor: Colors.grey, // Colore delle icone non selezionate
         ),
       ),
