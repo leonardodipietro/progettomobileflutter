@@ -53,6 +53,8 @@ dependencies:
   firebase_remote_config: ^4.3.8
   google_sign_in: ^5.2.1
   http: ^1.1.0 # non credo che la usiamo ma la teniamo per il momento
+  image_picker: ^0.8.4+3
+  permission_handler: ^10.2.0
   dio: ^4.0.0
   uni_links: ^0.5.1
   json_annotation: ^4.8.1

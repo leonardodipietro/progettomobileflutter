@@ -1,10 +1,15 @@
-import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'main.dart';
 import 'dart:async';
+import 'dart:io';
+import 'main.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
+import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+
 
 class ProfiloPersonale extends StatefulWidget {
-  const ProfiloPersonale({Key? key}) : super(key: key);
+  const ProfiloPersonale({super.key});
 
   @override
   _ProfiloPersonaleState createState() => _ProfiloPersonaleState();
@@ -13,17 +18,26 @@ class ProfiloPersonale extends StatefulWidget {
 class _ProfiloPersonaleState extends State<ProfiloPersonale> {
   bool _isLoggedIn = false;
   late StreamSubscription<User?> _authSubscription;
+  late String? profileImageUrl= ''; // Definizione della variabile profileImageUrl
+  late String? profileUsername = '';
+  int reviewCounter = 0; // Variabile di stato per il contatore delle recensioni
+  int followersCounter = 0; // Variabile di stato per il contatore dei follower
+  int followingCounter = 0; // Variabile di stato per il contatore dei following
+
 
   @override
   void initState() {
     super.initState();
-    // Verifica lo stato di autenticazione all'inizio
     checkUserLoggedIn();
+    fetchProfileImage();
+    fetchProfileUsername();
+    fetchCounters();
   }
 
   // Funzione per verificare se l'utente è già autenticato
   void checkUserLoggedIn() {
     _authSubscription = FirebaseAuth.instance.authStateChanges().listen((User? user) {
+      print('User: $user'); // Stampa il valore di user
       if (user != null) {
         // Se l'utente è autenticato, imposta _isLoggedIn su true
         setState(() {
@@ -40,7 +54,7 @@ class _ProfiloPersonaleState extends State<ProfiloPersonale> {
 
   @override
   void dispose() {
-    _authSubscription?.cancel(); // Rimuovi il listener
+    _authSubscription.cancel(); // Rimuovi il listener
     super.dispose();
   }
 
@@ -48,12 +62,52 @@ class _ProfiloPersonaleState extends State<ProfiloPersonale> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Profilo Personale'),
+        title: const Text('Impostazioni'),
       ),
       body: Center(
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: <Widget>[
+            Stack(
+            alignment: AlignmentDirectional.bottomEnd,
+              children: [
+                CircleAvatar(
+                  radius: 80,
+                  backgroundImage: profileImageUrl != null
+                      ? NetworkImage(profileImageUrl!) // Utilizza l'immagine del profilo corrente
+                      : AssetImage('assets/profile_default_image.jpg') as ImageProvider<Object>, // Utilizza l'immagine predefinita
+                  child: (!_isLoggedIn || (profileImageUrl == null || profileImageUrl!.isEmpty))? Icon(Icons.account_circle, size: 150): null, // Icona predefinita se non c'è un'immagine del profilo
+                ),
+                Positioned(
+                  bottom: 0,
+                  right: 0,
+                  child: Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.white60, // Colore di sfondo dell'IconButton
+                    ),
+                    child: IconButton(
+                      onPressed: () => _editProfileImage(context),
+                      icon: Icon(Icons.edit),
+                      iconSize: 25,
+                      color: Colors.black, // Colore dell'icona dell'IconButton
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                _buildCounter(context, 'Reviews', reviewCounter), // Contatore per le recensioni
+                _buildCounter(context, 'Followers', followersCounter), // Contatore per i follower
+                _buildCounter(context, 'Following', followingCounter), // Contatore per i seguiti
+              ],
+            ),
+            _buildUsername(context, 'Nome utente', 'JohnDoe'), // Voce Nome utente
+            SizedBox(height: 60),
             ElevatedButton(
               onPressed: () => _signOut(context),
               child: Text('Sign Out'),
@@ -65,6 +119,342 @@ class _ProfiloPersonaleState extends State<ProfiloPersonale> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildCounter(BuildContext context, String label, int count) {
+    return Column(
+      children: [
+        Text(
+          count.toString(),
+          style: TextStyle(fontSize: 24,),
+        ),
+        SizedBox(height: 5),
+        Text(
+          label,
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildUsername(BuildContext context, String label, String name) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Text(
+          label,
+          style: TextStyle(fontSize: 20),
+        ),
+        SizedBox(width: 20),
+        Row(
+          children: [
+            Text(
+              profileUsername ?? name, // Usa profileUsername se non è nullo, altrimenti usa 'username'
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            IconButton(
+              onPressed: () => _editUsername(context),
+              icon: Icon(Icons.edit),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  //Recupera l'immagine profilo dal database
+  void fetchProfileImage() async {
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      try {
+        DatabaseReference imageUrlRef = FirebaseDatabase.instance.ref().child('users').child(user.uid).child('profile image');
+        imageUrlRef.once().then((DatabaseEvent event) {
+          DataSnapshot snapshot = event.snapshot;
+          dynamic value = snapshot.value;
+          // Verifica se lo snapshot contiene un valore
+          if (value != null) {
+            String? imageUrl = value as String?;
+            setState(() {
+              profileImageUrl = imageUrl; // Aggiorna l'URL dell'immagine del profilo
+            });
+          }
+        }).catchError((error) {
+          print('Errore durante il recupero dell\'URL dell\'immagine del profilo: $error');
+        });
+      } catch (error) {
+        print('Errore durante il recupero dell\'URL dell\'immagine del profilo: $error');
+      }
+    }
+  }
+
+  //Apre il dialogue per modificare l'immagine profilo in vari modi
+  void _editProfileImage(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return SimpleDialog(
+          title: Text('Modifica immagine del profilo'),
+          children: <Widget>[
+            SimpleDialogOption(
+              onPressed: () {
+                Navigator.pop(context);
+                _takePhoto(); // Funzione per scattare una foto
+              },
+              child: Text('Scatta una foto'),
+            ),
+            SimpleDialogOption(
+              onPressed: () {
+                Navigator.pop(context);
+                _chooseFromGallery(); // Funzione per scegliere una foto dalla galleria
+              },
+              child: Text('Scegli dalla galleria'),
+            ),
+            SimpleDialogOption(
+              onPressed: () {
+                Navigator.pop(context);
+                _removePhoto(); // Funzione per rimuovere l'immagine corrente
+              },
+              child: Text('Rimuovi foto corrente'),
+            ),
+            SimpleDialogOption(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: Text('Annulla'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  //Permette di accede alla fotocamera per scattare una foto e impostarla come immagine di profili
+  void _takePhoto() async {
+    final pickedFile = await ImagePicker().getImage(source: ImageSource.camera);
+    if (pickedFile != null) {
+      // Hai scattato una foto, ora puoi gestire il file
+      File imageFile = File(pickedFile.path);
+
+      // Carica l'immagine nel cloud storage (ad esempio, Firebase Storage)
+      String imageUrl = await uploadImageToStorage(imageFile);
+
+      // Aggiorna l'URL dell'immagine nel database dell'utente
+      updateProfileImageUrl(imageUrl);
+    } else {
+      // L'utente ha annullato la selezione
+    }
+  }
+
+  //Permette di accedere alla galleria e di scegliere un immagine profilo dalla galleria
+  void _chooseFromGallery() async {
+    final pickedFile = await ImagePicker().getImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      // Hai scelto una foto dalla galleria, ora puoi gestire il file
+      // Esempio: carica il file nell'immagine del profilo
+      _updateProfileImage(File(pickedFile.path));
+    } else {
+      // L'utente ha annullato la selezione
+    }
+  }
+
+  //Inserisce l'immagine profilo nello storage
+  Future<String> uploadImageToStorage(File imageFile) async {
+    try {
+      // Ottieni l'utente corrente
+      User? user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        // Crea un riferimento al percorso di destinazione nel cloud storage
+        Reference storageRef = FirebaseStorage.instance.ref().child('profile_images/${user.uid}/image.jpg');
+
+        // Carica l'immagine nel cloud storage
+        UploadTask uploadTask = storageRef.putFile(imageFile);
+
+        // Attendi il completamento del caricamento
+        await uploadTask.whenComplete(() => null);
+
+        // Ottieni l'URL dell'immagine caricata
+        String imageUrl = await storageRef.getDownloadURL();
+
+        return imageUrl;
+      } else {
+        throw Exception('Utente non trovato');
+      }
+    } catch (e) {
+      print('Errore durante il caricamento dell\'immagine nel cloud storage: $e');
+      throw e; // Rilancia l'eccezione per gestirla nel chiamante
+    }
+  }
+
+  // Funzione per inserire l'URL dell'immagine scattata nel database dell'utente (Firebase Realtime Database)
+  void updateProfileImageUrl(String imageUrl) {
+    try {
+      // Ottieni l'utente corrente
+      User? user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        // Ottieni il riferimento al nodo dell'immagine del profilo dell'utente nel database
+        DatabaseReference imageUrlRef = FirebaseDatabase.instance.ref().child('users').child(user.uid).child('profile image');
+
+        // Aggiorna l'URL dell'immagine nel database
+        imageUrlRef.set(imageUrl).then((_) {
+          // Aggiornamento completato con successo
+          print('URL dell\'immagine del profilo aggiornato con successo nel database');
+          fetchProfileImage();
+        }).catchError((error) {
+          // Gestisci gli errori nell'aggiornamento
+          print('Errore durante l\'aggiornamento dell\'URL dell\'immagine del profilo nel database: $error');
+        });
+      } else {
+        throw Exception('Utente non trovato');
+      }
+    } catch (e) {
+      print('Errore durante l\'aggiornamento dell\'URL dell\'immagine del profilo nel database: $e');
+      throw e; // Rilancia l'eccezione per gestirla nel chiamante
+    }
+  }
+
+  // Funzione per inserire l'URL dell'immagine presa dalla galleria nel database dell'utente (Firebase Realtime Database)
+  void _updateProfileImage(File imageFile) async {
+    try {
+      // Carica l'immagine nel cloud storage (ad esempio, Firebase Storage)
+      String imageUrl = await uploadImageToStorage(imageFile);
+
+      // Aggiorna l'URL dell'immagine nel database dell'utente
+      updateProfileImageUrl(imageUrl);
+      fetchProfileImage();
+    } catch (e) {
+      // Gestisci eventuali errori
+      print('Errore durante il caricamento dell\'immagine del profilo dalla galleria: $e');
+    }
+  }
+
+  //Rimuove l'immagine di profilo dal database, in questo modo viene mostrata l'immagine di default
+  void _removePhoto() {
+    // Ottieni l'utente corrente
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      try {
+        // Ottieni il riferimento al nodo dell'immagine del profilo dell'utente nel database
+        DatabaseReference imageUrlRef = FirebaseDatabase.instance.ref().child('users').child(user.uid).child('profile image');
+
+        // Rimuovi completamente il nodo "profile image" dal database
+        imageUrlRef.remove().then((_) {
+          // Aggiorna anche la variabile locale profileImageUrl
+          setState(() {
+            profileImageUrl = null; // Imposta l'URL dell'immagine del profilo su vuoto
+          });
+          // Visualizza un messaggio di successo o effettua altre azioni necessarie
+        }).catchError((error) {
+          // Gestisci gli errori in caso di fallimento nell'eliminazione dal database
+          print('Errore durante l\'eliminazione del nodo "profile image" dal database: $error');
+        });
+      } catch (error) {
+        // Gestisci eventuali errori durante il recupero del riferimento nel database
+        print('Errore durante il recupero del riferimento nel database: $error');
+      }
+    }
+  }
+
+  // Funzione per recuperare i contatori dal database
+  void fetchCounters() {
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      try {
+        DatabaseReference counterRef = FirebaseDatabase.instance.ref().child('users').child(user.uid);
+        counterRef.onValue.listen((event) {
+          DataSnapshot snapshot = event.snapshot;
+          dynamic counters = snapshot.value;
+          if (counters != null) {
+            setState(() {
+              reviewCounter = counters['reviews counter'] ?? 0;
+              followersCounter = counters['followers counter'] ?? 0;
+              followingCounter = counters['following counter'] ?? 0;
+            });
+          }
+        }, onError: (error) {
+          print('Errore durante il recupero dei contatori: $error');
+        });
+      } catch (error) {
+        print('Errore durante il recupero dei contatori: $error');
+      }
+    }
+  }
+
+  //Recupera il nome utente dal database
+  void fetchProfileUsername() async {
+    print('Inizio fetchProfileUsername()');
+    User? user = FirebaseAuth.instance.currentUser;
+    print('Valore di user: $user'); // Stampa il valore di user
+    if (user != null) {
+      DatabaseReference userRef = FirebaseDatabase.instance.ref().child('users').child(user.uid).child('name');
+      userRef.onValue.listen((event) {
+        print('Listener degli eventi del database attivato');
+        DataSnapshot snapshot = event.snapshot;
+        dynamic value = snapshot.value;
+        print('Snapshot: $value'); // Controlla il valore del snapshot
+        if (value != null && value is String) {
+          setState(() {
+            profileUsername = value;
+          });
+          print('Nome utente recuperato: $profileUsername');
+        } else {
+          print('Il campo "name" non è presente o è null nel database.');
+        }
+      }, onError: (error) {
+        print('Errore durante il recupero dell\'name: $error');
+      });
+    }
+  }
+
+  //Permette la modifica del nome utente
+  void _editUsername(BuildContext context) {
+    // Mostra un dialogo per la modifica del nome utente
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        String newName = ''; // Variabile per memorizzare il nuovo nome utente
+
+        return AlertDialog(
+          title: Text("Modifica nome"),
+          content: TextField(
+            onChanged: (value) {
+              newName = value; // Aggiorna il nuovo nome utente ogni volta che viene modificato
+            },
+            decoration: InputDecoration(hintText: "Inserisci il tuo nome"),
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Chiudi il dialogo senza effettuare modifiche
+              },
+              child: Text('Annulla'),
+            ),
+            TextButton(
+              onPressed: () {
+                // Verifica se il nuovo nome utente non è vuoto
+                if (newName.isNotEmpty) {
+                  // Ottieni l'utente attualmente autenticato
+                  User? user = FirebaseAuth.instance.currentUser;
+
+                  // Ottieni il riferimento al campo 'name' nel database
+                  DatabaseReference userRef = FirebaseDatabase.instance.ref().child('users').child(user!.uid).child('name');
+
+                  // Effettua l'aggiornamento del nome utente nel database
+                  userRef.set(newName).then((_) {
+                    setState(() {
+                      profileUsername = newName; // Aggiorna il nome utente visualizzato nell'UI
+                    });
+                    Navigator.of(context).pop(); // Chiudi il dialogo dopo l'aggiornamento
+                  }).catchError((error) {
+                    print("Errore durante l'aggiornamento del nome utente: $error");
+                  });
+                }
+              },
+              child: Text('Conferma'),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -122,6 +512,10 @@ class _ProfiloPersonaleState extends State<ProfiloPersonale> {
       if (confirm == true) {
         // Elimina l'account dell'utente
         await user?.delete();
+
+        // Rimuovi anche il nodo relativo all'utente corrente dal Realtime Database
+        final reference = FirebaseDatabase.instance.ref().child('users').child(user!.uid);
+        await reference.remove();
 
         // Dopo l'eliminazione dell'account, puoi navigare l'utente alla pagina di login o ad altre schermate
         Navigator.pushReplacement(
