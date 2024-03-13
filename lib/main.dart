@@ -198,8 +198,8 @@ class _MyAppState extends State<MyApp> {
           children: [
             MyHomePage(title: 'Home'),
             CercaUtentiPage(),
-            ProfiloPersonale(),
             NotifichePage(),
+            ProfiloPersonale(),
           ],
         ),
         bottomNavigationBar: BottomNavigationBar( // Barra di navigazione nella parte inferiore dello schermo
@@ -213,12 +213,12 @@ class _MyAppState extends State<MyApp> {
               label: 'Search',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.person),
-              label: 'Profile',
-            ),
-            BottomNavigationBarItem(
               icon: Icon(Icons.notifications),
               label: 'Notifiche',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.person),
+              label: 'Profile',
             ),
           ],
           currentIndex: _currentIndex, // Indice corrente della barra di navigazione
