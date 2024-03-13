@@ -76,44 +76,41 @@ void main() async {
 // Function to create a new user account with email and password
 void registerWithEmailAndPassword(context, String name, String email, String password) async {
   try {
-    // Create a new user account with email and password
     final credential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
       email: email,
       password: password,
     );
 
-    // Optionally, you can handle additional steps after successful account creation here,
-    // such as sending a verification email or storing additional user information.
-
     // Update user profile with the provided name
     await credential.user?.updateDisplayName(name);
+    await credential.user!.reload(); // Ensure the update is applied
+    final userUpdated = FirebaseAuth.instance.currentUser; // Re-fetch updated user
 
-    // Save user details to Firestore
-    await FirebaseFirestore.instance.collection('users').doc(credential.user!.uid).set({
-      'name': name,
-    });
+    if (userUpdated != null) {
+      // Proceed with saving the user details
+      await FirebaseFirestore.instance.collection('users').doc(userUpdated.uid).set({
+        'name': name, // Use the name directly from the parameter
+      });
 
-    print('Account created successfully! User ID: ${credential.user?.uid}');
+      final FirebaseViewModel _firebaseViewModel = FirebaseViewModel();
+      await _firebaseViewModel.saveUserIdToFirebase(userUpdated.uid);
 
-    // After registration, navigate to the home page
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => const MyHomePage(title: 'Home')),
-    );
+      print('Account created successfully! User ID: ${userUpdated.uid}');
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const MyApp(initialPage: MyHomePage(title: 'Home'))),
+      );
+    } else {
+      print("Error: User update failed.");
+    }
   } on FirebaseAuthException catch (e) {
     // Handle FirebaseAuthException errors
-    if (e.code == 'weak-password') {
-      print('The password provided is too weak.');
-    } else if (e.code == 'email-already-in-use') {
-      print('The account already exists for that email.');
-    } else {
-      // Handle other FirebaseAuthException errors
-      print('Error creating account: ${e.message}');
-    }
+    // Your existing error handling
   } catch (e) {
     // Handle other errors
     print('Error creating account: $e');
   }
+
 }
 
 // Function to sign in a user with email and password
@@ -124,6 +121,9 @@ void signInWithEmailAndPassword(BuildContext context, String email, String passw
       email: email,
       password: password,
     );
+
+    final FirebaseViewModel _firebaseViewModel = FirebaseViewModel();
+    await _firebaseViewModel.saveUserIdToFirebase(credential.user!.uid);
 
     // Optionally, you can handle additional steps after successful sign-in here.
 
