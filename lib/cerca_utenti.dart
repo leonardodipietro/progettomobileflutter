@@ -12,7 +12,8 @@ class CercaUtentiPage extends StatefulWidget {
 class _CercaUtentiPageState extends State<CercaUtentiPage> {
   late final TextEditingController _searchController;
   late final DatabaseReference _databaseRef;
-  Map<String, String> _users = {}; // Memorizza le associazioni tra nome utente e userId
+  // Memorizza le associazioni tra nome utente e userId e immagine di profilo
+  Map<String, dynamic> _users = {};
   List<String> _name = [];
   int? _selectedIndex; // Indice dell'elemento selezionato
 
@@ -47,8 +48,13 @@ class _CercaUtentiPageState extends State<CercaUtentiPage> {
         _users.clear();
         users.forEach((userId, userData) {
           if (userData['name'] != null && userData['name'].toString().toLowerCase().contains(query.toLowerCase())) {
+            final profileImage = userData['profile image'] ?? ''; // Definisci profileImage qui
             _name.add(userData['name']);
-            _users[userData['name']] = userId;
+            _users[userData['name']] = {
+              'userId': userId,
+              'profileImage': profileImage, // Utilizza profileImage qui
+            };
+            print('Immagine di profilo per ${userData['name']}: $profileImage');
           }
         });
         setState(() {});
@@ -105,11 +111,12 @@ class _CercaUtentiPageState extends State<CercaUtentiPage> {
               itemCount: _name.length,
               itemBuilder: (context, index) {
                 final name = _name[index];
+                final profileImage = _users[name]['profileImage'];
                 return GestureDetector(
                   onTap: () {
                     print('Hai cliccato su $name');
                     // Recupera l'userId associato al nome selezionato
-                    final userId = _users[name];
+                    final userId = _users[name]['userId'];
                     if (userId != null) {
                       print('L\'userId associato a $name è $userId');
                       navigateToFriendPage(context, userId);
@@ -119,14 +126,18 @@ class _CercaUtentiPageState extends State<CercaUtentiPage> {
                   },
                   child: ListTile(
                     title: Text(name),
+                    leading: profileImage != null && profileImage.isNotEmpty
+                        ? CircleAvatar(
+                      backgroundImage: NetworkImage(profileImage),
+                    ) : null,
                     tileColor: _selectedIndex == index ? Colors.blue.withOpacity(0.5) : null,
                     // Aggiungi altri dettagli dell'utente se necessario
                   ),
                 );
               },
             ) : _searchController.text.isNotEmpty // Controlla se il campo di ricerca non è vuoto
-                ? Center(
-              child: Text('Nessun utente trovato'),
+              ? Center(
+                child: Text('Nessun utente trovato'),
             )
                 : SizedBox(), // Se il campo di ricerca è vuoto, non mostrare nulla
           ),
