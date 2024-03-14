@@ -204,6 +204,32 @@ class FirebaseViewModel extends ChangeNotifier{
     }
   }
 
+  // Recupera gli artisti dell'amico cercato
+  Future<void> fetchTopArtistsFriend(String userId, String filter) async {
+
+    if (userId != null) {
+      final userTopArtistsRef = FirebaseDatabase.instance.ref('users/$userId/topArtists/$filter');
+      try {
+        print("Tentativo di recupero tracce per l'utente $userId con filtro $filter");
+        DatabaseEvent event = await userTopArtistsRef.once();
+        print("DatabaseEvent recuperato con successo");
+        // Assumendo che i valori siano gli ID delle tracce e possano essere trattati come String
+        final artistIds = event.snapshot.children.map((child) => child.value.toString()).toList();
+        retrieveArtistsDetails(artistIds,(List<Artist> artists) {
+          for(var artist in artists)
+          {
+            print("Artist ricacciati: ${artist.name} e ${artist.images[0].url}");
+            artistsFromDb=artists;
+          }
+        });
+
+
+      } catch (error) {
+        print('FirebaseError: Error while fetching track IDs from Firebase database: $error');
+      }
+    }
+  }
+
   void retrieveArtistsDetails(List<String> artistIds, Function(List<Artist>) onComplete) async {
     final artistsRef = FirebaseDatabase.instance.ref('artists');
     List<Artist> artists = [];
@@ -310,6 +336,38 @@ class FirebaseViewModel extends ChangeNotifier{
 
 
         );
+      } catch (error) {
+        print('FirebaseError: Error while fetching track IDs from Firebase database: $error');
+      }
+    }
+  }
+
+  // Recupera le tracce dell'amico cercato
+  Future<void> fetchTopTracksFriend(String userId, String filter) async {
+
+    print("DDDD ${userId}");
+    if (userId.isNotEmpty) { // Aggiornamento: controlla che lo userId non sia vuoto
+      final userTopTracksRef = FirebaseDatabase.instance.ref('users/$userId/topTracks/$filter');
+      try {
+        print("Tentativo di recupero tracce per l'utente $userId con filtro $filter");
+        DatabaseEvent event = await userTopTracksRef.once();
+        print("DatabaseEvent recuperato con successo");
+        // Assumendo che i valori siano gli ID delle tracce e possano essere trattati come String
+        // map prende i child e ne recupera il value che poi viene convertito in una stringa e poi inserito in una lista
+        final trackIds = event.snapshot.children.map((child) => child.value.toString()).toList();
+        print("prechiamata ${trackIds}");
+        // Ora passiamo una funzione di callback a retrieveTracksDetails
+        retrieveTracksDetails(trackIds, (List<Track> tracks) {
+          print("Numero di tracce recuperate: ${trackIds.length}");
+          // Qui puoi stampare i dettagli delle tracce come desideri
+          for (var track in tracks) {
+            for (var artist in track.artists) {
+              print("Artist: ${artist.name}");
+              print("ROBA RICACCIATA Track: ${track.name}, Album: ${track.album.name}, IMMAGINE ${track.album.images[0].url}. Artist${artist.name}");
+              tracksFromDb=tracks;
+            }
+          }
+        });
       } catch (error) {
         print('FirebaseError: Error while fetching track IDs from Firebase database: $error');
       }

@@ -3,6 +3,12 @@ import 'cerca_utenti.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'dart:async';
+import 'package:progettomobileflutter/viewmodel/FirebaseViewModel.dart';
+import 'package:progettomobileflutter/model/SpotifyModel.dart' as Spotify;
+import 'model/SpotifyModel.dart';
+import 'package:flutter/widgets.dart' as fw;
+import 'package:progettomobileflutter/BranoSelezionato.dart';
+import 'package:progettomobileflutter/ArtistaSelezionato.dart';
 
 class PaginaAmico extends StatefulWidget {
   final String userId;
@@ -12,6 +18,8 @@ class PaginaAmico extends StatefulWidget {
   @override
   _PaginaAmicoState createState() => _PaginaAmicoState();
 }
+
+enum ContentType { tracks, artists }
 
 class _PaginaAmicoState extends State<PaginaAmico> {
   late Future<Map<String, dynamic>?> _userDataFuture;
@@ -24,6 +32,15 @@ class _PaginaAmicoState extends State<PaginaAmico> {
   bool _isLoggedIn = false;
   late StreamSubscription<User?> _authSubscription;
 
+  // Dichiarazione di _firebaseViewModel
+  FirebaseViewModel _firebaseViewModel = FirebaseViewModel();
+
+  String filter='short_term';
+
+  List<Track> _tracksToShow = []; // Dichiarazione di _tracksToShow
+  List<Artist> _artistsToShow = []; // Dichiarazione di _artistsToShow
+  ContentType _contentType = ContentType.tracks;
+
   @override
   void initState() {
     super.initState();
@@ -33,14 +50,17 @@ class _PaginaAmicoState extends State<PaginaAmico> {
         if (userData != null) {
           _name = userData['name'] ?? '';
           _profileImage = userData['profile image'] ?? '';
-          _reviewsCount = userData['reviews'] ?? 0;
-          _followersCount = userData['followers'] ?? 0;
-          _followingCount = userData['following'] ?? 0;
+          _reviewsCount = userData['reviews counter'] ?? 0;
+          _followersCount = userData['followers counter'] ?? 0;
+          _followingCount = userData['following counter'] ?? 0;
         }
       });
     });
     checkUserLoggedIn();
     fetchCounters();
+
+    // Inizializzazione di _firebaseViewModel
+    _firebaseViewModel = FirebaseViewModel();
   }
 
   @override
@@ -97,7 +117,8 @@ class _PaginaAmicoState extends State<PaginaAmico> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-            _name, style: TextStyle(fontSize: 20),
+          _name,
+          style: TextStyle(fontSize: 20),
         ), // Utilizza il nome recuperato come titolo dell'AppBar
       ),
       body: FutureBuilder(
@@ -115,7 +136,7 @@ class _PaginaAmicoState extends State<PaginaAmico> {
           } else {
             // Esegui il rendering del corpo della pagina qui, utilizzando i dati recuperati
             return Padding(
-              padding: const EdgeInsets.all(16.0),
+              padding: const EdgeInsets.only(bottom: 16.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -137,7 +158,6 @@ class _PaginaAmicoState extends State<PaginaAmico> {
                       _buildCounter(context, 'Reviews', _reviewsCount), // Contatore per le recensioni
                       _buildCounter(context, 'Followers', _followersCount), // Contatore per i follower
                       _buildCounter(context, 'Following', _followingCount), // Contatore per i seguiti
-
                       SizedBox(width: 16),
                     ],
                   ),
@@ -149,30 +169,97 @@ class _PaginaAmicoState extends State<PaginaAmico> {
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
                         ElevatedButton(
-                          onPressed: () {
-                            // Azione per il pulsante "Filtro"
-                          },
+                          onPressed: () => selectFilter(context),
                           child: Text('Filtro'),
                         ),
                         ElevatedButton(
-                          onPressed: () {
-                            // Azione per il pulsante "Top Tracks"
-                          },
+                          onPressed: () => handleTrackButtonClicked(context),
                           child: Text('Top Tracks'),
                         ),
                         ElevatedButton(
-                          onPressed: () {
-                            // Azione per il pulsante "Top Artist"
-                          },
+                          onPressed: () => handleArtistButtonClicked(context),
                           child: Text('Top Artist'),
                         ),
                       ],
                     ),
                   ),
+                  Expanded(
+                    child: _contentType == ContentType.tracks
+                        ? GridView.count(
+                      crossAxisCount: 3,
+                      children: List.generate(_tracksToShow.length, (index) {
+                        // Widget per tracce
+                        Spotify.Track track = _tracksToShow[index];
+                        return InkWell(
+                          onTap: () {
+                            print("Traccia selezionata: ${track.name}");
+                            _navigateToBranoSelezionato(track);
+                          },
+                          child: Center(
+                            child: Column(
+                              children: [
+                                track.album.images.isNotEmpty
+                                    ? fw.Image.network( // Utilizza l'alias fw per Image di Flutter
+                                  track.album.images[0].url,
+                                  height: 100,
+                                  width: 100,
+                                )
+                                    : Container(
+                                    height: 100,
+                                    width: 100,
+                                    color: Colors.grey),
+                                Flexible(
+                                  child: Text(
+                                    track.name,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                )
+                              ],
+                            ),
+                          ),
+                        );
+                      }),
+                    )
+                        : GridView.count(
+                      crossAxisCount: 3,
+                      children: List.generate(_artistsToShow.length, (index) {
+                        // Widget per artisti
+                        Spotify.Artist artist = _artistsToShow[index];
+                        return InkWell(
+                          onTap: () {
+                            print("Traccia selezionata: ${artist.name}");
+                            _navigateToArtistaSelezionato(artist);
+                          },
+                          child: Center(
+                            child: Column(
+                              children: [
+                                artist.images.isNotEmpty
+                                    ? fw.Image.network( // Utilizza l'alias fw per Image di Flutter
+                                  artist.images[0].url,
+                                  height: 100,
+                                  width: 100,
+                                )
+                                    : Container(
+                                    height: 100,
+                                    width: 100,
+                                    color: Colors.grey),
+                                Flexible(
+                                  child: Text(
+                                    artist.name,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                )
+                              ],
+                            ),
+                          ),
+                        );
+                      }),
+                    ),
+                  ),
                 ],
               ),
             );
-          }
+        }
         },
       ),
     );
@@ -195,6 +282,106 @@ class _PaginaAmicoState extends State<PaginaAmico> {
           ),
         ],
       ),
+    );
+  }
+
+
+  Future<void> selectFilter(BuildContext context) async {
+    BuildContext dialogContext;
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        dialogContext = context; // Memorizza il contesto corrente
+        return AlertDialog(
+          title: Text("Seleziona Filtro"),
+          content: SingleChildScrollView(
+            child: ListBody(
+              children: <Widget>[
+                GestureDetector(
+                  child: Text('Short Term'),
+                  onTap: () async {
+                    applyFilter(dialogContext, 'short_term'); // Utilizza il contesto memorizzato
+                    Navigator.of(dialogContext).pop(); // Chiudi il popup
+                  },
+                ),
+                Padding(padding: EdgeInsets.all(8.0)),
+                GestureDetector(
+                  child: Text('Medium Term'),
+                  onTap: () async {
+                    applyFilter(dialogContext, 'medium_term');
+                    Navigator.of(dialogContext).pop();
+                  },
+                ),
+                Padding(padding: EdgeInsets.all(8.0)),
+                GestureDetector(
+                  child: Text('Long Term'),
+                  onTap: () async {
+                    applyFilter(dialogContext, 'long_term');
+                    Navigator.of(dialogContext).pop();
+                  },
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> applyFilter(BuildContext context, String newFilter) async {
+    showDialog(
+      context: context,
+      builder: (context) => Center(child: CircularProgressIndicator()), // Mostra un indicatore di caricamento
+    );
+
+    // Utilizza widget.userId per ottenere lo userId necessario
+    String userId = widget.userId;
+
+    // Aggiungi lo userId necessario alla funzione fetchTopTracksFriend
+    await _firebaseViewModel.fetchTopTracksFriend(userId, newFilter);
+
+    // Aggiungi lo userId necessario alla funzione fetchTopArtistsFriend
+    await _firebaseViewModel.fetchTopArtistsFriend(userId, newFilter);
+
+    setState(() {
+      _tracksToShow = _firebaseViewModel.tracksFromDb;
+      _artistsToShow = _firebaseViewModel.artistsFromDb;
+    });
+  }
+
+  Future<void> handleTrackButtonClicked(BuildContext context) async {
+    print("Handle track button clicked chiamata");
+    // Utilizza widget.userId per ottenere lo userId necessario
+    String userId = widget.userId;
+    await _firebaseViewModel.fetchTopTracksFriend(userId, filter);
+    setState(() {
+      _contentType = ContentType.tracks;
+      _tracksToShow= _firebaseViewModel.tracksFromDb;
+    });
+  }
+
+  Future<void> handleArtistButtonClicked(BuildContext context) async {
+    // Utilizza widget.userId per ottenere lo userId necessario
+    String userId = widget.userId;
+    print("Handle artist button clicked chiamata");
+    await _firebaseViewModel.fetchTopArtistsFriend(userId, filter);
+    setState(() {
+      _contentType = ContentType.artists;
+      _artistsToShow= _firebaseViewModel.artistsFromDb;
+    });
+  }
+
+
+  void _navigateToBranoSelezionato(Spotify.Track track) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => BranoSelezionato(track: track )),
+    );
+  }
+  void _navigateToArtistaSelezionato(Spotify.Artist artist)  {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => ArtistaSelezionato(artist: artist )),
     );
   }
 }
