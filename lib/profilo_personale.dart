@@ -6,7 +6,9 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
-
+import 'package:progettomobileflutter/FollowersList.dart';
+import 'package:progettomobileflutter/FollowingList.dart';
+import 'package:progettomobileflutter/ReviewsList.dart';
 
 class ProfiloPersonale extends StatefulWidget {
   const ProfiloPersonale({super.key});
@@ -20,6 +22,7 @@ class _ProfiloPersonaleState extends State<ProfiloPersonale> {
   late StreamSubscription<User?> _authSubscription;
   late String? profileImageUrl= ''; // Definizione della variabile profileImageUrl
   late String? profileUsername = '';
+  late String? email = '';
   int reviewCounter = 0; // Variabile di stato per il contatore delle recensioni
   int followersCounter = 0; // Variabile di stato per il contatore dei follower
   int followingCounter = 0; // Variabile di stato per il contatore dei following
@@ -31,6 +34,7 @@ class _ProfiloPersonaleState extends State<ProfiloPersonale> {
     checkUserLoggedIn();
     fetchProfileImage();
     fetchProfileUsername();
+    fetchEmail();
     fetchCounters();
   }
 
@@ -101,12 +105,43 @@ class _ProfiloPersonaleState extends State<ProfiloPersonale> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                _buildCounter(context, 'Reviews', reviewCounter), // Contatore per le recensioni
-                _buildCounter(context, 'Followers', followersCounter), // Contatore per i follower
-                _buildCounter(context, 'Following', followingCounter), // Contatore per i seguiti
-              ],
+                GestureDetector(
+                  onTap: () {
+                    // Azione da eseguire quando viene cliccato il contatore delle recensioni
+                    // Per esempio, potresti navigare a una pagina di recensioni
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => ReviewsList()),
+                    );
+                  },
+                  child: _buildCounter(context, 'Reviews', reviewCounter),
+                ),
+                GestureDetector(
+                  onTap: () {
+                    // Azione da eseguire quando viene cliccato il contatore dei follower
+                    // Per esempio, puoi navigare alla pagina dei follower
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => FollowersList()),
+                    );
+                  },
+                  child: _buildCounter(context, 'Followers', followersCounter),
+                ),
+                GestureDetector(
+                  onTap: () {
+                    // Azione da eseguire quando viene cliccato il contatore dei seguiti
+                    // Per esempio, potresti navigare a una pagina dei seguiti
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => FollowingList()),
+                    );
+                  },
+                  child: _buildCounter(context, 'Following', followingCounter),
+                ),              ],
             ),
-            _buildUsername(context, 'Nome utente', 'JohnDoe'), // Voce Nome utente
+            SizedBox(height: 20,),
+            _buildUsername(context, 'Nome utente', 'JohnDoe'),
+            _buildEmail(context, 'Email', 'example@domain.com'),// Voce Nome utente
             SizedBox(height: 60),
             ElevatedButton(
               onPressed: () => _signOut(context),
@@ -139,28 +174,61 @@ class _ProfiloPersonaleState extends State<ProfiloPersonale> {
   }
 
   Widget _buildUsername(BuildContext context, String label, String name) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Text(
-          label,
-          style: TextStyle(fontSize: 20),
-        ),
-        SizedBox(width: 20),
-        Row(
-          children: [
-            Text(
-              profileUsername ?? name, // Usa profileUsername se non è nullo, altrimenti usa 'username'
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            IconButton(
-              onPressed: () => _editUsername(context),
-              icon: Icon(Icons.edit),
-            ),
-          ],
-        ),
-      ],
+    return Padding(
+      padding: EdgeInsets.only(left: 25),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          ),
+          SizedBox(width: 20),
+          Row(
+            children: [
+              Text(
+                profileUsername ?? name, // Usa profileUsername se non è nullo, altrimenti usa 'username'
+                style: TextStyle(fontSize: 20),
+              ),
+              IconButton(
+                onPressed: () => _editUsername(context),
+                icon: Icon(Icons.edit),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
+  }
+
+  Widget _buildEmail(BuildContext context, String label, String name) {
+    return Padding(
+      padding: EdgeInsets.only(left: 25),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          ),
+          SizedBox(width: 20,),
+          Text(
+            _abbreviateEmail(email ?? ''), // Utilizza l'operatore di null safety per gestire il valore null
+            style: TextStyle(fontSize: 20),
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Funzione per abbreviare l'email se è troppo lunga
+  String _abbreviateEmail(String email) {
+    if (email.length > 30) {
+      return email.substring(0, 25) + '...'; // Abbrevia l'email e aggiunge puntini di sospensione
+    } else {
+      return email; // Restituisce l'email originale se non è troppo lunga
+    }
   }
 
   //Recupera l'immagine profilo dal database
@@ -456,6 +524,31 @@ class _ProfiloPersonaleState extends State<ProfiloPersonale> {
         );
       },
     );
+  }
+
+  void fetchEmail() async {
+    print('Inizio fetchEmail()');
+    User? user = FirebaseAuth.instance.currentUser;
+    print('Valore di user: $user'); // Stampa il valore di user
+    if (user != null) {
+      DatabaseReference userRef = FirebaseDatabase.instance.ref().child('users').child(user.uid).child('email');
+      userRef.onValue.listen((event) {
+        print('Listener degli eventi del database attivato');
+        DataSnapshot snapshot = event.snapshot;
+        dynamic value = snapshot.value;
+        print('Snapshot: $value'); // Controlla il valore del snapshot
+        if (value != null && value is String) {
+          setState(() {
+            email = value;
+          });
+          print('Email recuperata: $email');
+        } else {
+          print('Il campo "email" non è presente o è null nel database.');
+        }
+      }, onError: (error) {
+        print('Errore durante il recupero dell\'name: $error');
+      });
+    }
   }
 
   // Funzione per il sign-out
