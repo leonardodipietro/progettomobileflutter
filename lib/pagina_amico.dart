@@ -126,6 +126,13 @@ class _PaginaAmicoState extends State<PaginaAmico> {
                         CircleAvatar(
                           backgroundImage: NetworkImage(_profileImage),
                           radius: 40,
+                        )
+                      else
+                        CircleAvatar(
+                          // Imposta un'immagine di default se _profileImage è vuoto
+                          child: Icon(Icons.account_circle, size: 80),
+                          backgroundColor: Colors.grey, // Imposta un colore di sfondo grigio
+                          radius: 40,
                         ),
                       _buildCounter(context, 'Reviews', _reviewsCount), // Contatore per le recensioni
                       _buildCounter(context, 'Followers', _followersCount), // Contatore per i follower
