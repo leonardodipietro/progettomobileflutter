@@ -287,11 +287,9 @@ class _PaginaAmicoState extends State<PaginaAmico> {
 
 
   Future<void> selectFilter(BuildContext context) async {
-    BuildContext dialogContext;
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        dialogContext = context; // Memorizza il contesto corrente
         return AlertDialog(
           title: Text("Seleziona Filtro"),
           content: SingleChildScrollView(
@@ -300,24 +298,24 @@ class _PaginaAmicoState extends State<PaginaAmico> {
                 GestureDetector(
                   child: Text('Short Term'),
                   onTap: () async {
-                    applyFilter(dialogContext, 'short_term'); // Utilizza il contesto memorizzato
-                    Navigator.of(dialogContext).pop(); // Chiudi il popup
+                    applyFilter(context, 'short_term'); // Passa il contesto corrente
+                    Navigator.of(context).pop(); // Chiude la finestra di dialogo dopo l'azione
                   },
                 ),
                 Padding(padding: EdgeInsets.all(8.0)),
                 GestureDetector(
                   child: Text('Medium Term'),
                   onTap: () async {
-                    applyFilter(dialogContext, 'medium_term');
-                    Navigator.of(dialogContext).pop();
+                    applyFilter(context, 'medium_term'); // Passa il contesto corrente
+                    Navigator.of(context).pop(); // Chiude la finestra di dialogo dopo l'azione
                   },
                 ),
                 Padding(padding: EdgeInsets.all(8.0)),
                 GestureDetector(
                   child: Text('Long Term'),
-                  onTap: () async {
-                    applyFilter(dialogContext, 'long_term');
-                    Navigator.of(dialogContext).pop();
+                  onTap: () async{
+                    applyFilter(context, 'long_term'); // Passa il contesto corrente
+                    Navigator.of(context).pop(); // Chiude la finestra di dialogo dopo l'azione
                   },
                 ),
               ],
