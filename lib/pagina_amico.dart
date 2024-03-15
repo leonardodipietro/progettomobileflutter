@@ -9,6 +9,8 @@ import 'model/SpotifyModel.dart';
 import 'package:flutter/widgets.dart' as fw;
 import 'package:progettomobileflutter/BranoSelezionato.dart';
 import 'package:progettomobileflutter/ArtistaSelezionato.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_database/ui/firebase_animated_list.dart';
 
 class PaginaAmico extends StatefulWidget {
   final String userId;
@@ -41,6 +43,8 @@ class _PaginaAmicoState extends State<PaginaAmico> {
   List<Artist> _artistsToShow = []; // Dichiarazione di _artistsToShow
   ContentType _contentType = ContentType.tracks;
 
+  bool _isFollowing = false;
+
   @override
   void initState() {
     super.initState();
@@ -57,16 +61,58 @@ class _PaginaAmicoState extends State<PaginaAmico> {
       });
     });
     checkUserLoggedIn();
-    fetchCounters();
+    fetchCounters(widget.userId);
 
     // Inizializzazione di _firebaseViewModel
     _firebaseViewModel = FirebaseViewModel();
+
+    // Controlla se l'utente sta seguendo l'utente attuale al momento dell'inizializzazione della pagina
+    checkFollowingStatus();
   }
 
   @override
   void dispose() {
     _authSubscription.cancel();
     super.dispose();
+  }
+
+  // Funzione per controllare lo stato del seguimento dell'utente attuale
+  Future<void> checkFollowingStatus() async {
+    String currentUserUid = FirebaseAuth.instance.currentUser?.uid ?? '';
+
+    if (currentUserUid.isNotEmpty) {
+      bool isFollowing = await _firebaseViewModel.isCurrentUserFollowing(widget.userId, currentUserUid);
+
+      setState(() {
+        _isFollowing = isFollowing;
+      });
+
+      print('Stato del seguimento: $_isFollowing');
+    }
+  }
+
+  // Funzione per gestire il click sul pulsante "Segui"
+  void handleFollowButtonClicked() {
+    setState(() {
+      _isFollowing = !_isFollowing; // Cambia lo stato del seguimento
+    });
+
+    String currentUserUid = FirebaseAuth.instance.currentUser?.uid ?? '';
+
+    // Aggiorna lo stato su Firebase in base alla tua logica di aggiunta/rimozione dai follower
+    if (_isFollowing) {
+      // Aggiungi l'utente ai tuoi follower su Firebase
+      _firebaseViewModel.addFollower(widget.userId, currentUserUid);
+      incrementFollowersCounter(widget.userId);
+      print('Tu hai iniziato a seguire l\'utente con ID: ${widget.userId}');
+      print('L\'utente con ID ${widget.userId} è stato aggiunto ai tuoi following');
+    } else {
+      // Rimuovi l'utente dai tuoi follower su Firebase
+      _firebaseViewModel.removeFollower(widget.userId, currentUserUid);
+      decrementFollowersCounter(widget.userId);
+      print('Tu hai smesso di seguire l\'utente con ID: ${widget.userId}');
+      print('L\'utente con ID ${widget.userId} è stato rimosso dai tuoi following');
+    }
   }
 
   // Funzione per verificare se l'utente è già autenticato
@@ -88,11 +134,9 @@ class _PaginaAmicoState extends State<PaginaAmico> {
   }
 
   // Funzione per recuperare i contatori dal database
-  void fetchCounters() {
-    User? user = FirebaseAuth.instance.currentUser;
-    if (user != null) {
+  void fetchCounters(String userId) {
       try {
-        DatabaseReference counterRef = FirebaseDatabase.instance.ref().child('users').child(user.uid);
+        DatabaseReference counterRef = FirebaseDatabase.instance.ref().child('users').child(userId);
         counterRef.onValue.listen((event) {
           DataSnapshot snapshot = event.snapshot;
           dynamic counters = snapshot.value;
@@ -101,6 +145,7 @@ class _PaginaAmicoState extends State<PaginaAmico> {
               _reviewsCount = counters['reviews counter'] ?? 0;
               _followersCount = counters['followers counter'] ?? 0;
               _followingCount = counters['following counter'] ?? 0;
+              print('Contatori: Reviews=$_reviewsCount, Followers=$_followersCount, Following=$_followingCount');
             });
           }
         }, onError: (error) {
@@ -109,17 +154,62 @@ class _PaginaAmicoState extends State<PaginaAmico> {
       } catch (error) {
         print('Errore durante il recupero dei contatori: $error');
       }
+  }
+
+  // Funzione che incrementa followers counter di userId (amico cercato)
+  Future<void> incrementFollowersCounter(String userId) async {
+    DatabaseReference counterRef = FirebaseDatabase.instance
+        .ref()
+        .child('users')
+        .child(userId)
+        .child('followers counter');
+
+    try {
+      DataSnapshot snapshot = await counterRef.once().then((event) => event.snapshot);
+      int currentCount = snapshot.value as int;
+      int newCount = currentCount + 1;
+      counterRef.set(newCount);
+      print('Contatore dei followers incrementato per l\'utente con ID $userId');
+    } catch (error) {
+      print('Errore durante l\'incremento del contatore dei followers per l\'utente con ID $userId: $error');
     }
   }
+
+  // Funzione che decrementa followers counter di userId (amico cercato)
+  Future<void> decrementFollowersCounter(String userId) async {
+    DatabaseReference counterRef = FirebaseDatabase.instance
+        .ref()
+        .child('users')
+        .child(userId)
+        .child('followers counter');
+
+    try {
+      DataSnapshot snapshot = await counterRef.once().then((event) => event.snapshot);
+      int currentCount = snapshot.value as int;
+      int newCount = currentCount - 1;
+      counterRef.set(newCount);
+      print('Contatore dei followers decrementato per l\'utente con ID $userId');
+    } catch (error) {
+      print('Errore durante il decremento del contatore dei followers per l\'utente con ID $userId: $error');
+    }
+  }
+
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          _name,
-          style: TextStyle(fontSize: 20),
-        ), // Utilizza il nome recuperato come titolo dell'AppBar
+        title: Row(
+          children: [
+            Expanded(
+              child: Text(_name),
+            ),
+            ElevatedButton(
+              onPressed: handleFollowButtonClicked,
+              child: Text(_isFollowing ? 'Segui già' : 'Segui'), // Cambia il testo in base allo stato del seguimento
+            ),
+          ],
+        ),
       ),
       body: FutureBuilder(
         future: _userDataFuture,
@@ -285,7 +375,7 @@ class _PaginaAmicoState extends State<PaginaAmico> {
     );
   }
 
-
+  // Gestisce la selezione del filtro temporale
   Future<void> selectFilter(BuildContext context) async {
     showDialog(
       context: context,
@@ -326,6 +416,7 @@ class _PaginaAmicoState extends State<PaginaAmico> {
     );
   }
 
+  // Applica il filtro temporale scelto
   Future<void> applyFilter(BuildContext context, String newFilter) async {
     showDialog(
       context: context,
@@ -335,10 +426,10 @@ class _PaginaAmicoState extends State<PaginaAmico> {
     // Utilizza widget.userId per ottenere lo userId necessario
     String userId = widget.userId;
 
-    // Aggiungi lo userId necessario alla funzione fetchTopTracksFriend
+    // Chiamata per recuperare i brani
     await _firebaseViewModel.fetchTopTracksFriend(userId, newFilter);
 
-    // Aggiungi lo userId necessario alla funzione fetchTopArtistsFriend
+    // Chiamata per recuperare gli artisti
     await _firebaseViewModel.fetchTopArtistsFriend(userId, newFilter);
 
     setState(() {
@@ -347,22 +438,27 @@ class _PaginaAmicoState extends State<PaginaAmico> {
     });
   }
 
+  // Gestisce il click su Top Tracks
   Future<void> handleTrackButtonClicked(BuildContext context) async {
     print("Handle track button clicked chiamata");
     // Utilizza widget.userId per ottenere lo userId necessario
     String userId = widget.userId;
+
     await _firebaseViewModel.fetchTopTracksFriend(userId, filter);
+
     setState(() {
       _contentType = ContentType.tracks;
       _tracksToShow= _firebaseViewModel.tracksFromDb;
     });
   }
 
+  // Gestisce il click su Top Artist
   Future<void> handleArtistButtonClicked(BuildContext context) async {
     // Utilizza widget.userId per ottenere lo userId necessario
     String userId = widget.userId;
-    print("Handle artist button clicked chiamata");
+
     await _firebaseViewModel.fetchTopArtistsFriend(userId, filter);
+
     setState(() {
       _contentType = ContentType.artists;
       _artistsToShow= _firebaseViewModel.artistsFromDb;
