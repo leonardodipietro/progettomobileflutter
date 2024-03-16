@@ -9,9 +9,9 @@ import 'model/SpotifyModel.dart';
 import 'package:flutter/widgets.dart' as fw;
 import 'package:progettomobileflutter/BranoSelezionato.dart';
 import 'package:progettomobileflutter/ArtistaSelezionato.dart';
-import 'ReviewsList.dart';
-import 'FollowersList.dart';
-import 'FollowingList.dart';
+import 'amico_reviews.dart';
+import 'amico_followers.dart';
+import 'amico_following.dart';
 
 class PaginaAmico extends StatefulWidget {
   final String userId;
@@ -530,19 +530,19 @@ class _PaginaAmicoState extends State<PaginaAmico> {
   void _navigateToReviews() {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => ReviewsList()),
+      MaterialPageRoute(builder: (context) => amicoReviewsList(widget.userId)),
     );
   }
   void _navigateToFollowers() {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => FollowersList()),
+      MaterialPageRoute(builder: (context) => amicoFollowersList(widget.userId)),
     );
   }
   void _navigateToFollowing() {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => FollowingList()),
+      MaterialPageRoute(builder: (context) => amicoFollowingList(widget.userId)),
     );
   }
 }
