@@ -43,6 +43,7 @@ class NotifichePageState extends State<NotifichePage> {
     super.initState();
     currentUser = FirebaseAuth.instance.currentUser!;
     startFollowerListener();
+    startReviewListener();
   }
 
   void addNewFollowerNotification(String followerId, bool isFollowing) {
@@ -300,6 +301,105 @@ class NotifichePageState extends State<NotifichePage> {
     }
   }
 
+  void startReviewListener() {
+    FirebaseDatabase.instance
+        .ref()
+        .child('reviews')
+        .onChildAdded
+        .listen((event) {
+      // Ottieni l'ID della recensione
+      String reviewId = event.snapshot.key ?? "";
+
+      // Ottieni le informazioni sulla recensione in modo asincrono
+      getReviewData(reviewId); // Passa l'ID della recensione invece dell'ID del follower
+    });
+
+    FirebaseDatabase.instance
+        .ref()
+        .child('users')
+        .child(currentUser.uid)
+        .child('following')
+        .onChildRemoved
+        .listen((event) {
+      String removedUserId = event.snapshot.key ?? "";
+      removeReviewNotifications(removedUserId);
+    });
+  }
+
+  void removeReviewNotifications(String reviewerId) {
+    setState(() {
+      notifiche.removeWhere((notifica) =>
+      notifica.tipo == TipoNotifica.nuovaRecensione &&
+          notifica.followerId == reviewerId);
+    });
+  }
+
+  void getReviewData(String followingId) async {
+    DatabaseReference reviewRef = FirebaseDatabase.instance
+        .ref()
+        .child('reviews')
+        .child(followingId);
+    DataSnapshot reviewSnapshot = await reviewRef.once().then((event) => event.snapshot);
+    Map<dynamic, dynamic>? reviewData = reviewSnapshot.value as Map<dynamic, dynamic>?;
+
+    if (reviewData != null) {
+      String reviewerId = reviewData['userId'] ?? "";
+      String trackId = reviewData['trackId'] ?? "";
+
+      DatabaseReference trackRef = FirebaseDatabase.instance
+          .ref()
+          .child('tracks')
+          .child(trackId);
+      DataSnapshot trackSnapshot = await trackRef.once().then((event) => event.snapshot);
+      Map<dynamic, dynamic>? trackData = trackSnapshot.value as Map<dynamic, dynamic>?;
+
+      if (trackData != null) {
+        String trackName = trackData['name'] ?? "";
+
+        DataSnapshot followingSnapshot = await FirebaseDatabase.instance
+            .ref()
+            .child('users')
+            .child(currentUser.uid)
+            .child('following')
+            .child(reviewerId)
+            .once().then((event) => event.snapshot);
+        bool isFollowing = followingSnapshot.exists;
+
+        if (isFollowing) {
+          DatabaseReference reviewerRef = FirebaseDatabase.instance
+              .ref()
+              .child('users')
+              .child(reviewerId);
+          DataSnapshot reviewerSnapshot = await reviewerRef.once().then((event) => event.snapshot);
+          Map<dynamic, dynamic>? reviewerData = reviewerSnapshot.value as Map<dynamic, dynamic>?;
+
+          if (reviewerData != null) {
+            String reviewerName = reviewerData['name'] ?? "";
+            String reviewerProfileImage = reviewerData['profile image'] ?? "";
+
+            String? immagineProfilo;
+            if (reviewerProfileImage.isNotEmpty) {
+              immagineProfilo = reviewerProfileImage;
+            }
+
+            setState(() {
+              notifiche.add(
+                Notifica(
+                  tipo: TipoNotifica.nuovaRecensione,
+                  mittente: reviewerName,
+                  followerId: reviewerId,
+                  testo: "ha scritto una nuova recensione della canzone \"$trackName\"",
+                  immagineProfilo: immagineProfilo,
+                  immagineDefault: Icons.account_circle,
+                  isFollowing: isFollowing,
+                ),
+              );
+            });
+          }
+        }
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -321,15 +421,17 @@ class NotifichePageState extends State<NotifichePage> {
             ),
             title: Text(
                 '${notifiche[index].mittente} ${notifiche[index].testo}'),
-            trailing: ElevatedButton(
-              onPressed: () {
-                setState(() {
-                  // Cambia lo stato di follow/unfollow
-                  toggleFollowStatus(notifiche[index].followerId, index);
-                });
-              },
-              child: Text(notifiche[index].isFollowing ? "Unfollow" : "Follow"),
-            ),
+            trailing: notifiche[index].tipo == TipoNotifica.nuovoFollower
+                ? ElevatedButton(
+                    onPressed: () {
+                      setState(() {
+                        // Cambia lo stato di follow/unfollow
+                        toggleFollowStatus(notifiche[index].followerId, index);
+                      });
+                    },
+                    child: Text(notifiche[index].isFollowing ? "Unfollow" : "Follow"),
+                  )
+                : null,
           );
         },
       ),
