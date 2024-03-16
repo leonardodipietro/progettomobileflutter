@@ -229,6 +229,7 @@ class _BranoSelezionatoState extends State<BranoSelezionato> {
                                       title: const Text('Elimina'),
                                       onTap: () {
                                         _recensioneViewModel.deleteRecensione(recensione.commentId);
+                                        _recensioneViewModel.deleteRecensioneFromUser(recensione.commentId, recensione.userId);
                                         Navigator.of(context).pop(); // Chiudi il dialogo dopo il tap
                                       },
                                     ),

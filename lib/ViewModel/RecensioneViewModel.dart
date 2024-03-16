@@ -45,23 +45,23 @@ class RecensioneViewModel with ChangeNotifier {
       print("Recensione salvata con successo.");
     })
         .catchError((error) {
-      // Gestisci qui l'errore
+
     });
 
-    // Nascondi l'EditText o il widget di input qui
+
   }
 
 
 
   void addCommentIdToTrack(String commentId, String trackId) {
     final DatabaseReference database = FirebaseDatabase.instance.ref();
-    database.child("tracks").child(trackId).child("comments").push().set(
+    database.child("tracks").child(trackId).child("reviews").push().set(
         commentId);
   }
 
   void addCommentIdToUser(String commentId, String userId) {
     final DatabaseReference database = FirebaseDatabase.instance.ref();
-    database.child("users").child(userId).child("comments").push().set(
+    database.child("users").child(userId).child("reviews").push().set(
         commentId);
   }
   Future<void> updateRecensione(String commentId, String userId, String trackId, String commentContent, String artistId) async {
@@ -346,6 +346,22 @@ class RecensioneViewModel with ChangeNotifier {
     final database = FirebaseDatabase.instance.ref();
     final reviewRef = database.child('reviews');
     reviewRef.child(commentId).remove();
+  }
+  Future<void> deleteRecensioneFromUser(String commentId, String userId) async {
+    final DatabaseReference database = FirebaseDatabase.instance.ref();
+    final DatabaseReference userReviewsRef = database.child("users").child(userId).child("reviews");
+
+    // Ottieni tutte le recensioni dell'utente
+    final snapshot = await userReviewsRef.get();
+
+    // Cerca attraverso le recensioni per trovare l'ID della recensione da rimuovere
+    for (final child in snapshot.children) {
+      if (child.value == commentId) {
+        // Quando trovi una corrispondenza, rimuovi quella recensione specifica
+        await child.ref.remove();
+        break; // Interrompi il ciclo se hai trovato e rimosso l'ID della recensione
+      }
+    }
   }
 
 
