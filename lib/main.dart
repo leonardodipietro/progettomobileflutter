@@ -23,6 +23,7 @@ import 'package:progettomobileflutter/ArtistaSelezionato.dart';
 import 'package:flutter/material.dart' hide Image;//Utilizza un alias per non avere conflitto con l'Image di SpotifyModel
 import 'package:flutter/widgets.dart' as fw;
 import 'model/themes.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 //import 'package:google_sign_in/google_sign_in.dart';
 
 void main() async {
@@ -348,6 +349,43 @@ class _MyHomePageState extends State<MyHomePage> {
         SpotifyConfig.redirectUri
     );
     _initUniLinks();
+
+    // Carica le preferenze salvate se presenti, altrimenti imposta valori predefiniti
+    loadSavedPreferences();
+  }
+
+  Future<void> savePreferences(String selectedFilter, ContentType selectedContentType) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.setString('selectedFilter', selectedFilter); // Salva il filtro selezionato
+    prefs.setInt('selectedContentType', selectedContentType.index);
+    print('Preferences saved successfully.');
+    print('Saving preferences: Filter=$selectedFilter, ContentType=$selectedContentType');
+  }
+
+  void loadSavedPreferences() async {
+    print('Loading saved preferences...');
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    // Controlla se ci sono preferenze salvate
+    if (prefs.containsKey('selectedFilter') && prefs.containsKey('selectedContentType')) {
+      String selectedFilter = prefs.getString('selectedFilter')!;
+      ContentType selectedContentType = ContentType.values[prefs.getInt('selectedContentType')!];
+
+      print('Loaded preferences: Filter=$selectedFilter, ContentType=$selectedContentType');
+
+      // Carica le preferenze salvate
+      applyFilter(selectedFilter); // Applica il filtro salvato
+      setState(() {
+        _contentType = selectedContentType; // Imposta il tipo di contenuto salvato
+      });
+    } else {
+      // Se non ci sono preferenze salvate, imposta valori predefiniti
+      print('No saved preferences found.');
+      applyFilter('short_term'); // Imposta il filtro predefinito
+      setState(() {
+        _contentType = ContentType.tracks; // Imposta il tipo di contenuto predefinito
+      });
+    }
   }
 
   // Funzione per verificare se l'utente è già autenticato
@@ -558,7 +596,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 GestureDetector(
                   child: Text('Short Term'),
                   onTap: () async {
-
+                    await savePreferences('short_term', _contentType); // Salva il filtro selezionato
                     applyFilter('short_term');
                     Navigator.of(context).pop(); // Chiude la finestra di dialogo dopo l'azione
                   },
@@ -576,7 +614,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 GestureDetector(
                   child: Text('Medium Term'),
                   onTap: () async {
-
+                    await savePreferences('medium_term', _contentType); // Salva il filtro selezionato
                     applyFilter('medium_term');
                     Navigator.of(context).pop(); // Chiude la finestra di dialogo dopo l'azione
                   },
@@ -593,6 +631,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 GestureDetector(
                   child: Text('Long Term'),
                   onTap: () async{
+                    await savePreferences('long_term', _contentType); // Salva il filtro selezionato
                     applyFilter('long_term');
                     Navigator.of(context).pop(); // Chiude la finestra di dialogo dopo l'azione
                   },
@@ -632,6 +671,7 @@ class _MyHomePageState extends State<MyHomePage> {
   Future<void> handleTrackButtonClicked() async {
     print("Handle track button clicked chiamata");
     final userId = FirebaseAuth.instance.currentUser?.uid;
+    await savePreferences('tracks', _contentType); // Salva il tipo di contenuto selezionato
     await _firebaseViewModel.fetchTopTracksFromFirebase(filter);
     setState(() {
       _contentType = ContentType.tracks;
@@ -641,6 +681,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   Future<void> handleArtistButtonClicked() async {
     final userId= FirebaseAuth.instance.currentUser?.uid;
+    await savePreferences('artists', _contentType); // Salva il tipo di contenuto selezionato
     print("Handle artist button clicked chiamata");
     await _firebaseViewModel.fetchTopArtistsFromFirebase(filter);
     setState(() {
