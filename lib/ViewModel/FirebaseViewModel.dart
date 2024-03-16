@@ -59,6 +59,82 @@ class FirebaseViewModel extends ChangeNotifier{
     }
   }
 
+  // Controlla se io seguo o meno l'utente che ho cercato
+  Future<bool> isCurrentUserFollowing(String userId, String currentUserUid) async {
+    try {
+      DataSnapshot snapshot = (await FirebaseDatabase.instance
+          .reference()
+          .child('users')
+          .child(userId)
+          .child('followers')
+          .child(currentUserUid)
+          .once()).snapshot;
+
+      bool isFollowing = snapshot.value != null;
+
+      print('Il tuo ID è presente tra i follower: $isFollowing');
+
+      return isFollowing;
+    } catch (error) {
+      print('Errore durante il controllo del seguace: $error');
+      return false;
+    }
+  }
+
+  // Aggiunge me ai suoi follower e lui ai miei following se inizio a seguire
+  Future<void> addFollower(String userId, String currentUserUid) async {
+    try {
+      // Io mi aggiungo nei suoi followers
+      await FirebaseDatabase.instance
+          .reference()
+          .child('users')
+          .child(userId)
+          .child('followers')
+          .child(currentUserUid)
+          .set(true);
+
+      // Lui si aggiunge ai miei following
+      await FirebaseDatabase.instance
+          .reference()
+          .child('users')
+          .child(currentUserUid)
+          .child('following')
+          .child(userId)
+          .set(true);
+
+      print('Utente aggiunto ai follower con successo');
+    } catch (error) {
+      print('Errore durante l\'aggiunta dell\'utente ai follower: $error');
+    }
+  }
+
+  // Toglie me dai suoi follower e lui ai miei following se smetto di seguire
+  Future<void> removeFollower(String userId, String currentUserUid) async {
+    try {
+      // Io mi tolgo dai suoi followers
+      await FirebaseDatabase.instance
+          .reference()
+          .child('users')
+          .child(userId)
+          .child('followers')
+          .child(currentUserUid)
+          .remove();
+
+      // Lui si toglie dai miei following
+      await FirebaseDatabase.instance
+          .reference()
+          .child('users')
+          .child(currentUserUid)
+          .child('following')
+          .child(userId)
+          .remove();
+
+      print('Utente rimosso dai follower con successo');
+    } catch (error) {
+      print('Errore durante la rimozione dell\'utente dai follower: $error');
+    }
+  }
+
 
 
 
