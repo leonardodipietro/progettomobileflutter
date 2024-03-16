@@ -2,14 +2,14 @@ import 'package:progettomobileflutter/ViewModel/RecensioneViewModel.dart';
 import 'package:progettomobileflutter/model/Recensione.dart';
 import 'package:progettomobileflutter/model/SpotifyModel.dart';
 import 'package:progettomobileflutter/model/SpotifyModel.dart' as Spotify;
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart' as fw;
+import 'package:progettomobileflutter/BranoSelezionato.dart';
 
 class ArtistaSelezionato extends StatefulWidget {
   final Spotify.Artist artist;
 
-  const ArtistaSelezionato({Key? key, required this.artist}) : super(key: key);
+  const ArtistaSelezionato({super.key, required this.artist});
 
   @override
   _ArtistaSelezionatoState createState() => _ArtistaSelezionatoState();
@@ -17,7 +17,7 @@ class ArtistaSelezionato extends StatefulWidget {
 
 class _ArtistaSelezionatoState extends State<ArtistaSelezionato> {
   List<Track> _tracks=[];
-  List<Recensione> _recensioni = [] ;
+  final List<Recensione> _recensioni = [] ;
   final RecensioneViewModel _recensioneViewModel = RecensioneViewModel();
   @override
   void initState() {
@@ -51,51 +51,65 @@ class _ArtistaSelezionatoState extends State<ArtistaSelezionato> {
             widget.artist.images.isNotEmpty
                 ? fw.Image.network(
                     widget.artist.images[0].url,
-                    height: 200,
-                    width: 200, // Utilizza l'alias fw per Image di Flutter
+                    height: 150,
+                    width: 150, // Utilizza l'alias fw per Image di Flutter
                   )
                 : Container(height: 250, width: 250, color: Colors.grey),
-            SizedBox(height: 50),
-            Text(
+            const SizedBox(height: 10),
+            const Text(
               "recensioni",
-              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 30),
             ),
             Expanded(
 
-              child: ListView.builder(
-                itemCount: _tracks.length,
-                itemBuilder: (context, index) {
-                  final track = _tracks[index];
-                  return InkWell(
-                    onTap: () {
-                      print("Traccia selezionata: ${track.name}");
-                    },
-                    child: Container(
-                      height: 120, // Fornisce una dimensione esplicita
-                      child: Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
+                child: ListView.builder(
+                  itemCount: _tracks.length,
+                  itemBuilder: (context, index) {
+                    final track = _tracks[index];
+                    return InkWell(
+                      onTap: () {
+                        print("Traccia selezionata: ${track.name}");
+                        _navigateToBranoSelezionato(track);
+                      },
+                      child: SizedBox(
+                        height: 120, // Fornisce una dimensione esplicita
+                        child: Row( // Usa Row invece di Column
                           children: [
+                            // Immagine a sinistra
                             if (track.album.images.isNotEmpty)
-                              fw.Image.network(track.album.images[0].url, height: 100, width: 100)
+                              fw.Image.network(track.album.images[0].url, height: 80, width: 80)
                             else
                               Container(height: 100, width: 100, color: Colors.grey),
-                            Text(
-                              track.name,
-                              overflow: TextOverflow.ellipsis,
+                            const SizedBox(width: 10), // Aggiunge spazio tra l'immagine e il testo
+                            // Testo (nome del brano) a destra
+                            Expanded( // Usa Expanded per far sì che il testo occupi lo spazio rimanente
+                              child: Text(
+                                track.name,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle( fontSize: 20
+                                  // Aggiungi qui eventuali stili per il testo
+                                ),
+                              ),
                             ),
                           ],
                         ),
                       ),
-                    ),
-                  );
-                },
-              )
+                    );
+                  },
+                )
+
 
             )
           ],
     ),
     ),
+    );
+  }
+
+  void _navigateToBranoSelezionato(Spotify.Track track) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => BranoSelezionato(track: track )),
     );
   }
 

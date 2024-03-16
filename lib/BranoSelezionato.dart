@@ -1,36 +1,43 @@
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:progettomobileflutter/model/Recensione.dart';
 import 'package:progettomobileflutter/model/SpotifyModel.dart' as Spotify;
 import 'package:flutter/widgets.dart' as fw;
 import 'package:progettomobileflutter/ViewModel/RecensioneViewModel.dart';
-import 'package:progettomobileflutter/model/Recensione.dart';
 import 'model/Utente.dart';
-
+import 'package:progettomobileflutter/ArtistaSelezionato.dart';
+import 'package:progettomobileflutter/model/Risposta.dart';
+import 'package:progettomobileflutter/ViewModel/RisposteViewModel.dart';
 
 class BranoSelezionato extends StatefulWidget {
   final Spotify.Track track;
+
   //final Spotify.Artist artist;
   /*final FirebaseAuth _auth = FirebaseAuth.instance;
   User? user = FirebaseAuth.instance.currentUser;*/
 
-
-  const BranoSelezionato({Key? key, required this.track}) : super(key: key);
+  const BranoSelezionato({super.key, required this.track});
 
   @override
   _BranoSelezionatoState createState() => _BranoSelezionatoState();
 }
 
-
 class _BranoSelezionatoState extends State<BranoSelezionato> {
-
   final TextEditingController _controller = TextEditingController();
-  Utente? utente;
-  List<Recensione> _recensioni = [] ;
-  final RecensioneViewModel _recensioneViewModel = RecensioneViewModel(); // Dichiarato qui
 
+  Utente? utente;
+  List<Recensione> _recensioni = [];
+  List<Risposta> _risposte =[];
+  final RecensioneViewModel _recensioneViewModel = RecensioneViewModel();
+  final RisposteViewModel _risposteViewModel = RisposteViewModel();
+  Map<String, Utente> usersMap = {};
+  late Spotify.Artist artist;
+  String? _replyingToCommentId;
+  String _textFieldHint = 'Scrivi una recensione...'; // Valore di default
+  String? _selectedCommentIdForReplies;
+  //TextEditingController _editingController = TextEditingController();
+  String? _editingCommentId; // Identificativo per la recensione che stai modificando,
 
   @override
   void initState() {
@@ -38,14 +45,60 @@ class _BranoSelezionatoState extends State<BranoSelezionato> {
     _fetchCurrentUser();
     //RecensioneViewModel _recensioneViewModel = RecensioneViewModel();
     _loadRecensioni();
-
   }
+
+  void _startReplyingToComment(String? commentId) {
+    if (_replyingToCommentId == commentId) {
+      // Se l'utente ripreme lo stesso bottone di risposta, considera come l'azione di annullamento della risposta
+      setState(() {
+        _replyingToCommentId = null;
+        _textFieldHint =
+            'Scrivi una recensione...'; // Reimposta al valore di default
+      });
+    } else {
+      setState(() {
+        _replyingToCommentId = commentId;
+        _textFieldHint =
+            'Scrivi un commento...'; // Cambia l'hint per la risposta
+      });
+    }
+
+    // Opzionale: Sposta il focus sul campo di testo
+    FocusScope.of(context).requestFocus(FocusNode());
+  }
+  //print("Risposte per la recensione $commentIdFather: $risposte");
+  // print("Recensioni caricate: ${_risposte.length}");
+  void _fetchRispostePerRecensione(String commentIdFather) {
+    print("Risposte per la recensione $commentIdFather: $_risposte");
+    _risposteViewModel.fetchCommentFromRecensione(commentIdFather).then((commentiList) {
+      setState(() {
+        // Aggiorna lo stato del tuo widget con la nuova lista di commenti
+        _risposte = commentiList;
+        print("Recensioni caricate: ${_risposte.length}");
+      });
+    }).catchError((error) {
+      // Gestione degli errori
+      print("Errore nel recuperare le risposte: $error");
+    });
+  }
+
+
   void _loadRecensioni() {
     print("Pre-chiamata recensione");
     _recensioneViewModel.fetchRecensioniForTrack(widget.track.id, () {
       setState(() {
         _recensioni = List.from(_recensioneViewModel.recensioniList);
         print("Recensioni caricate: ${_recensioni.length}");
+      });
+
+      final userIds =
+          _recensioni.map((recensione) => recensione.userId).toSet().toList();
+      _recensioneViewModel
+          .fetchUsers(userIds)
+          .then((Map<String, Utente> newUsersMap) {
+        setState(() {
+          usersMap = newUsersMap;
+        });
       });
     });
   }
@@ -59,27 +112,26 @@ class _BranoSelezionatoState extends State<BranoSelezionato> {
     }
   }
 
-
   @override
   void dispose() {
     // Pulisce il controller quando il widget viene rimosso dall'albero dei widget.
     _controller.dispose();
     super.dispose();
   }
- /* void _navigateToArtistaSelezionato(Spotify.Artist artist)  {
+
+  /* void _navigateToArtistaSelezionato(Spotify.Artist artist)  {
     Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => ArtistaSelezionato(artist: artist )),
     );
   }*/
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-            widget.track.name), // Mostra il nome della traccia come titolo
+        title:
+            Text(widget.track.name), // Mostra il nome della traccia come titolo
       ),
       body: Padding(
         padding: const EdgeInsets.all(8.0),
@@ -87,34 +139,49 @@ class _BranoSelezionatoState extends State<BranoSelezionato> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
             Row(
-              crossAxisAlignment: CrossAxisAlignment.start, // Allinea gli elementi della riga in alto
+              crossAxisAlignment: CrossAxisAlignment.start,
+              // Allinea gli elementi della riga in alto
               children: <Widget>[
                 // Immagine dell'album
                 widget.track.album.images.isNotEmpty
                     ? fw.Image.network(
-                  widget.track.album.images[0].url,
-                  height: 150,
-                  width: 150, // Utilizza l'alias fw per Image di Flutter
-                )
+                        widget.track.album.images[0].url,
+                        height: 150,
+                        width: 150, // Utilizza l'alias fw per Image di Flutter
+                      )
                     : Container(height: 150, width: 150, color: Colors.grey),
-                SizedBox(width: 10),
+                const SizedBox(width: 10),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
                       InkWell(
                         onTap: () {
-
-                          print("Testo cliccato");
+                          _recensioneViewModel
+                              .retrieveArtistById(widget.track.artists.first.id)
+                              .then((artist) {
+                            if (artist != null) {
+                              _navigateToArtistaSelezionato(artist);
+                            } else {
+                              print("nessun artista trovato");
+                              // Gestisci il caso in cui l'artista non è stato trovato o c'è stato un errore
+                            }
+                          });
                         },
-                        child: Text(widget.track.artists.map((artist) => artist.name).join(", "),
-                          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                          overflow: TextOverflow.ellipsis,),
+                        child: Text(
+                          widget.track.artists
+                              .map((artist) => artist.name)
+                              .join(", "),
+                          style: const TextStyle(
+                              fontSize: 20, fontWeight: FontWeight.bold),
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
-                      SizedBox(height: 15), // Spaziatura verticale tra il nome dell'artista e il nome dell'album
+                      const SizedBox(height: 15),
+                      // Spaziatura verticale tra il nome dell'artista e il nome dell'album
                       Text(
                         widget.track.album.name,
-                        style: TextStyle(fontSize: 18),
+                        style: const TextStyle(fontSize: 18),
                         overflow: TextOverflow.ellipsis,
                       ),
                     ],
@@ -122,8 +189,8 @@ class _BranoSelezionatoState extends State<BranoSelezionato> {
                 ),
               ],
             ),
-            SizedBox(height: 20), // Spaziatura verticale
-            Text(
+            const SizedBox(height: 20), // Spaziatura verticale
+            const Text(
               'Recensioni:',
               style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
             ),
@@ -132,92 +199,234 @@ class _BranoSelezionatoState extends State<BranoSelezionato> {
                 itemCount: _recensioni.length,
                 itemBuilder: (context, index) {
                   final recensione = _recensioni[index];
-                  return InkWell(
-                    onLongPress: () {
-                      // Mostra un AlertDialog quando l'elemento viene tenuto premuto
-                      showDialog(
-                        context: context,
-                        builder: (BuildContext context) {
-                          return AlertDialog(
-                            title: Text("Seleziona un'azione"),
-                            content: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: <Widget>[
-                                ListTile(
-                                  title: Text('Modifica'),
-                                  onTap: () {
+                  final utente = usersMap[recensione.userId];
+                  bool mostraRisposte = _selectedCommentIdForReplies == recensione.commentId;
 
-                                    Navigator.of(context).pop(); // Chiudi il dialogo dopo il tap
-                                  },
+                  return Column(
+                    children: [
+                      InkWell(
+                        onLongPress: () {
+                          showDialog(
+                            context: context,
+                            builder: (BuildContext context) {
+                              return AlertDialog(
+                                title: const Text("Seleziona un'azione"),
+                                content: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: <Widget>[
+                                    ListTile(
+                                      title: const Text('Modifica'),
+                                      onTap: () {
+                                        Navigator.of(context).pop();// Chiudi il dialogo dopo il tapù
+                                        setState(() {
+                                          _controller.text = recensione.content; // Imposta il testo della recensione nella TextField
+                                          _editingCommentId = recensione.commentId; // Salva l'ID della recensione che stai modificando
+                                          _textFieldHint = 'Modifica la tua recensione...'; // Opzionale: aggiorna l'hint della TextField
+                                        });
+                                      },
+                                    ),
+                                    ListTile(
+                                      title: const Text('Elimina'),
+                                      onTap: () {
+                                        _recensioneViewModel.deleteRecensione(recensione.commentId);
+                                        Navigator.of(context).pop(); // Chiudi il dialogo dopo il tap
+                                      },
+                                    ),
+                                  ],
                                 ),
-                                ListTile(
-                                  title: Text('Elimina'),
-                                  onTap: () {
-                                    _recensioneViewModel.deleteRecensione(recensione.commentId);
-                                    Navigator.of(context).pop(); // Chiudi il dialogo dopo il tap
-                                  },
-                                ),
-                              ],
-                            ),
-                            actions: <Widget>[
-                              TextButton(
-                                child: Text("Annulla"),
-                                onPressed: () => Navigator.of(context).pop(),
-                              ),
-                            ],
+                                actions: <Widget>[
+                                  TextButton(
+                                    child: const Text("Annulla"),
+                                    onPressed: () => Navigator.of(context).pop(),
+                                  ),
+                                ],
+                              );
+                            },
                           );
                         },
-                      );
-                    },
-                    child: ListTile(
-                      title: Text(recensione.content),
-                      subtitle: Text("Scritta da: ${recensione.userId}"),
-                    ),
+                        child: ListTile(
+                          leading: utente?.profile_image != null
+                              ? Image.network(
+                            utente!.profile_image!,
+                            width: 40,
+                            height: 40,
+                            fit: BoxFit.cover,
+                          )
+                              : const CircleAvatar(
+                            child: Icon(Icons.account_circle),
+                          ),
+                          title: Text(recensione.content),
+                          subtitle: Text("Scritta da: ${utente?.name ?? 'Utente sconosciuto'}"),
+                          trailing: IconButton(
+                            icon: const Icon(Icons.reply),
+                            onPressed: () {
+                              _startReplyingToComment(recensione.commentId);
+                              if (!mostraRisposte) {
+                                _fetchRispostePerRecensione(recensione.commentId);
+                              }
+                              setState(() {
+                                _selectedCommentIdForReplies = mostraRisposte ? null : recensione.commentId;
+                              });
+                            },
+                          ),
+                        ),
+                      ),
+                      if (mostraRisposte)
+                        FutureBuilder<List<Risposta>>(
+                          future: _risposteViewModel.fetchCommentFromRecensione(recensione.commentId),
+                          builder: (context, snapshot) {
+                            if (snapshot.connectionState == ConnectionState.waiting) {
+                              return const CircularProgressIndicator();
+                            } else if (snapshot.hasError) {
+                              return Text("Errore nel caricamento delle risposte: ${snapshot.error}");
+                            } else if (snapshot.hasData && snapshot.data!.isNotEmpty) {
+                              return Padding(
+                                padding: const EdgeInsets.only(left: 20.0),
+                                child: ListView.builder(
+                                  shrinkWrap: true,
+                                  physics: NeverScrollableScrollPhysics(),
+                                  itemCount: snapshot.data!.length,
+                                  itemBuilder: (context, rispostaIndex) {
+                                    final risposta = snapshot.data![rispostaIndex];
+                                    final utenteRisposta = usersMap[risposta.userId];
+                                    return ListTile(
+                                      title: Text(risposta.answercontent),
+                                      subtitle: Text("Risposta di: ${utenteRisposta?.name ?? 'Utente sconosciuto'}"),
+                                      leading: utenteRisposta?.profile_image != null
+                                          ? Image.network(
+                                        utenteRisposta!.profile_image!,
+                                        width: 40,
+                                        height: 40,
+                                        fit: BoxFit.cover,
+                                      )
+                                          : const CircleAvatar(
+                                        child: Icon(Icons.account_circle),
+                                      ),
+                                      onLongPress: () {
+                                        // Mostra un AlertDialog quando l'utente mantiene premuta una risposta
+                                        showDialog(
+                                            context: context,
+                                            builder: (BuildContext context) {
+                                              return AlertDialog(
+                                                  title: Text("Vuoi cancellare questa risposta?"),
+                                                  actions: <Widget>[
+                                                    TextButton(
+                                                        child: Text("Annulla"),
+                                                        onPressed: () {
+                                                         Navigator.of(context).pop(); // Chiudi il dialogo
+                                                         },
+                                                      ),
+                                                    TextButton(
+                                                       child: Text("Elimina"),
+                                                       onPressed: () {
+                                                       // Chiama il metodo per cancellare la risposta
+                                                        _risposteViewModel.deleteRisposta(risposta.answerId);
+                                                       Navigator.of(context).pop(); // Chiudi il dialogo
+
+                                                       },
+                                                    ),
+                                                    ],
+                                              );
+                                            },
+                                        );
+                                    }
+
+                                    );
+                                  },
+                                ),
+                              );
+                            } else {
+                              return const Text("Nessuna risposta trovata.");
+                            }
+                          },
+                        ),
+                    ],
                   );
                 },
               ),
             ),
-
-          Row(
-            children: <Widget>[
-              Expanded(
-
-                child: TextField(
-                  controller: _controller,
-                  decoration: InputDecoration(
-                    hintText: 'Scrivi una recensione...',
-                    border: OutlineInputBorder(),
+            Row(
+              children: <Widget>[
+                Expanded(
+                  child: TextField(
+                    controller: _controller,
+                    decoration: InputDecoration(
+                      hintText: _textFieldHint,
+                      border: const OutlineInputBorder(),
+                    ),
                   ),
                 ),
-              ),
-              SizedBox(width: 10),
-              // Aggiungi uno spazio tra il TextField e il bottone
-              ElevatedButton(
-                onPressed: () {
-                  String commentContent = _controller.text;
-                  // Qui va la logica per l'invio della recensione
-                  print("siamo qui");
-                  print("AAAAABBB ${utente?.userId}");
-//e ${widget.track.id} e${commentContent} ");
-                  if(commentContent.isNotEmpty){
+                const SizedBox(width: 10),
+                // Aggiungi uno spazio tra il TextField e il bottone
+                ElevatedButton(
+                  onPressed: () {
+                    String content = _controller.text.trim();
+                    if (content.isNotEmpty) {
+                      if (_replyingToCommentId != null) {
+                        // Modalità risposta a un commento (utilizza `saveRisposta`)
+                        _risposteViewModel.saveRisposta(
+                          utente?.userId ?? "",
+                          _replyingToCommentId!,
+                          content,
+                        );
+                        _replyingToCommentId = null; // Resetta l'ID della risposta dopo l'invio
+                      } else if (_editingCommentId != null) {
+                        // Modalità modifica recensione (utilizza `updateRecensione`)
+                        _recensioneViewModel.updateRecensione(
+                          _editingCommentId!,
+                          utente?.userId ?? "",
+                          widget.track.id,
+                          content,
+                          widget.track.artists.map((artist) => artist.id).join(", "),
+                        );
+                        _editingCommentId = null; // Resetta l'ID della recensione in modifica dopo l'invio
+                      }  else {
+                        // Modalità recensione (utilizza il metodo esistente `saveRecensione`)
+                        _recensioneViewModel.saveRecensione(
+                          utente?.userId ?? "",
+                          widget.track.id,
+                          content,
+                          widget.track.artists.map((artist) => artist.id).join(", "),
+                        );
+                      }
 
-                  _recensioneViewModel.saveRecensione(
-                      utente?.userId, widget.track.id,commentContent, widget.track.artists.map((artist) => artist.id).join(", "));
-                  };
-                },
-                child: Text('Invia'),
-                style: ElevatedButton.styleFrom(
-                  padding: EdgeInsets.symmetric(
-                      vertical: 20.0),
+                      _controller.clear(); // Pulisci il campo di testo dopo l'invio
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 20.0),
+                  ),
+                  child: const Text('Invia'),
                 ),
-              ),
-            ],
-          ),
 
-
+              ],
+            ),
           ],
         ),
       ),
     );
   } //WIDGET BUILD
+
+  void _navigateToArtistaSelezionato(Spotify.Artist artist) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+          builder: (context) => ArtistaSelezionato(artist: artist)),
+    );
+  }
+
+  Future<Map<String, dynamic>?> fetchUserData(String userId) async {
+    try {
+      DatabaseReference reference =
+          FirebaseDatabase.instance.reference().child('users').child(userId);
+      DataSnapshot snapshot = (await reference.once()).snapshot;
+      Map<dynamic, dynamic>? userData =
+          snapshot.value as Map<dynamic, dynamic>?;
+
+      return userData?.cast<String, dynamic>(); // Cast a <String, dynamic>
+    } catch (e) {
+      print('Errore durante il recupero dei dati dell\'utente: $e');
+      return null; // Gestisci l'errore in modo appropriato
+    }
+  }
 }
