@@ -9,8 +9,9 @@ import 'model/SpotifyModel.dart';
 import 'package:flutter/widgets.dart' as fw;
 import 'package:progettomobileflutter/BranoSelezionato.dart';
 import 'package:progettomobileflutter/ArtistaSelezionato.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_database/ui/firebase_animated_list.dart';
+import 'ReviewsList.dart';
+import 'FollowersList.dart';
+import 'FollowingList.dart';
 
 class PaginaAmico extends StatefulWidget {
   final String userId;
@@ -39,7 +40,7 @@ class _PaginaAmicoState extends State<PaginaAmico> {
 
   String filter='short_term';
 
-  List<Track> _tracksToShow = []; // Dichiarazione di _tracksToShow
+  List<Spotify.Track> _tracksToShow = []; // Dichiarazione di _tracksToShow
   List<Artist> _artistsToShow = []; // Dichiarazione di _artistsToShow
   ContentType _contentType = ContentType.tracks;
 
@@ -104,12 +105,14 @@ class _PaginaAmicoState extends State<PaginaAmico> {
       // Aggiungi l'utente ai tuoi follower su Firebase
       _firebaseViewModel.addFollower(widget.userId, currentUserUid);
       incrementFollowersCounter(widget.userId);
+      incrementFollowingCounter(currentUserUid);
       print('Tu hai iniziato a seguire l\'utente con ID: ${widget.userId}');
       print('L\'utente con ID ${widget.userId} è stato aggiunto ai tuoi following');
     } else {
       // Rimuovi l'utente dai tuoi follower su Firebase
       _firebaseViewModel.removeFollower(widget.userId, currentUserUid);
       decrementFollowersCounter(widget.userId);
+      decrementFollowingCounter(currentUserUid);
       print('Tu hai smesso di seguire l\'utente con ID: ${widget.userId}');
       print('L\'utente con ID ${widget.userId} è stato rimosso dai tuoi following');
     }
@@ -175,6 +178,26 @@ class _PaginaAmicoState extends State<PaginaAmico> {
     }
   }
 
+  // Funzione che incrementa following counter di currentUserUid (io)
+  Future<void> incrementFollowingCounter(String userId) async {
+    String currentUserUid = FirebaseAuth.instance.currentUser?.uid ?? '';
+    DatabaseReference counterRef = FirebaseDatabase.instance
+        .ref()
+        .child('users')
+        .child(currentUserUid)
+        .child('following counter');
+
+    try {
+      DataSnapshot snapshot = await counterRef.once().then((event) => event.snapshot);
+      int currentCount = snapshot.value as int;
+      int newCount = currentCount + 1;
+      counterRef.set(newCount);
+      print('Contatore dei followers incrementato per l\'utente con ID $userId');
+    } catch (error) {
+      print('Errore durante l\'incremento del contatore dei followers per l\'utente con ID $userId: $error');
+    }
+  }
+
   // Funzione che decrementa followers counter di userId (amico cercato)
   Future<void> decrementFollowersCounter(String userId) async {
     DatabaseReference counterRef = FirebaseDatabase.instance
@@ -182,6 +205,26 @@ class _PaginaAmicoState extends State<PaginaAmico> {
         .child('users')
         .child(userId)
         .child('followers counter');
+
+    try {
+      DataSnapshot snapshot = await counterRef.once().then((event) => event.snapshot);
+      int currentCount = snapshot.value as int;
+      int newCount = currentCount - 1;
+      counterRef.set(newCount);
+      print('Contatore dei followers decrementato per l\'utente con ID $userId');
+    } catch (error) {
+      print('Errore durante il decremento del contatore dei followers per l\'utente con ID $userId: $error');
+    }
+  }
+
+  // Funzione che decrementa following counter di currentUserUid (io)
+  Future<void> decrementFollowingCounter(String userId) async {
+    String currentUserUid = FirebaseAuth.instance.currentUser?.uid ?? '';
+    DatabaseReference counterRef = FirebaseDatabase.instance
+        .ref()
+        .child('users')
+        .child(currentUserUid)
+        .child('following counter');
 
     try {
       DataSnapshot snapshot = await counterRef.once().then((event) => event.snapshot);
@@ -245,9 +288,12 @@ class _PaginaAmicoState extends State<PaginaAmico> {
                           backgroundColor: Colors.grey, // Imposta un colore di sfondo grigio
                           radius: 40,
                         ),
-                      _buildCounter(context, 'Reviews', _reviewsCount), // Contatore per le recensioni
-                      _buildCounter(context, 'Followers', _followersCount), // Contatore per i follower
-                      _buildCounter(context, 'Following', _followingCount), // Contatore per i seguiti
+                      _buildCounter(context, 'Reviews', _reviewsCount,
+                        _navigateToReviews,),
+                      _buildCounter(context, 'Followers', _followersCount,
+                        _navigateToFollowers,),
+                      _buildCounter(context, 'Following', _followingCount,
+                        _navigateToFollowing,),
                       SizedBox(width: 16),
                     ],
                   ),
@@ -355,22 +401,25 @@ class _PaginaAmicoState extends State<PaginaAmico> {
     );
   }
 
-  // Per grafica contatori
-  Widget _buildCounter(BuildContext context, String label, int count) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8.0), // Aggiungi spaziatura orizzontale tra i contatori
-      child: Column(
-        children: [
-          Text(
-            count.toString(),
-            style: TextStyle(fontSize: 20),
-          ),
-          SizedBox(height: 5),
-          Text(
-            label,
-            style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
-          ),
-        ],
+  // Per grafica contatori cliccabili
+  Widget _buildCounter(BuildContext context, String label, int count, VoidCallback? onTap) {
+    return GestureDetector(
+      onTap: onTap, // Chiamata alla funzione onTap per la navigazione
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8.0), // Aggiungi spaziatura orizzontale tra i contatori
+        child: Column(
+          children: [
+            Text(
+              count.toString(),
+              style: TextStyle(fontSize: 20),
+            ),
+            SizedBox(height: 5),
+            Text(
+              label,
+              style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -476,6 +525,24 @@ class _PaginaAmicoState extends State<PaginaAmico> {
     Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => ArtistaSelezionato(artist: artist )),
+    );
+  }
+  void _navigateToReviews() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => ReviewsList()),
+    );
+  }
+  void _navigateToFollowers() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => FollowersList()),
+    );
+  }
+  void _navigateToFollowing() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => FollowingList()),
     );
   }
 }
