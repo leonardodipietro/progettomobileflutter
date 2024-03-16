@@ -173,56 +173,6 @@ class _FollowingListState extends State<FollowingList> {
     }
   }
 
-  /*void unfollowUser(String userId) async {
-    User? currentUser = FirebaseAuth.instance.currentUser;
-    if (currentUser != null) {
-      DatabaseReference followingRef = FirebaseDatabase.instance
-          .ref()
-          .child('users')
-          .child(currentUser.uid)
-          .child('following')
-          .child(userId);
-      DatabaseReference followerRef = FirebaseDatabase.instance
-          .ref()
-          .child('users')
-          .child(userId)
-          .child('followers')
-          .child(currentUser.uid);
-
-      try {
-        await followingRef.remove();
-        await followerRef.remove();
-        print('Successfully unfollowed user $userId');
-
-        // Decrement following counter for current user
-        DatabaseReference currentUserFollowingRef = FirebaseDatabase.instance
-            .ref()
-            .child('users')
-            .child(currentUser.uid)
-            .child('following counter');
-        DataSnapshot currentUserFollowingSnapshot = await currentUserFollowingRef.once().then((event) => event.snapshot);
-        int currentUserFollowingCount = currentUserFollowingSnapshot.value as int;
-        await currentUserFollowingRef.set(currentUserFollowingCount - 1);
-
-        // Decrement followers counter for user being unfollowed
-        DatabaseReference userBeingUnfollowedFollowersRef = FirebaseDatabase.instance
-            .ref()
-            .child('users')
-            .child(userId)
-            .child('followers counter');
-        DataSnapshot userBeingUnfollowedFollowersSnapshot = await userBeingUnfollowedFollowersRef.once().then((event) => event.snapshot);
-        int userBeingUnfollowedFollowersCount = userBeingUnfollowedFollowersSnapshot.value as int;
-        await userBeingUnfollowedFollowersRef.set(userBeingUnfollowedFollowersCount - 1);
-
-        setState(() {
-          followingInfo.remove(userId);
-        });
-      } catch (error) {
-        print('Error unfollowing user $userId: $error');
-      }
-    }
-  }*/
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(

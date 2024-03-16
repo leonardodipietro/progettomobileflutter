@@ -175,7 +175,16 @@ class NotifichePageState extends State<NotifichePage> {
           .child(followerId)
           .remove();
 
+      await FirebaseDatabase.instance
+          .ref()
+          .child('users')
+          .child(followerId)
+          .child('followers')
+          .child(currentUser.uid)
+          .remove();
+
       await decrementFollowingCounter();
+      await decrementFollowersCounter(followerId);
     } else {
       // Altrimenti, aggiungilo ai following
       await FirebaseDatabase.instance
@@ -186,8 +195,17 @@ class NotifichePageState extends State<NotifichePage> {
           .child(followerId)
           .set(true);
 
+      await FirebaseDatabase.instance
+          .ref()
+          .child('users')
+          .child(followerId)
+          .child('followers')
+          .child(currentUser.uid)
+          .set(true);
+
       // Incrementa il contatore dei following
       await incrementFollowingCounter();
+      await incrementFollowersCounter(followerId);
     }
     // Aggiorna lo stato di seguimento nella lista
     setState(() {
@@ -229,6 +247,42 @@ class NotifichePageState extends State<NotifichePage> {
       print('Error retrieving following counter: $error');
     }
   }
+
+  Future<void> incrementFollowersCounter(String followerId) async {
+    // Ottieni il valore attuale del contatore dei following
+    DatabaseReference counterRef = FirebaseDatabase.instance
+        .ref()
+        .child('users')
+        .child(followerId)
+        .child('followers counter');
+
+    try {
+      DataSnapshot snapshot = await counterRef.once().then((event) => event.snapshot);
+      int currentCount = snapshot.value as int;
+      int newCount = currentCount + 1;
+      counterRef.set(newCount);
+    } catch (error) {
+      print('Error retrieving following counter: $error');
+    }
+  }
+
+  Future<void> decrementFollowersCounter(String followerId) async {
+    DatabaseReference counterRef = FirebaseDatabase.instance
+        .ref()
+        .child('users')
+        .child(followerId)
+        .child('followers counter');
+
+    try {
+      DataSnapshot snapshot = await counterRef.once().then((event) => event.snapshot);
+      int currentCount = snapshot.value as int;
+      int newCount = currentCount - 1;
+      counterRef.set(newCount);
+    } catch (error) {
+      print('Error retrieving following counter: $error');
+    }
+  }
+
 
   @override
   Widget build(BuildContext context) {
