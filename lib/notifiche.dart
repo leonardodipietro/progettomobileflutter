@@ -114,6 +114,17 @@ class NotifichePageState extends State<NotifichePage> {
       // Ottieni le informazioni del follower in modo asincrono
       getFollowerData(followerId);
     });
+
+    FirebaseDatabase.instance
+        .ref()
+        .child('users')
+        .child(currentUser.uid)
+        .child('followers')
+        .onChildRemoved
+        .listen((event) {
+      String followerId = event.snapshot.key ?? ""; // Ottieni l'ID del follower rimosso
+      removeFollowerNotification(followerId);
+    });
   }
 
   void getFollowerData(String followerId) async {
@@ -160,6 +171,12 @@ class NotifichePageState extends State<NotifichePage> {
           );
         });
     }
+  }
+
+  void removeFollowerNotification(String followerId) {
+    setState(() {
+      notifiche.removeWhere((notifica) => notifica.followerId == followerId);
+    });
   }
 
   void toggleFollowStatus(String followerId, int index) async {
