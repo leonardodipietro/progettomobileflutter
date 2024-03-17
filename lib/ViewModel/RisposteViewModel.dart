@@ -37,7 +37,7 @@ class RisposteViewModel {
     });
   }
 
-  Future<List<Risposta>> fetchCommentFromRecensione(
+  /*Future<List<Risposta>> fetchCommentFromRecensione(
       String commentIdFather) async {
     final databaseRef = FirebaseDatabase.instance.ref();
     List<Risposta> commentiList = [];
@@ -64,11 +64,10 @@ class RisposteViewModel {
       print("Errore nel recuperare i commenti: $error");
     }
     fetchUsers(userIds.toList()).then((Map<String, Utente> usersMap) {
-      // Qui hai sia le recensioni che la mappa degli utenti
-      // Puoi combinare questi dati come necessario per la tua UI
+
       print("SIAMO QUI");
       print(
-          "Dettagli utenti recuperati. Numero di utenti: ${usersMap.length}");
+          "Dettagli utenti recuperati. per le risposte  Numero di utenti: ${usersMap.length}");
       usersMap.forEach((userId, utente) {
         print("DAJE forse  UserID: $userId, Nome: ${utente.name},IMAGE: ${utente
             .profile_image}  Email: ${utente.email}");
@@ -77,13 +76,36 @@ class RisposteViewModel {
 
 
     return commentiList;
+  }*/
+
+  Future<List<Risposta>> fetchCommentFromRecensione(String commentIdFather) async {
+    final databaseRef = FirebaseDatabase.instance.ref();
+    List<Risposta> commentiList = [];
+    List<String> userIds = []; // Assicurati che questa lista sia dichiarata qui se non è già gestita altrove
+
+    try {
+      DataSnapshot dataSnapshot = await databaseRef.child("answers").get();
+      if (dataSnapshot.exists) {
+        final dati = dataSnapshot.value as Map<dynamic, dynamic>;
+        dati.forEach((key, value) {
+          final commento = Risposta.fromMap(value as Map<dynamic, dynamic>);
+          if (commento.commentIdfather == commentIdFather) {
+            commentiList.add(commento);
+            userIds.add(commento.userId); // Raccogli gli ID utente qui
+          }
+        });
+      } else {
+        print("Nessun commento trovato.");
+      }
+    } catch (error) {
+      print("Errore nel recuperare i commenti: $error");
+    }
+
+    // Opzionalmente, potresti voler restituire anche gli userIds se necessario
+    return commentiList;
   }
 
-  void deleteRisposta(String answerId) {
-    final database = FirebaseDatabase.instance.ref();
-    final reviewRef = database.child('answers');
-    reviewRef.child(answerId).remove();
-  }
+
 
   Future<Map<String, Utente>> fetchUsers(List<String> userIds) async {
     final DatabaseReference database = FirebaseDatabase.instance.ref();
@@ -109,5 +131,11 @@ class RisposteViewModel {
       }
     }
     return usersMap;
+  }
+
+  void deleteRisposta(String answerId) {
+    final database = FirebaseDatabase.instance.ref();
+    final reviewRef = database.child('answers');
+    reviewRef.child(answerId).remove();
   }
 }

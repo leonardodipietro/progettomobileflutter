@@ -42,6 +42,7 @@ class RecensioneViewModel with ChangeNotifier {
         .then((value) {
       addCommentIdToTrack(commentId, trackId);
       addCommentIdToUser(commentId, userId ?? '');
+      updateReviewsCounter(userId, true);
       print("Recensione salvata con successo.");
     })
         .catchError((error) {
@@ -50,6 +51,32 @@ class RecensioneViewModel with ChangeNotifier {
 
 
   }
+
+  Future<void> updateReviewsCounter(String? userId, bool increment) async {
+    final DatabaseReference userRef = _database.ref('users/$userId');
+
+    print('Aggiornamento del contatore recensioni per l\'utente: $userId');
+
+    // Ottieni il valore corrente del contatore delle recensioni
+    final snapshot = await userRef.child('reviews counter').get();
+    int currentCount = snapshot.exists ? int.parse(snapshot.value.toString()) : 0;
+
+    print('Valore attuale del contatore recensioni: $currentCount');
+
+    // Aggiorna il contatore in base all'azione (incremento o decremento)
+    if (increment) {
+      currentCount++;
+      print('Incremento del contatore recensioni.');
+    } else {
+      currentCount = currentCount > 0 ? currentCount - 1 : 0;
+      print('Decremento del contatore recensioni. Nuovo valore: $currentCount');
+    }
+
+    // Imposta il nuovo valore del contatore
+    await userRef.child('reviews counter').set(currentCount);
+    print('Il contatore recensioni è stato aggiornato a: $currentCount');
+  }
+
 
 
 
@@ -359,9 +386,12 @@ class RecensioneViewModel with ChangeNotifier {
       if (child.value == commentId) {
         // Quando trovi una corrispondenza, rimuovi quella recensione specifica
         await child.ref.remove();
+        await updateReviewsCounter(userId, false);
         break; // Interrompi il ciclo se hai trovato e rimosso l'ID della recensione
       }
     }
+
+
   }
 
 

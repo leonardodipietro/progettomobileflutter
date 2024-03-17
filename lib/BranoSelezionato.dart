@@ -26,18 +26,20 @@ class BranoSelezionato extends StatefulWidget {
 class _BranoSelezionatoState extends State<BranoSelezionato> {
   final TextEditingController _controller = TextEditingController();
 
-  Utente? utente;
+  Utente? actualuser;
   List<Recensione> _recensioni = [];
   List<Risposta> _risposte =[];
   final RecensioneViewModel _recensioneViewModel = RecensioneViewModel();
   final RisposteViewModel _risposteViewModel = RisposteViewModel();
   Map<String, Utente> usersMap = {};
+  Map<String,Utente> usersMapRisp = {} ;
   late Spotify.Artist artist;
   String? _replyingToCommentId;
   String _textFieldHint = 'Scrivi una recensione...'; // Valore di default
   String? _selectedCommentIdForReplies;
   //TextEditingController _editingController = TextEditingController();
   String? _editingCommentId; // Identificativo per la recensione che stai modificando,
+  User? user = FirebaseAuth.instance.currentUser;
 
   @override
   void initState() {
@@ -66,21 +68,38 @@ class _BranoSelezionatoState extends State<BranoSelezionato> {
     // Opzionale: Sposta il focus sul campo di testo
     FocusScope.of(context).requestFocus(FocusNode());
   }
-  //print("Risposte per la recensione $commentIdFather: $risposte");
-  // print("Recensioni caricate: ${_risposte.length}");
   void _fetchRispostePerRecensione(String commentIdFather) {
-    print("Risposte per la recensione $commentIdFather: $_risposte");
     _risposteViewModel.fetchCommentFromRecensione(commentIdFather).then((commentiList) {
-      setState(() {
-        // Aggiorna lo stato del tuo widget con la nuova lista di commenti
-        _risposte = commentiList;
-        print("Recensioni caricate: ${_risposte.length}");
+      // Recupera gli ID utente dalle risposte
+      List<String> userIds = commentiList.map((risposta) => risposta.userId).toList();
+      // Assicurati che il tuo ViewModel abbia un metodo fetchUsers che accetta una lista di userIds
+      _risposteViewModel.fetchUsers(userIds).then((usersMap) {
+        setState(() {
+          _risposte = commentiList;
+          usersMapRisp = usersMap; // Aggiorna la mappa degli utenti con i nuovi dati
+        });
       });
     }).catchError((error) {
-      // Gestione degli errori
-      print("Errore nel recuperare le risposte: $error");
+      print("Errore nel recuperare i dati: $error");
     });
   }
+  void _updateRisposte(String commentIdFather) {
+    _risposteViewModel.fetchCommentFromRecensione(commentIdFather).then((commentiList) {
+      // Ottieni gli ID utente dalle nuove risposte
+      List<String> userIds = commentiList.map((risposta) => risposta.userId).toSet().toList();
+
+      // Recupera e aggiorna i dettagli degli utenti
+      _risposteViewModel.fetchUsers(userIds).then((usersMap) {
+        setState(() {
+          // Aggiorna la lista delle risposte e la mappa degli utenti
+          _risposte = commentiList;
+          usersMapRisp.addAll(usersMap); // Aggiorna o sovrascrivi la mappa degli utenti
+        });
+      });
+    });
+  }
+
+
 
 
   void _loadRecensioni() {
@@ -107,7 +126,8 @@ class _BranoSelezionatoState extends State<BranoSelezionato> {
     final firebaseUser = FirebaseAuth.instance.currentUser;
     if (firebaseUser != null) {
       setState(() {
-        utente = Utente.fromFirebaseUser(firebaseUser);
+        actualuser = Utente.fromFirebaseUser(firebaseUser);
+        print("MI SERVE ${actualuser?.userId}");
       });
     }
   }
@@ -206,7 +226,8 @@ class _BranoSelezionatoState extends State<BranoSelezionato> {
                     children: [
                       InkWell(
                         onLongPress: () {
-                          showDialog(
+                          if (recensione.userId == actualuser?.userId) {
+                             showDialog(
                             context: context,
                             builder: (BuildContext context) {
                               return AlertDialog(
@@ -244,6 +265,7 @@ class _BranoSelezionatoState extends State<BranoSelezionato> {
                               );
                             },
                           );
+                          }//QUI
                         },
                         child: ListTile(
                           leading: utente?.profile_image != null
@@ -289,7 +311,8 @@ class _BranoSelezionatoState extends State<BranoSelezionato> {
                                   itemCount: snapshot.data!.length,
                                   itemBuilder: (context, rispostaIndex) {
                                     final risposta = snapshot.data![rispostaIndex];
-                                    final utenteRisposta = usersMap[risposta.userId];
+                                    final utenteRisposta =  usersMapRisp[risposta.userId];
+                                    print("prova qui $utenteRisposta") ;
                                     return ListTile(
                                       title: Text(risposta.answercontent),
                                       subtitle: Text("Risposta di: ${utenteRisposta?.name ?? 'Utente sconosciuto'}"),
@@ -304,6 +327,7 @@ class _BranoSelezionatoState extends State<BranoSelezionato> {
                                         child: Icon(Icons.account_circle),
                                       ),
                                       onLongPress: () {
+                                        if (risposta.userId == actualuser?.userId) {
                                         // Mostra un AlertDialog quando l'utente mantiene premuta una risposta
                                         showDialog(
                                             context: context,
@@ -330,6 +354,7 @@ class _BranoSelezionatoState extends State<BranoSelezionato> {
                                               );
                                             },
                                         );
+                                        }  //qui
                                     }
 
                                     );
@@ -364,18 +389,23 @@ class _BranoSelezionatoState extends State<BranoSelezionato> {
                     String content = _controller.text.trim();
                     if (content.isNotEmpty) {
                       if (_replyingToCommentId != null) {
+                        String commentIdFather = _replyingToCommentId ?? "";
                         // Modalità risposta a un commento (utilizza `saveRisposta`)
                         _risposteViewModel.saveRisposta(
-                          utente?.userId ?? "",
+                          actualuser?.userId ?? "",
                           _replyingToCommentId!,
                           content,
-                        );
+                        ).then((_) {
+                          // Chiamata alla funzione di aggiornamento dopo il successo
+                          _updateRisposte(commentIdFather);
+                          _replyingToCommentId = null; // Resetta l'ID della risposta dopo l'invio
+                        });
                         _replyingToCommentId = null; // Resetta l'ID della risposta dopo l'invio
                       } else if (_editingCommentId != null) {
                         // Modalità modifica recensione (utilizza `updateRecensione`)
                         _recensioneViewModel.updateRecensione(
                           _editingCommentId!,
-                          utente?.userId ?? "",
+                          actualuser?.userId ?? "",
                           widget.track.id,
                           content,
                           widget.track.artists.map((artist) => artist.id).join(", "),
@@ -384,7 +414,7 @@ class _BranoSelezionatoState extends State<BranoSelezionato> {
                       }  else {
                         // Modalità recensione (utilizza il metodo esistente `saveRecensione`)
                         _recensioneViewModel.saveRecensione(
-                          utente?.userId ?? "",
+                          actualuser?.userId ?? "",
                           widget.track.id,
                           content,
                           widget.track.artists.map((artist) => artist.id).join(", "),

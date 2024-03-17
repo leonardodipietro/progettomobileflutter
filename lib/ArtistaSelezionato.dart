@@ -54,7 +54,11 @@ class _ArtistaSelezionatoState extends State<ArtistaSelezionato> {
                     height: 150,
                     width: 150, // Utilizza l'alias fw per Image di Flutter
                   )
-                : Container(height: 250, width: 250, color: Colors.grey),
+            :  fw.Image.asset(
+                   'assets/images/iconacantante.jpeg',
+                    height: 150,
+                    width: 150,
+      ),
             const SizedBox(height: 10),
             const Text(
               "recensioni",
