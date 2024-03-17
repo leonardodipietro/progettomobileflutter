@@ -9,8 +9,10 @@ enum TipoNotifica {
 
 class Notifica {
   final TipoNotifica tipo;
+  final String? reviewId;
   final String mittente;
-  final String followerId;
+  final String? followerId;
+  final String? reviewerId;
   final String testo;
   final String? immagineProfilo;
   final IconData immagineDefault;// Icona di default nel caso in cui non ci sia un'immagine del profilo
@@ -18,8 +20,10 @@ class Notifica {
 
   Notifica({
     required this.tipo,
+    this.reviewId,
     required this.mittente,
-    required this.followerId,
+    this.followerId,
+    this.reviewerId,
     required this.testo,
     required this.immagineProfilo,
     required this.immagineDefault,
@@ -43,6 +47,7 @@ class NotifichePageState extends State<NotifichePage> {
     super.initState();
     currentUser = FirebaseAuth.instance.currentUser!;
     startFollowerListener();
+    startFollowingListener();
     startReviewListener();
   }
 
@@ -97,6 +102,8 @@ class NotifichePageState extends State<NotifichePage> {
     if (isFollowing) {
       print('Il follower $followerId è già tra i tuoi following');
       // Qui puoi fare altre azioni come aggiornare lo stato del pulsante a "unfollow"
+      // Qui puoi fare altre azioni come aggiornare lo stato del pulsante a "unfollow"
+      getReviewData(followerId); // Aggiungi questa riga qui
     } else {
       print('Il follower $followerId non è tra i tuoi following');
       // Qui puoi fare altre azioni come aggiornare lo stato del pulsante a "follow"
@@ -125,6 +132,44 @@ class NotifichePageState extends State<NotifichePage> {
         .listen((event) {
       String followerId = event.snapshot.key ?? ""; // Ottieni l'ID del follower rimosso
       removeFollowerNotification(followerId);
+    });
+  }
+
+  void startFollowingListener() {
+    FirebaseDatabase.instance
+        .ref()
+        .child('users')
+        .child(currentUser.uid)
+        .child('following')
+        .onChildAdded
+        .listen((event) {
+      String followingUserId = event.snapshot.key ?? ""; // Ottieni l'ID dell'utente che sta seguendo
+      // Aggiorna lo stato di seguimento nelle notifiche
+      updateFollowingStatusInNotification(followingUserId, true);
+    });
+
+    FirebaseDatabase.instance
+        .ref()
+        .child('users')
+        .child(currentUser.uid)
+        .child('following')
+        .onChildRemoved
+        .listen((event) {
+      String removedUserId = event.snapshot.key ?? ""; // Ottieni l'ID dell'utente rimosso dai following
+      // Rimuovi le notifiche relative alle recensioni dell'utente rimosso
+      removeReviewsByUserId(removedUserId);
+      // Aggiorna lo stato di seguimento nelle notifiche
+      updateFollowingStatusInNotification(removedUserId, false);
+    });
+  }
+
+  void updateFollowingStatusInNotification(String userId, bool isFollowing) {
+    setState(() {
+      for (var notification in notifiche) {
+        if (notification.followerId == userId) {
+          notification.isFollowing = isFollowing;
+        }
+      }
     });
   }
 
@@ -231,6 +276,14 @@ class NotifichePageState extends State<NotifichePage> {
     });
   }
 
+/*  void reloadNotifications() {
+    // Funzione per ricaricare le notifiche delle recensioni dei nuovi following
+    notifiche.clear(); // Pulisci la lista delle notifiche
+    startFollowerListener();
+    startFollowingListener();
+    startReviewListener(); // Riavvia il listener delle recensioni per ottenere le notifiche aggiornate
+  }*/
+
   Future<void> incrementFollowingCounter() async {
     // Ottieni il valore attuale del contatore dei following
     DatabaseReference counterRef = FirebaseDatabase.instance
@@ -309,36 +362,41 @@ class NotifichePageState extends State<NotifichePage> {
         .listen((event) {
       // Ottieni l'ID della recensione
       String reviewId = event.snapshot.key ?? "";
-
       // Ottieni le informazioni sulla recensione in modo asincrono
       getReviewData(reviewId); // Passa l'ID della recensione invece dell'ID del follower
     });
 
     FirebaseDatabase.instance
         .ref()
-        .child('users')
-        .child(currentUser.uid)
-        .child('following')
+        .child('reviews')
         .onChildRemoved
         .listen((event) {
-      String removedUserId = event.snapshot.key ?? "";
-      removeReviewNotifications(removedUserId);
+      // Ottieni l'ID della recensione
+      String reviewId = event.snapshot.key ?? "";
+      // Rimuovi la notifica relativa alla recensione
+      removeReviewNotification(reviewId);
     });
   }
 
-  void removeReviewNotifications(String reviewerId) {
+  void removeReviewNotification(String reviewId) {
+    setState(() {
+      notifiche.removeWhere((notifica) => notifica.reviewId == reviewId);
+    });
+  }
+
+  void removeReviewsByUserId(String userId) {
     setState(() {
       notifiche.removeWhere((notifica) =>
       notifica.tipo == TipoNotifica.nuovaRecensione &&
-          notifica.followerId == reviewerId);
+          notifica.followerId == userId);
     });
   }
 
-  void getReviewData(String followingId) async {
+  void getReviewData(String reviewId) async {
     DatabaseReference reviewRef = FirebaseDatabase.instance
         .ref()
         .child('reviews')
-        .child(followingId);
+        .child(reviewId);
     DataSnapshot reviewSnapshot = await reviewRef.once().then((event) => event.snapshot);
     Map<dynamic, dynamic>? reviewData = reviewSnapshot.value as Map<dynamic, dynamic>?;
 
@@ -386,6 +444,7 @@ class NotifichePageState extends State<NotifichePage> {
               notifiche.add(
                 Notifica(
                   tipo: TipoNotifica.nuovaRecensione,
+                  reviewId: reviewId,
                   mittente: reviewerName,
                   followerId: reviewerId,
                   testo: "ha scritto una nuova recensione della canzone \"$trackName\"",
@@ -426,7 +485,7 @@ class NotifichePageState extends State<NotifichePage> {
                     onPressed: () {
                       setState(() {
                         // Cambia lo stato di follow/unfollow
-                        toggleFollowStatus(notifiche[index].followerId, index);
+                        toggleFollowStatus(notifiche[index].followerId!, index);
                       });
                     },
                     child: Text(notifiche[index].isFollowing ? "Unfollow" : "Follow"),
