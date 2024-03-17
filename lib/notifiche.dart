@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:progettomobileflutter/BranoSelezionato.dart';
+import 'package:progettomobileflutter/pagina_amico.dart';
+import 'package:progettomobileflutter/model/SpotifyModel.dart';
 
 enum TipoNotifica {
   nuovoFollower,
@@ -11,23 +14,25 @@ class Notifica {
   final TipoNotifica tipo;
   final String? reviewId;
   final String mittente;
-  final String? followerId;
-  final String? reviewerId;
+  final String userId;
   final String testo;
   final String? immagineProfilo;
   final IconData immagineDefault;// Icona di default nel caso in cui non ci sia un'immagine del profilo
   bool isFollowing; // Indica se l'utente corrente sta già seguendo il mittente della notifica
+  final DateTime? timestamp;
+  final String? trackId;
 
   Notifica({
     required this.tipo,
     this.reviewId,
     required this.mittente,
-    this.followerId,
-    this.reviewerId,
+    required this.userId,
     required this.testo,
     required this.immagineProfilo,
     required this.immagineDefault,
     required this.isFollowing,
+    this.timestamp,
+    this.trackId
   });
 }
 
@@ -59,7 +64,7 @@ class NotifichePageState extends State<NotifichePage> {
           tipo: TipoNotifica.nuovoFollower,
           mittente: "Nuovo Follower",
           testo: "Ha iniziato a seguirti.",
-          followerId: followerId,
+          userId: followerId,
           immagineProfilo: null,
           // Immagine del profilo (puoi aggiungere se necessario)
           immagineDefault: Icons.account_circle,
@@ -166,7 +171,7 @@ class NotifichePageState extends State<NotifichePage> {
   void updateFollowingStatusInNotification(String userId, bool isFollowing) {
     setState(() {
       for (var notification in notifiche) {
-        if (notification.followerId == userId) {
+        if (notification.userId == userId) {
           notification.isFollowing = isFollowing;
         }
       }
@@ -208,7 +213,7 @@ class NotifichePageState extends State<NotifichePage> {
             Notifica(
               tipo: TipoNotifica.nuovoFollower,
               mittente: followerName,
-              followerId: followerId,
+              userId: followerId,
               testo: " ha iniziato a seguirti.",
               immagineProfilo: immagineProfilo,
               immagineDefault: Icons.account_circle,
@@ -221,7 +226,7 @@ class NotifichePageState extends State<NotifichePage> {
 
   void removeFollowerNotification(String followerId) {
     setState(() {
-      notifiche.removeWhere((notifica) => notifica.followerId == followerId);
+      notifiche.removeWhere((notifica) => notifica.userId == followerId);
     });
   }
 
@@ -388,7 +393,7 @@ class NotifichePageState extends State<NotifichePage> {
     setState(() {
       notifiche.removeWhere((notifica) =>
       notifica.tipo == TipoNotifica.nuovaRecensione &&
-          notifica.followerId == userId);
+          notifica.userId == userId);
     });
   }
 
@@ -403,6 +408,9 @@ class NotifichePageState extends State<NotifichePage> {
     if (reviewData != null) {
       String reviewerId = reviewData['userId'] ?? "";
       String trackId = reviewData['trackId'] ?? "";
+      String timestampString = reviewData['timestamp'] ?? "";
+      // Converti la stringa del timestamp in un oggetto DateTime
+      DateTime timestamp = DateTime.parse(timestampString);
 
       DatabaseReference trackRef = FirebaseDatabase.instance
           .ref()
@@ -446,11 +454,13 @@ class NotifichePageState extends State<NotifichePage> {
                   tipo: TipoNotifica.nuovaRecensione,
                   reviewId: reviewId,
                   mittente: reviewerName,
-                  followerId: reviewerId,
+                  userId: reviewerId,
                   testo: "ha scritto una nuova recensione della canzone \"$trackName\"",
                   immagineProfilo: immagineProfilo,
                   immagineDefault: Icons.account_circle,
                   isFollowing: isFollowing,
+                  timestamp: timestamp,
+                  trackId: trackId,
                 ),
               );
             });
@@ -460,8 +470,43 @@ class NotifichePageState extends State<NotifichePage> {
     }
   }
 
+  Future<Track> fetchTrack(String trackId) async {
+    print('Fetching track with ID: $trackId');
+
+    try {
+      // Interroga il database per ottenere i dati della traccia
+      DataSnapshot dataSnapshot = await FirebaseDatabase.instance
+          .ref()
+          .child('tracks')
+          .child(trackId)
+          .once()
+          .then((event) => event.snapshot);
+
+      // Ottieni i dati come mappa generica
+      Map<dynamic, dynamic> trackData = dataSnapshot.value as Map<dynamic, dynamic>;
+
+      // Converti la mappa in una mappa di tipo String, dynamic
+      Map<String, dynamic> trackDataStringKeys = Map<String, dynamic>.from(trackData);
+
+      // Crea un'istanza di Track utilizzando i dati ottenuti dal database
+      Track track = Track.fromJson(trackDataStringKeys);
+
+      // Aggiungi un log per visualizzare i dati della traccia convertita
+      print('Converted track data: $track');
+
+      return track;
+    } catch (error) {
+      print('Error fetching track: $error');
+      throw error;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    // Ordina le notifiche delle recensioni per timestamp
+    List<Notifica> recensioni = notifiche.where((notifica) => notifica.tipo == TipoNotifica.nuovaRecensione).toList();
+    recensioni.sort((a, b) => b.timestamp!.compareTo(a.timestamp!));
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Notifiche'),
@@ -469,28 +514,65 @@ class NotifichePageState extends State<NotifichePage> {
       body: ListView.builder(
         itemCount: notifiche.length,
         itemBuilder: (context, index) {
-          return ListTile(
-            leading: CircleAvatar(
-              backgroundImage: notifiche[index].immagineProfilo != null && notifiche[index].immagineProfilo!.isNotEmpty
-                  ? NetworkImage(notifiche[index].immagineProfilo!)
-                  : null,
-              child: notifiche[index].immagineProfilo == null
-                  ? Icon(notifiche[index].immagineDefault)
+          return GestureDetector(
+              onTap: () {
+            // Logic to handle tap based on notification type
+            if (notifiche[index].tipo == TipoNotifica.nuovoFollower) {
+              // Navigate to follower profile
+              // Replace the code below with your navigation logic
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => PaginaAmico(userId: notifiche[index].userId),
+                ),
+              );
+            } else if (notifiche[index].tipo == TipoNotifica.nuovaRecensione) {
+              // Navigate to track page
+              // Replace the code below with your navigation logic
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => FutureBuilder<Track?>(
+                    future: fetchTrack(notifiche[index].trackId!), // Assuming reviewId is the trackId
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return CircularProgressIndicator(); // Or a loading indicator
+                      } else if (snapshot.hasError || snapshot.data == null) {
+                        return Text('Error fetching track'); // Handle errors or null track
+                      } else {
+                        return BranoSelezionato(track: snapshot.data!); // Use the fetched track
+                      }
+                    },
+                  ),
+                ),
+              );
+            } else {
+              print('Track ID is null');
+            }
+          },
+            child: ListTile(
+              leading: CircleAvatar(
+                backgroundImage: notifiche[index].immagineProfilo != null && notifiche[index].immagineProfilo!.isNotEmpty
+                    ? NetworkImage(notifiche[index].immagineProfilo!)
+                    : null,
+                child: notifiche[index].immagineProfilo == null
+                    ? Icon(notifiche[index].immagineDefault)
+                    : null,
+              ),
+              title: Text(
+                  '${notifiche[index].mittente} ${notifiche[index].testo}'),
+              trailing: notifiche[index].tipo == TipoNotifica.nuovoFollower
+                  ? ElevatedButton(
+                      onPressed: () {
+                        setState(() {
+                          // Cambia lo stato di follow/unfollow
+                          toggleFollowStatus(notifiche[index].userId, index);
+                        });
+                      },
+                      child: Text(notifiche[index].isFollowing ? "Unfollow" : "Follow"),
+                    )
                   : null,
             ),
-            title: Text(
-                '${notifiche[index].mittente} ${notifiche[index].testo}'),
-            trailing: notifiche[index].tipo == TipoNotifica.nuovoFollower
-                ? ElevatedButton(
-                    onPressed: () {
-                      setState(() {
-                        // Cambia lo stato di follow/unfollow
-                        toggleFollowStatus(notifiche[index].followerId!, index);
-                      });
-                    },
-                    child: Text(notifiche[index].isFollowing ? "Unfollow" : "Follow"),
-                  )
-                : null,
           );
         },
       ),
