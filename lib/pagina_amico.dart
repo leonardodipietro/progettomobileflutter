@@ -285,7 +285,6 @@ class _PaginaAmicoState extends State<PaginaAmico> {
                         CircleAvatar(
                           // Imposta un'immagine di default se _profileImage è vuoto
                           child: Icon(Icons.account_circle, size: 80),
-                          backgroundColor: Colors.grey, // Imposta un colore di sfondo grigio
                           radius: 40,
                         ),
                       _buildCounter(context, 'Reviews', _reviewsCount,

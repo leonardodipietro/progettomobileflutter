@@ -68,7 +68,7 @@ class _ProfiloPersonaleState extends State<ProfiloPersonale> {
       appBar: AppBar(
         title: const Text('Impostazioni'),
       ),
-      body: Center(
+      body: SingleChildScrollView(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: <Widget>[
@@ -80,7 +80,7 @@ class _ProfiloPersonaleState extends State<ProfiloPersonale> {
                   backgroundImage: profileImageUrl != null
                       ? NetworkImage(profileImageUrl!) // Utilizza l'immagine del profilo corrente
                       : AssetImage('assets/profile_default_image.jpg') as ImageProvider<Object>, // Utilizza l'immagine predefinita
-                  child: (profileImageUrl == null || profileImageUrl!.isEmpty)? Icon(Icons.account_circle, size: 150): null, // Icona predefinita se non c'è un'immagine del profilo
+                  child: (profileImageUrl == null || profileImageUrl!.isEmpty)? Icon(Icons.account_circle, size: 150, color: Colors.white): null, // Icona predefinita se non c'è un'immagine del profilo
                 ),
                 Positioned(
                   bottom: 0,
