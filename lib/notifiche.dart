@@ -50,10 +50,17 @@ class NotifichePageState extends State<NotifichePage> {
   @override
   void initState() {
     super.initState();
-    currentUser = FirebaseAuth.instance.currentUser!;
-    startFollowerListener();
-    startFollowingListener();
-    startReviewListener();
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      currentUser = user;
+      // Avvia i listener o altre operazioni qui dopo aver ottenuto l'utente corrente
+      startFollowerListener();
+      startFollowingListener();
+      startReviewListener();
+    } else {
+      // Se l'utente non è loggato, esegui un'azione, come tornare alla schermata di accesso
+      // Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => PaginaDiAccesso()));
+    }
   }
 
   void addNewFollowerNotification(String followerId, bool isFollowing) {
@@ -469,7 +476,6 @@ class NotifichePageState extends State<NotifichePage> {
       }
     }
   }
-
   Future<Track> fetchTrack(String trackId) async {
     print('Fetching track with ID: $trackId');
 
@@ -482,23 +488,64 @@ class NotifichePageState extends State<NotifichePage> {
           .once()
           .then((event) => event.snapshot);
 
-      // Ottieni i dati come mappa generica
-      Map<dynamic, dynamic> trackData = dataSnapshot.value as Map<dynamic, dynamic>;
+      // Verifica che i dati esistano
+      if (dataSnapshot.exists) {
+        // Ottieni i dati come mappa generica
+        Map<dynamic, dynamic> trackDataDynamic = dataSnapshot.value as Map<dynamic, dynamic>;
+        // Converti la mappa in una mappa di tipo String, dynamic
+        Map<String, dynamic> trackDataStringKeys = trackDataDynamic.map((key, value) => MapEntry(key.toString(), value));
 
-      // Converti la mappa in una mappa di tipo String, dynamic
-      Map<String, dynamic> trackDataStringKeys = Map<String, dynamic>.from(trackData);
 
-      // Crea un'istanza di Track utilizzando i dati ottenuti dal database
-      Track track = Track.fromJson(trackDataStringKeys);
 
-      // Aggiungi un log per visualizzare i dati della traccia convertita
-      print('Converted track data: $track');
 
-      return track;
+        // DAL DB RECUPERO DELLE LISTE DI ID DELL ARTISTA CHE NON SONO COMPATIBILI CON IL METODO FROM
+        //JSON DI TRACK PERCIO TRASFORMO LA LISTA DI STRINGA IN UNA AD OGGETTI
+        List<String> artistIds = List<String>.from(trackDataStringKeys['artists']);
+
+
+        // Per ogni ID, recupera i dettagli dell'artista
+        List<Artist> artists = [];
+        for (String artistId in artistIds) {
+          Artist? artist = await retrieveArtistById(artistId);
+          if (artist != null) {
+            artists.add(artist);
+            print("vediamo cosa c è nelle notifiche ${artists.first.name}");
+          }
+        }
+
+// Assegna la lista degli artisti con tutti i dati all'oggetto Track
+        trackDataStringKeys['artists'] = artists;
+
+        trackDataStringKeys['artists'] = artistIds.map((id) => {"id": id}).toList();
+
+        // Crea un'istanza di Track utilizzando i dati ottenuti dal database
+        Track track = Track.fromJson(trackDataStringKeys);
+
+        // Aggiungi un log per visualizzare i dati della traccia convertita
+        print('Converted track data: ${track.artists.first.name}');
+
+        return track;
+      } else {
+        throw Exception('Track data not found for ID: $trackId');
+      }
     } catch (error) {
       print('Error fetching track: $error');
-      throw error;
+      rethrow;
     }
+  }
+  Future<Artist?> retrieveArtistById(String artistId) async {
+    final database = FirebaseDatabase.instance.ref();
+    final artistRef = database.child('artists').child(artistId);
+
+    DatabaseEvent event = await artistRef.once();
+
+    if (event.snapshot.exists) {
+      // Converti il dataSnapshot in un Map<String, dynamic>
+      Map<String, dynamic> artistData = Map<String, dynamic>.from(event.snapshot.value as Map);
+      artistData['id'] = artistId; // Assicurati che l'ID sia incluso nei dati, se necessario
+      return Artist.fromJson(artistData);
+    }
+    return null;
   }
 
   @override

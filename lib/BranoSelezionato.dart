@@ -26,6 +26,9 @@ class BranoSelezionato extends StatefulWidget {
 class _BranoSelezionatoState extends State<BranoSelezionato> {
   final TextEditingController _controller = TextEditingController();
 
+
+  Spotify.Artist? artist;
+  bool isLoading = true;
   Utente? actualuser;
   List<Recensione> _recensioni = [];
   List<Risposta> _risposte =[];
@@ -33,7 +36,7 @@ class _BranoSelezionatoState extends State<BranoSelezionato> {
   final RisposteViewModel _risposteViewModel = RisposteViewModel();
   Map<String, Utente> usersMap = {};
   Map<String,Utente> usersMapRisp = {} ;
-  late Spotify.Artist artist;
+  //late Spotify.Artist artist;
   String? _replyingToCommentId;
   String _textFieldHint = 'Scrivi una recensione...'; // Valore di default
   String? _selectedCommentIdForReplies;
@@ -47,7 +50,24 @@ class _BranoSelezionatoState extends State<BranoSelezionato> {
     _fetchCurrentUser();
     //RecensioneViewModel _recensioneViewModel = RecensioneViewModel();
     _loadRecensioni();
+    _fetchArtistDetails();
   }
+  void _fetchArtistDetails() async {
+    try {
+      Spotify.Artist? artistDetails = await _recensioneViewModel.retrieveArtistById(widget.track.artists.first.id);
+      if (artistDetails != null) {
+        setState(() {
+          artist = artistDetails;
+          print("vediamo che succede ${artist?.name} artist?.name");
+          isLoading = false; // Dati caricati, non più in caricamento
+        });
+      }
+    } catch (error) {
+      // Gestisci l'errore come preferisci
+      print("Errore nel recupero dei dettagli dell'artista: $error");
+    }
+  }
+
 
   void _startReplyingToComment(String? commentId) {
     if (_replyingToCommentId == commentId) {
@@ -180,8 +200,10 @@ class _BranoSelezionatoState extends State<BranoSelezionato> {
                           _recensioneViewModel
                               .retrieveArtistById(widget.track.artists.first.id)
                               .then((artist) {
+                                print("PROVIAMO ${widget.track.artists.first.name}");
                             if (artist != null) {
                               _navigateToArtistaSelezionato(artist);
+                              print("vediamo SE c è AAA ${artist.name}");
                             } else {
                               print("nessun artista trovato");
                               // Gestisci il caso in cui l'artista non è stato trovato o c'è stato un errore
@@ -189,9 +211,9 @@ class _BranoSelezionatoState extends State<BranoSelezionato> {
                           });
                         },
                         child: Text(
-                          widget.track.artists
-                              .map((artist) => artist.name)
-                              .join(", "),
+                            //widget.track.artists.first.name
+                              artist?.name ?? 'Caricamento artista...',
+                             // .join(", "),
                           style: const TextStyle(
                               fontSize: 20, fontWeight: FontWeight.bold),
                           overflow: TextOverflow.ellipsis,
