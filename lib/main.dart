@@ -327,13 +327,18 @@ class _MyHomePageState extends State<MyHomePage> {
   bool _isLoggedIn = false; // Variabile di stato per gestire l'autenticazione
   List<Track> _tracksToShow=[];
   List<Artist> _artistsToShow=[];
-  ContentType _contentType = ContentType.tracks;
+  //ContentType _contentType = ContentType.tracks;
   final FirebaseAuth _auth = FirebaseAuth.instance;
   SpotifyViewModel? _spotifyViewModel;
   StreamSubscription? _sub;
   int _counter = 0;
   final FirebaseViewModel _firebaseViewModel = FirebaseViewModel();
-  String filter='short_term';
+  //String filter='short_term';
+
+  String term = 'short_term';
+  String type = 'top tracks';
+  ContentType contentType = ContentType.tracks;
+
   @override
   //INIZIA IL CICLO DI VITA DEL WIDGET
   void initState() {
@@ -350,41 +355,41 @@ class _MyHomePageState extends State<MyHomePage> {
     );
     _initUniLinks();
 
-    // Carica le preferenze salvate se presenti, altrimenti imposta valori predefiniti
-    loadSavedPreferences();
-  }
+    _loadUserPreferences();
+    _loadAndHandleSavedPreferences();
 
-  Future<void> savePreferences(String selectedFilter, ContentType selectedContentType) async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    prefs.setString('selectedFilter', selectedFilter); // Salva il filtro selezionato
-    prefs.setInt('selectedContentType', selectedContentType.index);
-    print('Preferences saved successfully.');
-    print('Saving preferences: Filter=$selectedFilter, ContentType=$selectedContentType');
-  }
+    // Popola la lista automaticamente all'avvio dell'app
+    if (contentType == ContentType.tracks) {
+      print("Popolamento lista automatico: tracks, termine: $term");
+      handleTrackButtonClicked(term);
 
-  void loadSavedPreferences() async {
-    print('Loading saved preferences...');
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-
-    // Controlla se ci sono preferenze salvate
-    if (prefs.containsKey('selectedFilter') && prefs.containsKey('selectedContentType')) {
-      String selectedFilter = prefs.getString('selectedFilter')!;
-      ContentType selectedContentType = ContentType.values[prefs.getInt('selectedContentType')!];
-
-      print('Loaded preferences: Filter=$selectedFilter, ContentType=$selectedContentType');
-
-      // Carica le preferenze salvate
-      applyFilter(selectedFilter); // Applica il filtro salvato
-      setState(() {
-        _contentType = selectedContentType; // Imposta il tipo di contenuto salvato
-      });
     } else {
-      // Se non ci sono preferenze salvate, imposta valori predefiniti
-      print('No saved preferences found.');
-      applyFilter('short_term'); // Imposta il filtro predefinito
-      setState(() {
-        _contentType = ContentType.tracks; // Imposta il tipo di contenuto predefinito
-      });
+      print("Popolamento lista automatico: artists, termine: $term");
+      handleArtistButtonClicked(term);
+    }
+  }
+
+  _loadUserPreferences() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    // Carica le preferenze dell'utente, se presenti
+    String savedTerm = prefs.getString('term') ?? 'short_term';
+    String savedType = prefs.getString('type') ?? 'top tracks';
+    int savedContentTypeIndex = prefs.getInt('contentType') ?? 0;
+
+    // Imposta le preferenze predefinite se non sono state salvate
+    term = savedTerm;
+    type = savedType;
+    contentType = ContentType.values[savedContentTypeIndex];
+
+    // Stampa le preferenze caricate per controllo
+    print('Termine selezionato: $term');
+    print('Tipo selezionato: $type');
+    print('Tipo di contenuto selezionato: $contentType');
+
+    // Se non ci sono preferenze salvate, salva le impostazioni predefinite
+    if (savedTerm == 'short_term' && savedType == 'top tracks' && savedContentTypeIndex == 0) {
+      _saveUserPreferences();
     }
   }
 
@@ -406,36 +411,6 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
-  /*
-  void _initUniLinks() async {
-    // Ascolta gli URI in arrivo quando l'app è già aperta è UN LISTENER
-    _sub = getUriLinksStream().listen((Uri? uri) { //TODO IN FUTURO POTREBBE ESSERE DEPRECATA
-      print('URI in arrivo: $uri');
-      if (uri != null) {
-        // Esegui l'autenticazione con il codice di autorizzazione dopo che è arrivato l uri
-        _handleIncomingUri(uri);
-      }
-    }, onError: (err) {
-      print('Errore nel listener URI: $err');
-
-    });
-
-
-  }
-
-  void _handleIncomingUri(Uri uri) async {
-    print('Gestione URI: $uri');
-    // Estrai il codice di autorizzazione dall'URI
-    final code = uri.queryParameters['code'];
-    if (code != null) {
-      // Utilizza il ViewModel per autenticare con il codice
-      await _spotifyViewModel?.authenticate(code);
-      print('Autenticazione completata');//uso l await per aspettare che venga recuperato il codice prima di chiamare fetch
-      _fetchAndDisplayTopTracks();
-      _fetchAndDisplayTopArtists();
-    }
-  }
-*/
   @override
   void dispose() {
     _sub?.cancel();
@@ -458,12 +433,6 @@ class _MyHomePageState extends State<MyHomePage> {
           crossAxisAlignment: CrossAxisAlignment.start,
 
           children: <Widget>[
-            //const Text('User IDs and Names from Realtime Database:'),
-            /*ElevatedButton(
-              onPressed: () => _startAuthenticationProcess(context),
-              child: const Text('Autentica con Spotify'),
-            ),
-            */
            Center(
             child: ElevatedButton(
                    onPressed: () => _onHandleStartAuthButtonClick(),
@@ -482,11 +451,11 @@ class _MyHomePageState extends State<MyHomePage> {
                     child: Text('Filtro'),
                   ),
                   ElevatedButton(
-                    onPressed: () => handleTrackButtonClicked(),
+                    onPressed: () => handleTrackButtonClicked(term),
                     child: Text('Top Tracks'),
                   ),
                   ElevatedButton(
-                    onPressed: () => handleArtistButtonClicked(),
+                    onPressed: () => handleArtistButtonClicked(term),
                     child: Text('Top Artist'),
                   ),
                   /*DA METTERE ElevatedButton(
@@ -498,7 +467,7 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
             SizedBox(height: 15),
             Expanded(
-              child: _contentType == ContentType.tracks ? GridView.count(
+              child: contentType == ContentType.tracks ? GridView.count(
                 crossAxisCount: 3,
                 children: List.generate(_tracksToShow.length, (index) {
                   // Widget per tracce
@@ -519,17 +488,6 @@ class _MyHomePageState extends State<MyHomePage> {
                             track.name,
                             overflow: TextOverflow.ellipsis,//serve per evitare l overflow del testo
                           )
-                          /*VEDIAMO se LASCIARLO
-                          child:Column(
-                          children: [Text(_tracksToShow[index].name,
-                                          overflow: TextOverflow.ellipsis),
-                                     Text(_tracksToShow[index].artists.map((artist) => artist.name).join(", "),
-                                       overflow: TextOverflow.ellipsis,
-                                       ),
-                                      Text(_tracksToShow[index].album.name,
-                                        overflow: TextOverflow.ellipsis,
-                                        ),
-                         ])*/
                        )
                       ],
                     ),
@@ -596,52 +554,31 @@ class _MyHomePageState extends State<MyHomePage> {
                 GestureDetector(
                   child: Text('Short Term'),
                   onTap: () async {
-                    await savePreferences('short_term', _contentType); // Salva il filtro selezionato
                     applyFilter('short_term');
                     Navigator.of(context).pop(); // Chiude la finestra di dialogo dopo l'azione
+                    _saveUserPreferences();
+                    print('Termine selezionato: $term');
                   },
-                    /*{
-                  Navigator.of(context).pop();
-                    /*setState(()  {
-                      /*filter = 'short_term';
-                      await _firebaseViewModel.fetchTopTracksFromFirebase(filter);
-                      _tracksToShow= _firebaseViewModel.tracksFromDb;*/
-                    });*/
-                    Navigator.of(context).pop();
-                  },*/
                 ),
                 Padding(padding: EdgeInsets.all(8.0)),
                 GestureDetector(
                   child: Text('Medium Term'),
                   onTap: () async {
-                    await savePreferences('medium_term', _contentType); // Salva il filtro selezionato
                     applyFilter('medium_term');
                     Navigator.of(context).pop(); // Chiude la finestra di dialogo dopo l'azione
+                    _saveUserPreferences();
+                    print('Termine selezionato: $term');
                   },
-                  /*{
-                    /*setState(()  {
-                    //  filter = 'medium_term';
-                    //  _firebaseViewModel.fetchTopTracksFromFirebase(filter);
-                    //  _tracksToShow= _firebaseViewModel.tracksFromDb;
-                    });*/
-                    Navigator.of(context).pop();
-                  },*/
                 ),
                 Padding(padding: EdgeInsets.all(8.0)),
                 GestureDetector(
                   child: Text('Long Term'),
                   onTap: () async{
-                    await savePreferences('long_term', _contentType); // Salva il filtro selezionato
                     applyFilter('long_term');
                     Navigator.of(context).pop(); // Chiude la finestra di dialogo dopo l'azione
+                    _saveUserPreferences();
+                    print('Termine selezionato: $term');
                   },
-                   /* setState(()  {
-                     /* filter = 'long_term';
-                      _firebaseViewModel.fetchTopTracksFromFirebase(filter);
-                      _tracksToShow= _firebaseViewModel.tracksFromDb;*/
-                    });*/
-                   // Navigator.of(context).pop();
-
                 ),
               ],
             ),
@@ -650,12 +587,37 @@ class _MyHomePageState extends State<MyHomePage> {
       },
     );
   }
+
+  _saveUserPreferences() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.setString('term', term);
+    prefs.setString('type', type);
+    prefs.setInt('contentType', contentType.index);
+
+    print('Preferenze utente salvate');
+  }
+
+  _loadAndHandleSavedPreferences() async {
+    print("Dentro _loadAndHandleSavedPreferences");
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String savedTerm = prefs.getString('term') ?? 'short_term';
+    String savedType = prefs.getString('type') ?? 'top tracks';
+
+    // Controllo se deve essere caricata la lista delle tracce o degli artisti
+    if (savedType == 'top tracks') {
+      print("Caricamento top tracks");
+      handleTrackButtonClicked(savedTerm);
+    } else {
+      print("Caricamento top artist");
+      handleArtistButtonClicked(savedTerm);
+    }
+  }
+
   void applyFilter(String newFilter) async {
     showDialog(
       context: context,
       builder: (context) => Center(child: CircularProgressIndicator()), // Mostra un indicatore di caricamento
     );
-
 
     await _firebaseViewModel.fetchTopTracksFromFirebase(newFilter);
     await _firebaseViewModel.fetchTopArtistsFromFirebase(newFilter);
@@ -668,29 +630,27 @@ class _MyHomePageState extends State<MyHomePage> {
 
   }
 
-  Future<void> handleTrackButtonClicked() async {
+  Future<void> handleTrackButtonClicked(String filter) async {
     print("Handle track button clicked chiamata");
     final userId = FirebaseAuth.instance.currentUser?.uid;
-    await savePreferences('tracks', _contentType); // Salva il tipo di contenuto selezionato
     await _firebaseViewModel.fetchTopTracksFromFirebase(filter);
     setState(() {
-      _contentType = ContentType.tracks;
+      contentType = ContentType.tracks;
       _tracksToShow= _firebaseViewModel.tracksFromDb;
+      print("I dati sono stati caricati correttamente.");
     });
   }
 
-  Future<void> handleArtistButtonClicked() async {
+  Future<void> handleArtistButtonClicked(String filter) async {
     final userId= FirebaseAuth.instance.currentUser?.uid;
-    await savePreferences('artists', _contentType); // Salva il tipo di contenuto selezionato
     print("Handle artist button clicked chiamata");
     await _firebaseViewModel.fetchTopArtistsFromFirebase(filter);
     setState(() {
-      _contentType = ContentType.artists;
+      contentType = ContentType.artists;
       _artistsToShow= _firebaseViewModel.artistsFromDb;
+      print("I dati sono stati caricati correttamente.");
     });
   }
-
-
 
 
 
@@ -868,11 +828,6 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
-/*// Assumendo che handleResponseTrack sia definito da qualche parte nel tuo codice Dart.
-  void handleResponseTrack(dynamic response, String userId, String timeRange) {
-    // Implementazione...
-  }*/
-
   void handleResponseTrack(trackResponse,userId,timeRange) {
     print("trackresponse su handle $trackResponse");
     print("userId $userId");
@@ -933,35 +888,3 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 }
-
-
-/*
-  void _initUniLinks() async {
-    // Ascolta gli URI in arrivo quando l'app è già aperta è UN LISTENER
-    _sub = getUriLinksStream().listen((Uri? uri) { //TODO IN FUTURO POTREBBE ESSERE DEPRECATA
-      print('URI in arrivo: $uri');
-      if (uri != null) {
-        // Esegui l'autenticazione con il codice di autorizzazione dopo che è arrivato l uri
-        _handleIncomingUri(uri);
-      }
-    }, onError: (err) {
-      print('Errore nel listener URI: $err');
-
-    });
-
-
-  }
-
-  void _handleIncomingUri(Uri uri) async {
-    print('Gestione URI: $uri');
-    // Estrai il codice di autorizzazione dall'URI
-    final code = uri.queryParameters['code'];
-    if (code != null) {
-      // Utilizza il ViewModel per autenticare con il codice
-      await _spotifyViewModel?.authenticate(code);
-      print('Autenticazione completata');//uso l await per aspettare che venga recuperato il codice prima di chiamare fetch
-      _fetchAndDisplayTopTracks();
-      _fetchAndDisplayTopArtists();
-    }
-  }
- */
