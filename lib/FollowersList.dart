@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:progettomobileflutter/pagina_amico.dart';
 
 class Follower {
   final String userId;
@@ -169,53 +170,63 @@ class _FollowersListState extends State<FollowersList> {
             username: followerData['name'],
             profileImageUrl: followerData['profile image'],
           );
-          return ListTile(
-            leading: CircleAvatar(
-              backgroundImage: followerData['profile image'] != null &&
-                  followerData['profile image'].isNotEmpty
-                  ? NetworkImage(
-                  followerData['profile image']) // Utilizza l'immagine del profilo se presente
-                  : AssetImage(
-                  'assets/profile_default_image.jpg') as ImageProvider<Object>,
-              // Utilizza l'immagine predefinita se l'URL è vuoto
-              child: followerData['profile image'] == null ||
-                  followerData['profile image'].isEmpty
-                  ? Icon(Icons
-                  .account_circle) // Mostra l'icona predefinita se non c'è un'immagine del profilo
-                  : null,
-            ),
-            title: Text(follower.username),
-            trailing: ElevatedButton(
-              onPressed: () {
-                // Chiedi conferma all'utente
-                showDialog(
-                  context: context,
-                  builder: (BuildContext context) {
-                    return AlertDialog(
-                      title: Text("Remove Follower"),
-                      content: Text(
-                          "Are you sure you want to remove this follower?"),
-                      actions: <Widget>[
-                        TextButton(
-                          onPressed: () {
-                            Navigator.of(context).pop(); // Chiudi il dialog
-                          },
-                          child: Text("Cancel"),
-                        ),
-                        TextButton(
-                          onPressed: () {
-                            // Rimuovi il follower
-                            removeFollower(followerId);
-                            Navigator.of(context).pop(); // Chiudi il dialog
-                          },
-                          child: Text("Remove"),
-                        ),
-                      ],
-                    );
-                  },
-                );
+          return GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => PaginaAmico(userId: followerId),
+                ),
+              );
               },
-              child: Text("Remove"),
+            child: ListTile(
+              leading: CircleAvatar(
+                backgroundImage: followerData['profile image'] != null &&
+                    followerData['profile image'].isNotEmpty
+                    ? NetworkImage(
+                    followerData['profile image']) // Utilizza l'immagine del profilo se presente
+                    : AssetImage(
+                    'assets/profile_default_image.jpg') as ImageProvider<Object>,
+                // Utilizza l'immagine predefinita se l'URL è vuoto
+                child: followerData['profile image'] == null ||
+                    followerData['profile image'].isEmpty
+                    ? Icon(Icons
+                    .account_circle) // Mostra l'icona predefinita se non c'è un'immagine del profilo
+                    : null,
+              ),
+              title: Text(follower.username),
+              trailing: ElevatedButton(
+                onPressed: () {
+                  // Chiedi conferma all'utente
+                  showDialog(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return AlertDialog(
+                        title: Text("Remove Follower"),
+                        content: Text(
+                            "Are you sure you want to remove this follower?"),
+                        actions: <Widget>[
+                          TextButton(
+                            onPressed: () {
+                              Navigator.of(context).pop(); // Chiudi il dialog
+                            },
+                            child: Text("Cancel"),
+                          ),
+                          TextButton(
+                            onPressed: () {
+                              // Rimuovi il follower
+                              removeFollower(followerId);
+                              Navigator.of(context).pop(); // Chiudi il dialog
+                            },
+                            child: Text("Remove"),
+                          ),
+                        ],
+                      );
+                    },
+                  );
+                },
+                child: Text("Remove"),
+              ),
             ),
           );
         },

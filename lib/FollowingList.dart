@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:progettomobileflutter/pagina_amico.dart';
 
 class FollowingList extends StatefulWidget {
   @override
@@ -201,62 +202,72 @@ class _FollowingListState extends State<FollowingList> {
           String followingId = followingInfo.keys.toList()[index];
           Map<String, dynamic> followingData = followingInfo[followingId]!;
           bool isFollowing = followingStatus[followingId] ?? false;
-          return ListTile(
-            leading: CircleAvatar(
-              backgroundImage: followingData['profile image'] != null &&
-                  followingData['profile image'].isNotEmpty
-                  ? NetworkImage(
-                  followingData['profile image']) // Utilizza l'immagine del profilo se presente
-                  : AssetImage(
-                  'assets/profile_default_image.jpg') as ImageProvider<Object>,
-              // Utilizza l'immagine predefinita se l'URL è vuoto
-              child: followingData['profile image'] == null ||
-                  followingData['profile image'].isEmpty
-                  ? Icon(Icons
-                  .account_circle) // Mostra l'icona predefinita se non c'è un'immagine del profilo
-                  : null,
-            ),
-            title: Text(followingData['name']),
-            trailing: ElevatedButton(
-              onPressed: () {
-                showDialog(
-                  context: context,
-                  builder: (BuildContext context) {
-                    return AlertDialog(
-                      title: Text(isFollowing
-                          ? "Unfollow User"
-                          : "Follow User"),
-                      // Aggiorna il titolo del dialogo in base allo stato corrente
-                      content: Text(isFollowing
-                          ? "Are you sure you want to unfollow this user?"
-                          : "Are you sure you want to follow this user?"),
-                      // Aggiorna il testo del dialogo in base allo stato corrente
-                      actions: <Widget>[
-                        TextButton(
-                          onPressed: () {
-                            Navigator.of(context).pop(); // Chiudi il dialog
-                          },
-                          child: Text("Cancel"),
-                        ),
-                        TextButton(
-                          onPressed: () {
-                            // Cambia lo stato di follow/unfollow
-                            toggleFollowStatus(followingId);
-                            Navigator.of(context).pop(); // Chiudi il dialog
-                          },
-                          child: Text(isFollowing
-                              ? "Unfollow"
-                              : "Follow"), // Aggiorna il testo del pulsante in base allo stato corrente
-                        ),
-                      ],
+          return GestureDetector(
+              onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => PaginaAmico(userId: followingId),
+              ),
+            );
+            },
+              child: ListTile(
+                leading: CircleAvatar(
+                  backgroundImage: followingData['profile image'] != null &&
+                      followingData['profile image'].isNotEmpty
+                      ? NetworkImage(
+                      followingData['profile image']) // Utilizza l'immagine del profilo se presente
+                      : AssetImage(
+                      'assets/profile_default_image.jpg') as ImageProvider<Object>,
+                  // Utilizza l'immagine predefinita se l'URL è vuoto
+                  child: followingData['profile image'] == null ||
+                      followingData['profile image'].isEmpty
+                      ? Icon(Icons
+                      .account_circle) // Mostra l'icona predefinita se non c'è un'immagine del profilo
+                      : null,
+                ),
+                title: Text(followingData['name']),
+                trailing: ElevatedButton(
+                  onPressed: () {
+                    showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return AlertDialog(
+                          title: Text(isFollowing
+                              ? "Unfollow User"
+                              : "Follow User"),
+                          // Aggiorna il titolo del dialogo in base allo stato corrente
+                          content: Text(isFollowing
+                              ? "Are you sure you want to unfollow this user?"
+                              : "Are you sure you want to follow this user?"),
+                          // Aggiorna il testo del dialogo in base allo stato corrente
+                          actions: <Widget>[
+                            TextButton(
+                              onPressed: () {
+                                Navigator.of(context).pop(); // Chiudi il dialog
+                              },
+                              child: Text("Cancel"),
+                            ),
+                            TextButton(
+                              onPressed: () {
+                                // Cambia lo stato di follow/unfollow
+                                toggleFollowStatus(followingId);
+                                Navigator.of(context).pop(); // Chiudi il dialog
+                              },
+                              child: Text(isFollowing
+                                  ? "Unfollow"
+                                  : "Follow"), // Aggiorna il testo del pulsante in base allo stato corrente
+                            ),
+                          ],
+                        );
+                      },
                     );
                   },
-                );
-              },
-              child: Text(isFollowing
-                  ? "Unfollow"
-                  : "Follow"), // Aggiorna il testo del pulsante in base allo stato corrente
-            ),
+                  child: Text(isFollowing
+                      ? "Unfollow"
+                      : "Follow"), // Aggiorna il testo del pulsante in base allo stato corrente
+                ),
+              ),
           );
         },
       ),

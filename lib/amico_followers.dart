@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:progettomobileflutter/pagina_amico.dart';
 
 class Follower {
   final String userId;
@@ -123,22 +124,32 @@ class _amicoFollowersListState extends State<amicoFollowersList> {
             username: followerData['name'],
             profileImageUrl: followerData['profile image'],
           );
-          return ListTile(
-            leading: CircleAvatar(
-              backgroundImage: followerData['profile image'] != null &&
-                  followerData['profile image'].isNotEmpty
-                  ? NetworkImage(
-                  followerData['profile image']) // Utilizza l'immagine del profilo se presente
-                  : AssetImage(
-                  'assets/profile_default_image.jpg') as ImageProvider<Object>,
-              // Utilizza l'immagine predefinita se l'URL è vuoto
-              child: followerData['profile image'] == null ||
-                  followerData['profile image'].isEmpty
-                  ? Icon(Icons
-                  .account_circle) // Mostra l'icona predefinita se non c'è un'immagine del profilo
-                  : null,
+          return GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => PaginaAmico(userId: followerId),
+                ),
+              );
+            },
+            child: ListTile(
+              leading: CircleAvatar(
+                backgroundImage: followerData['profile image'] != null &&
+                    followerData['profile image'].isNotEmpty
+                    ? NetworkImage(
+                    followerData['profile image']) // Utilizza l'immagine del profilo se presente
+                    : AssetImage(
+                    'assets/profile_default_image.jpg') as ImageProvider<Object>,
+                // Utilizza l'immagine predefinita se l'URL è vuoto
+                child: followerData['profile image'] == null ||
+                    followerData['profile image'].isEmpty
+                    ? Icon(Icons
+                    .account_circle) // Mostra l'icona predefinita se non c'è un'immagine del profilo
+                    : null,
+              ),
+              title: Text(follower.username),
             ),
-            title: Text(follower.username),
           );
         },
       ),
