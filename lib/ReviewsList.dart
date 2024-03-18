@@ -201,23 +201,23 @@ class _ReviewsListState extends State<ReviewsList> {
         title: Text('Recensioni'),
       ),
       body: reviews.isEmpty
-          ? Center(
-        child: reviews.isNotEmpty
-            ? CircularProgressIndicator()
-            : FutureBuilder(
-          future: Future.delayed(Duration(seconds: 10)),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState ==
-                ConnectionState.waiting) {
-              return CircularProgressIndicator();
-            } else {
-              return Text(
-                  "Non hai ancora scritto nessuna recensione");
-            }
-          },
-        ),
-      )
-          : ListView.separated(
+      ? Center(
+    child: reviews.isNotEmpty
+        ? CircularProgressIndicator()
+        : FutureBuilder(
+      future: Future.delayed(Duration(seconds: 10)),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState ==
+            ConnectionState.waiting) {
+          return CircularProgressIndicator();
+        } else {
+          return Text(
+              "Non hai ancora scritto nessuna recensione");
+        }
+      },
+    ),
+  )
+      : ListView.separated(
         itemCount: reviews.length,
         separatorBuilder: (BuildContext context, int index) {
           return Divider(
@@ -229,47 +229,64 @@ class _ReviewsListState extends State<ReviewsList> {
           final review = reviews[index];
           return ListTile(
             contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            leading: SizedBox(
-              width: 60,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  if (review.track.imageUrl.isNotEmpty)
-                    Image.network(
-                      review.track.imageUrl,
-                      width: 50,
-                      height: 50,
-                    )
-                  else
-                    Icon(Icons.library_music),
-                ],
-              ),
-            ),
             title: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  review.track.name,
-                  style: TextStyle(),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Center(
+                      child: SizedBox(
+                        width: 50,
+                        height: 50,
+                        child: review.track.imageUrl.isNotEmpty
+                            ? Image.network(
+                          review.track.imageUrl,
+                          width: 50,
+                          height: 50,
+                        )
+                            : Icon(Icons.library_music),
+                      ),
+                    ),
+                    SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            review.track.name,
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          Text(
+                            'Artista: ${review.track.artistNames.join(", ")}',
+                            style: TextStyle(fontSize: 12, color: Colors.grey),
+                          ),
+                          Text(
+                            'Album: ${review.track.albumName}',
+                            style: TextStyle(fontSize: 12, color: Colors.grey),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-                SizedBox(height: 4),
+                SizedBox(height: 8),
                 Text(
-                  'Artista: ${review.track.artistNames.join(", ")}',
-                  style: TextStyle(fontSize: 12, color: Colors.grey),
+                  review.content,
+                  style: TextStyle(fontSize: 18),
                 ),
-                Text(
-                  'Album: ${review.track.albumName}',
-                  style: TextStyle(fontSize: 12, color: Colors.grey),
+                SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(child: Container()),
+                    Text(
+                      review.timestamp,
+                      style: TextStyle(fontSize: 12, color: Colors.grey),
+                    ),
+                  ],
                 ),
               ],
-            ),
-            subtitle: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8.0),
-              child: Text(
-                review.content,
-                style: TextStyle(fontSize: 18),
-              ),
             ),
           );
         },
