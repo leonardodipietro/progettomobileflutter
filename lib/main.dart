@@ -35,21 +35,13 @@ void main() async {
 
   // Verifica lo stato di autenticazione dell'utente
   User? user = FirebaseAuth.instance.currentUser;
+  print('Valore di user: $user');
 
   Widget initialPage;
 
   // Se l'utente è già autenticato, vai direttamente alla schermata principale
   if (user != null) {
-    initialPage = const MyHomePage(title: 'Home');
-  } else {
-    initialPage = RegistrationPage();
-  }
-
-  // Pagina iniziale dell'applicazione
-
-  // Se l'utente è già autenticato, vai direttamente alla schermata principale
-  if (user != null) {
-    initialPage = MyHomePage(title: 'Home');
+    initialPage = const MyApp(initialPage: MyHomePage(title: 'Home'));
   } else {
     initialPage = RegistrationPage();
   }
@@ -277,18 +269,6 @@ class RegistrationPage extends StatelessWidget {
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: () {
-                // Call the signInWithEmailAndPassword function with the email and password entered by the user
-                signInWithEmailAndPassword(
-                  context,
-                  emailController.text,
-                  passwordController.text,
-                );
-              },
-              child: const Text('Accedi'),
-            ),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: () {
                 // Call the registerWithEmailAndPassword function with name, email, and password entered by the user
                 registerWithEmailAndPassword(
                   context,
@@ -299,6 +279,17 @@ class RegistrationPage extends StatelessWidget {
               },
               child: const Text('Registrati'),
             ),
+            const SizedBox(height: 16),
+            TextButton(
+              onPressed: () {
+                // Navigate to the login page
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => LoginPage()),
+                );
+              },
+              child: const Text("Sei già registrato? Accedi"),
+            ),
             // const SizedBox(height: 16),
             // ElevatedButton(
             //   onPressed: () {
@@ -307,6 +298,60 @@ class RegistrationPage extends StatelessWidget {
             //   },
             //   child: const Text('Registrati con Google'),
             // ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class LoginPage extends StatelessWidget {
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+
+  LoginPage({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Accesso'),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            TextField(
+              controller: emailController,
+              decoration: const InputDecoration(labelText: 'Email'),
+            ),
+            TextField(
+              controller: passwordController,
+              decoration: const InputDecoration(labelText: 'Password'),
+              obscureText: true,
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: () {
+                // Call the signInWithEmailAndPassword function with the email and password entered by the user
+                signInWithEmailAndPassword(
+                  context,
+                  emailController.text,
+                  passwordController.text,
+                );
+              },
+              child: const Text('Accedi'),
+            ),
+            const SizedBox(height: 16),
+            TextButton(
+              onPressed: () {
+                // Navigate back to the registration page
+                Navigator.pop(context);
+              },
+              child: const Text("Non sei ancora registrato? Registrati"),
+            ),
           ],
         ),
       ),
@@ -324,14 +369,14 @@ class MyHomePage extends StatefulWidget {
 }
 enum ContentType { tracks, artists }//per salvare l ultima delle lista selezionate tra tracks e artists
 class _MyHomePageState extends State<MyHomePage> {
-  bool _isLoggedIn = false; // Variabile di stato per gestire l'autenticazione
+  bool isLoggedIn = false; // Variabile di stato per gestire l'autenticazione
   List<Track> _tracksToShow=[];
   List<Artist> _artistsToShow=[];
   //ContentType _contentType = ContentType.tracks;
   final FirebaseAuth _auth = FirebaseAuth.instance;
   SpotifyViewModel? _spotifyViewModel;
   StreamSubscription? _sub;
-  int _counter = 0;
+  int counter = 0;
   final FirebaseViewModel _firebaseViewModel = FirebaseViewModel();
   //String filter='short_term';
 
@@ -400,12 +445,12 @@ class _MyHomePageState extends State<MyHomePage> {
       if (user != null) {
         // Se l'utente è autenticato, imposta _isLoggedIn su true
         setState(() {
-          _isLoggedIn = true;
+          isLoggedIn = true;
         });
       } else {
         // Se l'utente non è autenticato, imposta _isLoggedIn su false
         setState(() {
-          _isLoggedIn = false;
+          isLoggedIn = false;
         });
       }
     });
@@ -532,7 +577,7 @@ class _MyHomePageState extends State<MyHomePage> {
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           setState(() {
-            _counter++;
+            counter++;
           });
         },
         tooltip: 'Increment',
