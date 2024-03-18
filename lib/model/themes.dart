@@ -11,15 +11,43 @@ final ThemeData lightTheme = ThemeData(
 final ThemeData darkTheme = ThemeData(
   brightness: Brightness.dark,
   scaffoldBackgroundColor: Colors.black,
+  primaryColor: Colors.black, // Imposta il colore predefinito su nero
+  textTheme: TextTheme( // Imposta il colore del testo su bianco
+    headline1: TextStyle(color: Colors.white), // Esempio di stile di testo per l'intestazione
+    bodyText1: TextStyle(color: Colors.white), // Esempio di stile di testo per il corpo
+    // Aggiungi altri stili di testo se necessario...
+  ),
+
+  inputDecorationTheme: InputDecorationTheme(
+    labelStyle: TextStyle(color: Colors.white), // Imposta il colore del testo delle etichette su bianco
+    hintStyle: TextStyle(color: Colors.white), // Imposta il colore del testo dei suggerimenti su bianco
+
+    // Imposta il colore del bordo della sezione di input su bianco
+    border: OutlineInputBorder(
+      borderSide: BorderSide(color: Colors.white),
+      borderRadius: BorderRadius.circular(10),
+    ),
+  ),
+
   elevatedButtonTheme: ElevatedButtonThemeData(
     style: ButtonStyle(
       backgroundColor: MaterialStateProperty.all<Color>(Colors.green),
+      // Imposta il colore del testo del pulsante su bianco
+      foregroundColor: MaterialStateProperty.all<Color>(Colors.white),
     ),
   ),
-  // Imposta il colore della barra di navigazione su grigio
+
+    // Imposta il colore della barra di navigazione su grigio
   appBarTheme: AppBarTheme(
-    backgroundColor: Colors.grey,
+    backgroundColor: Colors.black,
   ),
+
+    bottomNavigationBarTheme: BottomNavigationBarThemeData(
+    backgroundColor: Colors.grey[800],
+    selectedItemColor: Colors.green,
+    unselectedItemColor: Colors.grey,
+  ),
+
   // Altri attributi del tema scuro...
 );
 

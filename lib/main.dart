@@ -176,21 +176,12 @@ class _MyAppState extends State<MyApp> {
     return MaterialApp(
       navigatorKey: navigatorKey, // Assegna la chiave globale al navigatore
       title: 'Flutter Demo',
-      theme: ThemeData(
-        // Impostazione del tema dell'applicazione
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
-        // Imposta il colore delle icone nella barra di navigazione
-        bottomNavigationBarTheme: BottomNavigationBarThemeData(
-          selectedItemColor: Colors.green, // Colore delle icone selezionate
-          unselectedItemColor: Colors.grey, // Colore delle icone non selezionate
-        ),
-      ),
+      theme: darkTheme,
       home: Scaffold(
         body: IndexedStack( // Utilizziamo IndexedStack per mantenere lo stato delle pagine
           index: _currentIndex, // L'indice corrente determina quale pagina viene visualizzata
           children: [
-            MyHomePage(title: 'Home'),
+            MyHomePage(title: 'See Your Music'),
             CercaUtentiPage(),
             NotifichePage(),
             ProfiloPersonale(),
@@ -468,122 +459,109 @@ class _MyHomePageState extends State<MyHomePage> {
       // Fornisce l'istanza esistente di FirebaseViewModel
         value: _firebaseViewModel,
 
-    child: Scaffold(
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text(widget.title),
-      ),
-      body: Center(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Scaffold(
+          appBar: AppBar(
+            title: Text(widget.title),
+          ),
+          body: Center(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
 
-          children: <Widget>[
-           Center(
-            child: ElevatedButton(
-                   onPressed: () => _onHandleStartAuthButtonClick(),
-                   child: const Text('Autentica con Spotify'),
-            ),
-           ),
-            Container(
-              width: double.infinity, // Occupa tutta la larghezza possibile
-              color: Theme.of(context).colorScheme.secondary, // Colore di sfondo
-              padding: EdgeInsets.symmetric(vertical: 8, horizontal: 16), // Padding interno
-              child: Row( // Usa Row per allineare i bottoni orizzontalmente
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly, // Spazia uniformemente i bottoni
-                children: [
-                  ElevatedButton(
-                    onPressed: () => selectFilter(),
-                    child: Text('Filtro'),
+              children: <Widget>[
+                Center(
+                  child: ElevatedButton(
+                    onPressed: () => _onHandleStartAuthButtonClick(),
+                    child: const Text('Autentica con Spotify'),
                   ),
-                  ElevatedButton(
-                    onPressed: () => handleTrackButtonClicked(term),
-                    child: Text('Top Tracks'),
-                  ),
-                  ElevatedButton(
-                    onPressed: () => handleArtistButtonClicked(term),
-                    child: Text('Top Artist'),
-                  ),
-                  /*DA METTERE ElevatedButton(
+                ),
+                Container(
+                  width: double.infinity, // Occupa tutta la larghezza possibile
+                  padding: EdgeInsets.symmetric(vertical: 8, horizontal: 16), // Padding interno
+                  child: Row( // Usa Row per allineare i bottoni orizzontalmente
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly, // Spazia uniformemente i bottoni
+                    children: [
+                      ElevatedButton(
+                        onPressed: () => selectFilter(),
+                        child: Text('Filtro'),
+                      ),
+                      ElevatedButton(
+                        onPressed: () => handleTrackButtonClicked(term),
+                        child: Text('Top Tracks'),
+                      ),
+                      ElevatedButton(
+                        onPressed: () => handleArtistButtonClicked(term),
+                        child: Text('Top Artist'),
+                      ),
+                      /*DA METTERE ElevatedButton(
                     child:Text('stile'),
                     onPressed:() => print('bottone premuto'),
                   ),*/
-                ],
-              ),
-            ),
-            SizedBox(height: 15),
-            Expanded(
-              child: contentType == ContentType.tracks ? GridView.count(
-                crossAxisCount: 3,
-                children: List.generate(_tracksToShow.length, (index) {
-                  // Widget per tracce
-                  Spotify.Track track = _tracksToShow[index];
-                  return InkWell(//widget che rende cliccabile elemento
-                      onTap: () {
-                        print("Traccia selezionata: ${track.name}");
-                        _navigateToBranoSelezionato(track);
-                      },
-                  child: Center(
-                    child: Column(
-                      children: [
-                        track.album.images.isNotEmpty
-                            ? fw.Image.network(track.album.images[0].url, height: 100, width: 100) // Utilizza l'alias fw per Image di Flutter
-                            : Container(height: 100, width: 100, color: Colors.grey),
-                        Flexible(
-                          child:Text(
-                            track.name,
-                            overflow: TextOverflow.ellipsis,//serve per evitare l overflow del testo
-                          )
-                       )
-                      ],
-                    ),
+                    ],
                   ),
-                  );
-                }),
-              ) : GridView.count(
-                crossAxisCount: 3,
-                children: List.generate(_artistsToShow.length, (index) {
-                  // Widget per artisti
-                  Spotify.Artist artist = _artistsToShow[index];
-                  return InkWell(
-                      onTap: () {
-                        print("Traccia selezionata: ${artist.name}");
-                        _navigateToArtistaSelezionato(artist);
-                      },
-
-                   child: Center(
-                    child: Column(
-                      children: [
-                        artist.images.isNotEmpty
-                            ? fw.Image.network(artist.images[0].url, height: 100, width: 100) // Utilizza l'alias fw per Image di Flutter
-                            : Container(height: 100, width: 100, color: Colors.grey),
-                        Flexible(
-                          child: Text(
-                            artist.name,
-                            overflow: TextOverflow.ellipsis,
+                ),
+                SizedBox(height: 15),
+                Expanded(
+                  child: contentType == ContentType.tracks ? GridView.count(
+                    crossAxisCount: 3,
+                    children: List.generate(_tracksToShow.length, (index) {
+                      // Widget per tracce
+                      Spotify.Track track = _tracksToShow[index];
+                      return InkWell(//widget che rende cliccabile elemento
+                        onTap: () {
+                          print("Traccia selezionata: ${track.name}");
+                          _navigateToBranoSelezionato(track);
+                        },
+                        child: Center(
+                          child: Column(
+                            children: [
+                              track.album.images.isNotEmpty
+                                  ? fw.Image.network(track.album.images[0].url, height: 100, width: 100) // Utilizza l'alias fw per Image di Flutter
+                                  : Container(height: 100, width: 100),
+                              Flexible(
+                                  child:Text(
+                                    track.name,
+                                    overflow: TextOverflow.ellipsis,//serve per evitare l overflow del testo
+                                  )
+                              )
+                            ],
                           ),
-                        )
-                      ],
-                    ),
-                  ),);
-                }),
-              ),
-            )
-          ],
-        ),
-      ),
+                        ),
+                      );
+                    }),
+                  ) : GridView.count(
+                    crossAxisCount: 3,
+                    children: List.generate(_artistsToShow.length, (index) {
+                      // Widget per artisti
+                      Spotify.Artist artist = _artistsToShow[index];
+                      return InkWell(
+                        onTap: () {
+                          print("Traccia selezionata: ${artist.name}");
+                          _navigateToArtistaSelezionato(artist);
+                        },
 
-
-
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          setState(() {
-            counter++;
-          });
-        },
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ),
-    ));
+                        child: Center(
+                          child: Column(
+                            children: [
+                              artist.images.isNotEmpty
+                                  ? fw.Image.network(artist.images[0].url, height: 100, width: 100) // Utilizza l'alias fw per Image di Flutter
+                                  : Container(height: 100, width: 100),
+                              Flexible(
+                                child: Text(
+                                  artist.name,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              )
+                            ],
+                          ),
+                        ),);
+                    }),
+                  ),
+                )
+              ],
+            ),
+          ),
+        )
+    );
 
   }
 

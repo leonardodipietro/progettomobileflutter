@@ -101,7 +101,9 @@ class _CercaUtentiPageState extends State<CercaUtentiPage> {
                     });
                   },
                 ) : null,
-                border: OutlineInputBorder(),
+                border: OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white),
+                ),
               ),
               onChanged: searchUsers,
             ),
