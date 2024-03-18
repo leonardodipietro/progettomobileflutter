@@ -278,13 +278,16 @@ class _PaginaAmicoState extends State<PaginaAmico> {
                     children: [
                       if (_profileImage.isNotEmpty)
                         CircleAvatar(
+                          backgroundColor: _profileImage.isNotEmpty
+                          ? Colors.grey[800] : Colors.transparent,
                           backgroundImage: NetworkImage(_profileImage),
                           radius: 40,
                         )
                       else
                         CircleAvatar(
+                          backgroundColor: Colors.grey[800],
                           // Imposta un'immagine di default se _profileImage è vuoto
-                          child: Icon(Icons.account_circle, size: 80),
+                          child: Icon(Icons.account_circle, size: 80, color: Colors.white,),
                           radius: 40,
                         ),
                       _buildCounter(context, 'Reviews', _reviewsCount,

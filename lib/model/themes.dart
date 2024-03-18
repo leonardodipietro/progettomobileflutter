@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 // Definizione del tema chiaro
 final ThemeData lightTheme = ThemeData(
   primaryColor: Colors.blue,
-  hintColor: Colors.green,
+  hintColor: Color(0xFF1ED660),
   // Altri attributi del tema chiaro...
 );
 
@@ -15,20 +15,20 @@ final ThemeData darkTheme = ThemeData(
 
   // Imposta il colore del cursore di testo su verde
   textSelectionTheme: TextSelectionThemeData(
-    cursorColor: Colors.green,
-    selectionHandleColor: Colors.green,
+    cursorColor: Color(0xFF1ED660),
+    selectionHandleColor: Color(0xFF1ED660),
   ),
 
   textButtonTheme: TextButtonThemeData(
     style: ButtonStyle(
-      foregroundColor: MaterialStateProperty.all<Color>(Colors.green), // Imposta il colore del testo del TextButton su verde
+      foregroundColor: MaterialStateProperty.all<Color>(Color(0xFF1ED660)), // Imposta il colore del testo del TextButton su verde
     ),
   ),
 
   inputDecorationTheme: InputDecorationTheme(
     // Imposta il colore del bordo quando attivo su verde
     focusedBorder: OutlineInputBorder(
-      borderSide: BorderSide(color: Colors.green),
+      borderSide: BorderSide(color: Color(0xFF1ED660)),
       borderRadius: BorderRadius.circular(10),
     ),
     labelStyle: TextStyle(color: Colors.white),
@@ -36,7 +36,7 @@ final ThemeData darkTheme = ThemeData(
 
   elevatedButtonTheme: ElevatedButtonThemeData(
     style: ButtonStyle(
-      backgroundColor: MaterialStateProperty.all<Color>(Colors.green),
+      backgroundColor: MaterialStateProperty.all<Color>(Color(0xFF1ED660)),
       // Imposta il colore del testo del pulsante su bianco
       foregroundColor: MaterialStateProperty.all<Color>(Colors.white),
     ),
@@ -49,7 +49,7 @@ final ThemeData darkTheme = ThemeData(
 
   bottomNavigationBarTheme: BottomNavigationBarThemeData(
     backgroundColor: Colors.grey[800],
-    selectedItemColor: Colors.green,
+    selectedItemColor: Color(0xFF1ED660),
     unselectedItemColor: Colors.grey,
   ),
 
@@ -59,7 +59,7 @@ final ThemeData darkTheme = ThemeData(
 
   // Applica il filtro di colore verde alle immagini di default
   colorScheme: ColorScheme.dark().copyWith(
-    primary: Colors.green,
+    primary: Color(0xFF1ED660),
   ),
 
   // Altri attributi del tema scuro...

@@ -135,6 +135,7 @@ class _amicoFollowersListState extends State<amicoFollowersList> {
             },
             child: ListTile(
               leading: CircleAvatar(
+                backgroundColor:Colors.grey[800],
                 backgroundImage: followerData['profile image'] != null &&
                     followerData['profile image'].isNotEmpty
                     ? NetworkImage(
@@ -145,7 +146,7 @@ class _amicoFollowersListState extends State<amicoFollowersList> {
                 child: followerData['profile image'] == null ||
                     followerData['profile image'].isEmpty
                     ? Icon(Icons
-                    .account_circle) // Mostra l'icona predefinita se non c'è un'immagine del profilo
+                    .account_circle, color: Colors.white,) // Mostra l'icona predefinita se non c'è un'immagine del profilo
                     : null,
               ),
               title: Text(follower.username),

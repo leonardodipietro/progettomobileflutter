@@ -298,7 +298,8 @@ class _BranoSelezionatoState extends State<BranoSelezionato> {
                             fit: BoxFit.cover,
                           )
                               : const CircleAvatar(
-                            child: Icon(Icons.account_circle),
+                                backgroundColor: Colors.white10,
+                                child: Icon(Icons.account_circle, color: Colors.white),
                           ),
                           title: Text(recensione.content),
                           subtitle: Text("Scritta da: ${utente?.name ?? 'Utente sconosciuto'}"),
@@ -346,7 +347,8 @@ class _BranoSelezionatoState extends State<BranoSelezionato> {
                                         fit: BoxFit.cover,
                                       )
                                           : const CircleAvatar(
-                                        child: Icon(Icons.account_circle),
+                                        backgroundColor: Colors.white10,
+                                        child: Icon(Icons.account_circle, color: Colors.white),
                                       ),
                                       onLongPress: () {
                                         if (risposta.userId == actualuser?.userId) {

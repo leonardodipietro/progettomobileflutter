@@ -72,11 +72,13 @@ class _ProfiloPersonaleState extends State<ProfiloPersonale> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: <Widget>[
+            SizedBox(height: 20,),
             Stack(
             alignment: AlignmentDirectional.bottomEnd,
               children: [
                 CircleAvatar(
                   radius: 80,
+                  backgroundColor: Colors.grey[800],
                   backgroundImage: profileImageUrl != null
                       ? NetworkImage(profileImageUrl!) // Utilizza l'immagine del profilo corrente
                       : AssetImage('assets/profile_default_image.jpg') as ImageProvider<Object>, // Utilizza l'immagine predefinita
@@ -102,6 +104,7 @@ class _ProfiloPersonaleState extends State<ProfiloPersonale> {
                 ),
               ],
             ),
+            SizedBox(height: 30,),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
@@ -139,14 +142,16 @@ class _ProfiloPersonaleState extends State<ProfiloPersonale> {
                   child: _buildCounter(context, 'Following', followingCounter),
                 ),              ],
             ),
-            SizedBox(height: 20,),
+            SizedBox(height: 50,),
             _buildUsername(context, 'Nome utente', 'JohnDoe'),
+            SizedBox(height: 10,),
             _buildEmail(context, 'Email', 'example@domain.com'),// Voce Nome utente
-            SizedBox(height: 60),
+            SizedBox(height: 80),
             ElevatedButton(
               onPressed: () => _signOut(context),
               child: Text('Sign Out'),
             ),
+            SizedBox(height: 10,),
             ElevatedButton(
               onPressed: () => _deleteAccount(context),
               child: Text('Delete Account'),

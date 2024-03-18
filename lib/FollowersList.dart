@@ -181,6 +181,7 @@ class _FollowersListState extends State<FollowersList> {
               },
             child: ListTile(
               leading: CircleAvatar(
+                backgroundColor: Colors.grey[800],
                 backgroundImage: followerData['profile image'] != null &&
                     followerData['profile image'].isNotEmpty
                     ? NetworkImage(

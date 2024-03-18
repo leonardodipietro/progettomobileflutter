@@ -130,11 +130,14 @@ class _CercaUtentiPageState extends State<CercaUtentiPage> {
                     title: Text(name),
                     leading: profileImage != null && profileImage.isNotEmpty
                         ? CircleAvatar(
+                      backgroundColor: profileImage != null
+                      ? Colors.grey[800] : Colors.transparent,
                       backgroundImage: NetworkImage(profileImage),
                     )
                         : CircleAvatar(
+                      backgroundColor: Colors.grey[800],
                       // Imposta un'immagine di default se l'utente non ha un'immagine di profilo
-                      child: Icon(Icons.account_circle),
+                      child: Icon(Icons.account_circle, color: Colors.white),
                     ),
                     tileColor: _selectedIndex == index ? Colors.blue.withOpacity(0.5) : null,
                     // Aggiungi altri dettagli dell'utente se necessario

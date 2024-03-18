@@ -213,6 +213,7 @@ class _FollowingListState extends State<FollowingList> {
             },
               child: ListTile(
                 leading: CircleAvatar(
+                  backgroundColor: Colors.grey[800],
                   backgroundImage: followingData['profile image'] != null &&
                       followingData['profile image'].isNotEmpty
                       ? NetworkImage(
@@ -223,7 +224,7 @@ class _FollowingListState extends State<FollowingList> {
                   child: followingData['profile image'] == null ||
                       followingData['profile image'].isEmpty
                       ? Icon(Icons
-                      .account_circle) // Mostra l'icona predefinita se non c'è un'immagine del profilo
+                      .account_circle, color: Colors.white) // Mostra l'icona predefinita se non c'è un'immagine del profilo
                       : null,
                 ),
                 title: Text(followingData['name']),

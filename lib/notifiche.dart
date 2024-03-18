@@ -599,11 +599,12 @@ class NotifichePageState extends State<NotifichePage> {
           },
             child: ListTile(
               leading: CircleAvatar(
+                backgroundColor: Colors.grey[800],
                 backgroundImage: notifiche[index].immagineProfilo != null && notifiche[index].immagineProfilo!.isNotEmpty
                     ? NetworkImage(notifiche[index].immagineProfilo!)
                     : null,
                 child: notifiche[index].immagineProfilo == null
-                    ? Icon(notifiche[index].immagineDefault)
+                    ? Icon(notifiche[index].immagineDefault, color: Colors.white,)
                     : null,
               ),
               title: Text(
