@@ -158,6 +158,7 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   // Indice corrente per gestire la navigazione
   int _currentIndex = 0;
+  bool isUserAuthenticated = false;
 
   late BuildContext materialAppContext; // Contesto dell'applicazione MaterialApp
   late GlobalKey<NavigatorState> navigatorKey; // Chiave globale per il navigatore
@@ -169,58 +170,69 @@ class _MyAppState extends State<MyApp> {
     navigatorKey = GlobalKey<NavigatorState>();
     // Inizializzazione del contesto dell'applicazione MaterialApp
     materialAppContext = context;
+    checkUserAuthenticationStatus();
   }
-
+  void checkUserAuthenticationStatus() {
+    // Simula una chiamata per verificare lo stato di autenticazione dell'utente
+    var user = FirebaseAuth.instance.currentUser;
+    setState(() {
+      isUserAuthenticated = user != null;
+    });
+  }
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    /*return MaterialApp(
       navigatorKey: navigatorKey, // Assegna la chiave globale al navigatore
       title: 'Flutter Demo',
+      theme: darkTheme,*/
+    // Utilizza una condizione per decidere quale pagina mostrare
+    final Widget currentPage = isUserAuthenticated
+        ? IndexedStack(
+      index: _currentIndex,
+      children: [
+        MyHomePage(title: 'Home'),
+        CercaUtentiPage(),
+        NotifichePage(),
+        ProfiloPersonale(),
+      ],
+    )
+        : widget.initialPage; // Mostra initialPage se l'utente non è autenticato
+
+    return MaterialApp(
+      navigatorKey: navigatorKey,
+      title: 'Flutter Demo',
       theme: darkTheme,
+
+
       home: Scaffold(
-        body: IndexedStack( // Utilizziamo IndexedStack per mantenere lo stato delle pagine
-          index: _currentIndex, // L'indice corrente determina quale pagina viene visualizzata
-          children: [
-            MyHomePage(title: 'See Your Music'),
-            CercaUtentiPage(),
-            NotifichePage(),
-            ProfiloPersonale(),
+        body: currentPage,
+        bottomNavigationBar: isUserAuthenticated ? BottomNavigationBar(
+          items: const <BottomNavigationBarItem>[
+            BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+            BottomNavigationBarItem(icon: Icon(Icons.search), label: 'Search'),
+            BottomNavigationBarItem(icon: Icon(Icons.notifications), label: 'Notifiche'),
+            BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
           ],
-        ),
-        bottomNavigationBar: BottomNavigationBar( // Barra di navigazione nella parte inferiore dello schermo
-          items: const <BottomNavigationBarItem>[ // Elementi della barra di navigazione
-            BottomNavigationBarItem(
-              icon: Icon(Icons.home),
-              label: 'Home',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.search),
-              label: 'Search',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.notifications),
-              label: 'Notifiche',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.person),
-              label: 'Profile',
-            ),
-          ],
-          currentIndex: _currentIndex, // Indice corrente della barra di navigazione
-          // Gestisce il tap sugli elementi della barra di navigazione
+          currentIndex: _currentIndex,
           onTap: (index) {
-            // Verifica se l'indice selezionato è diverso dall'indice corrente
-            if (index != _currentIndex) {
-              setState(() {
-                // Aggiorna l'indice corrente con l'indice selezionato
-                _currentIndex = index;
-              });
-            }
+            setState(() {
+              _currentIndex = index;
+            });
           },
-        ),
+        ) : null, // Nasconde la BottomNavigationBar se l'utente non è autenticato
       ),
     );
   }
+}
+
+void checkUserLoggedIn() async {
+  FirebaseAuth.instance.authStateChanges().listen((User? user) {
+    if (user == null) {
+      print('Listener authStateChanges: Utente non loggato');
+    } else {
+      print('Listener authStateChanges: Utente loggato');
+    }
+  });
 }
 
 class RegistrationPage extends StatelessWidget {
