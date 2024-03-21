@@ -43,7 +43,7 @@ void main() async {
   if (user != null) {
     initialPage = const MyApp(initialPage: MyHomePage(title: 'Home'));
   } else {
-    initialPage = RegistrationPage();
+    initialPage = RegistrationPage(); //OCCHIO
   }
 
   // Avvia l'applicazione Flutter passando la pagina iniziale
@@ -68,7 +68,7 @@ void main() async {
 }*/
 
 // Function to create a new user account with email and password
-void registerWithEmailAndPassword(context, String name, String email, String password) async {
+Future<void> registerWithEmailAndPassword(context, String name, String email, String password) async {
   try {
     final credential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
       email: email,
@@ -108,7 +108,7 @@ void registerWithEmailAndPassword(context, String name, String email, String pas
 }
 
 // Function to sign in a user with email and password
-void signInWithEmailAndPassword(BuildContext context, String email, String password) async {
+Future<void> signInWithEmailAndPassword(BuildContext context, String email, String password) async {
   try {
     // Sign in the user with email and password
     final credential = await FirebaseAuth.instance.signInWithEmailAndPassword(
@@ -235,17 +235,24 @@ void checkUserLoggedIn() async {
   });
 }
 
-class RegistrationPage extends StatelessWidget {
+class RegistrationPage extends StatefulWidget {
+  const RegistrationPage({Key? key}) : super(key: key);
+
+  @override
+  _RegistrationPageState createState() => _RegistrationPageState();
+}
+
+class _RegistrationPageState extends State<RegistrationPage> {
   final TextEditingController nameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
 
-  RegistrationPage({Key? key}) : super(key: key);
-
   bool _obscureText = true;
 
   void _togglePasswordVisibility(BuildContext context) {
-    _obscureText = !_obscureText;
+    setState(() {
+      _obscureText = !_obscureText;
+    });
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       content: Text(_obscureText ? 'Password nascosta' : 'Password visibile'),
       duration: Duration(seconds: 1),
@@ -293,7 +300,7 @@ class RegistrationPage extends StatelessWidget {
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: () {
-                // Call the registerWithEmailAndPassword function with name, email, and password entered by the user
+                // Chiamare la funzione registerWithEmailAndPassword con nome, email e password inserite dall'utente
                 registerWithEmailAndPassword(
                   context,
                   nameController.text,
@@ -329,16 +336,23 @@ class RegistrationPage extends StatelessWidget {
   }
 }
 
-class LoginPage extends StatelessWidget {
+class LoginPage extends StatefulWidget {
+  const LoginPage({Key? key}) : super(key: key);
+
+  @override
+  _LoginPage createState() => _LoginPage();
+}
+
+class _LoginPage extends State<LoginPage> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
-
-  LoginPage({Key? key}) : super(key: key);
 
   bool _obscureText = true;
 
   void _togglePasswordVisibility(BuildContext context) {
-    _obscureText = !_obscureText;
+    setState(() {
+      _obscureText = !_obscureText;
+    });
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       content: Text(_obscureText ? 'Password nascosta' : 'Password visibile'),
       duration: Duration(seconds: 1),
@@ -380,13 +394,22 @@ class LoginPage extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             ElevatedButton(
-              onPressed: () {
-                // Call the signInWithEmailAndPassword function with the email and password entered by the user
-                signInWithEmailAndPassword(
-                  context,
-                  emailController.text,
-                  passwordController.text,
-                );
+              onPressed: () async {
+                // Chiamare la funzione signInWithEmailAndPassword con l'email e la password inserite dall'utente
+                try {
+                  await signInWithEmailAndPassword(
+                    context,
+                    emailController.text,
+                    passwordController.text,
+                  );
+                } catch (error) {
+                  print('Error during sign-in attempt: $error');
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    content: Text('Una tra mail e password è sbagliata'),
+                    duration: Duration(seconds: 2),
+                  ));
+                  print('Error snackbar shown');
+                }
               },
               child: const Text('Accedi'),
             ),
