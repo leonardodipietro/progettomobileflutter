@@ -242,17 +242,15 @@ class RegistrationPage extends StatelessWidget {
 
   RegistrationPage({Key? key}) : super(key: key);
 
-  //bool _obscureText = true;
+  bool _obscureText = true;
 
-  // void _togglePasswordVisibility(BuildContext context) {
-  //   _obscureText = !_obscureText;
-  //   ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-  //     content: Text(_obscureText ? 'Password nascosta' : 'Password visibile'),
-  //     duration: Duration(seconds: 1),
-  //   ));
-  // }
-
-  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  void _togglePasswordVisibility(BuildContext context) {
+    _obscureText = !_obscureText;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(_obscureText ? 'Password nascosta' : 'Password visibile'),
+      duration: Duration(seconds: 1),
+    ));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -269,7 +267,7 @@ class RegistrationPage extends StatelessWidget {
             const SizedBox(height: 20),
             TextField(
               controller: nameController,
-              decoration: InputDecoration(labelText: 'Name'),
+              decoration: InputDecoration(labelText: 'Name',),
             ),
             const SizedBox(height: 20),
             TextField(
@@ -277,18 +275,20 @@ class RegistrationPage extends StatelessWidget {
               decoration: const InputDecoration(labelText: 'Email'),
             ),
             const SizedBox(height: 20),
-            TextFormField(
+            TextField(
               controller: passwordController,
               decoration: InputDecoration(
                 labelText: 'Password',
-                suffixIcon: GestureDetector(
-                  onTap: () {
-                    passwordController.clear();
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    _obscureText ? Icons.visibility : Icons.visibility_off,
+                  ),
+                  onPressed: () {
+                    _togglePasswordVisibility(context);
                   },
-                  child: Icon(Icons.visibility),
                 ),
               ),
-              obscureText: true,
+              obscureText: _obscureText,
             ),
             const SizedBox(height: 16),
             ElevatedButton(
@@ -335,16 +335,15 @@ class LoginPage extends StatelessWidget {
 
   LoginPage({Key? key}) : super(key: key);
 
-  // bool _obscureText = true;
-  //
-  // void _togglePasswordVisibility(BuildContext context) {
-  //   _obscureText = !_obscureText;
-  //   ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-  //     content: Text(_obscureText ? 'Password nascosta' : 'Password visibile'),
-  //     duration: Duration(seconds: 1),
-  //   ));
-  // }
-  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  bool _obscureText = true;
+
+  void _togglePasswordVisibility(BuildContext context) {
+    _obscureText = !_obscureText;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(_obscureText ? 'Password nascosta' : 'Password visibile'),
+      duration: Duration(seconds: 1),
+    ));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -364,18 +363,20 @@ class LoginPage extends StatelessWidget {
               decoration: const InputDecoration(labelText: 'Email'),
             ),
             const SizedBox(height: 20),
-            TextFormField(
+            TextField(
               controller: passwordController,
               decoration: InputDecoration(
                 labelText: 'Password',
-                suffixIcon: GestureDetector(
-                  onTap: () {
-                    passwordController.clear();
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    _obscureText ? Icons.visibility : Icons.visibility_off,
+                  ),
+                  onPressed: () {
+                    _togglePasswordVisibility(context);
                   },
-                  child: Icon(Icons.visibility),
                 ),
               ),
-              obscureText: true,
+              obscureText: _obscureText,
             ),
             const SizedBox(height: 16),
             ElevatedButton(
