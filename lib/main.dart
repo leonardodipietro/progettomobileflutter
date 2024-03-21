@@ -190,7 +190,7 @@ class _MyAppState extends State<MyApp> {
         ? IndexedStack(
       index: _currentIndex,
       children: [
-        MyHomePage(title: 'Home'),
+        MyHomePage(title: 'See Your Music'),
         CercaUtentiPage(),
         NotifichePage(),
         ProfiloPersonale(),
@@ -211,7 +211,7 @@ class _MyAppState extends State<MyApp> {
             BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
             BottomNavigationBarItem(icon: Icon(Icons.search), label: 'Search'),
             BottomNavigationBarItem(icon: Icon(Icons.notifications), label: 'Notifiche'),
-            BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
+            BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Impostazioni'),
           ],
           currentIndex: _currentIndex,
           onTap: (index) {
@@ -240,7 +240,19 @@ class RegistrationPage extends StatelessWidget {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
 
-  RegistrationPage({super.key});
+  RegistrationPage({Key? key}) : super(key: key);
+
+  //bool _obscureText = true;
+
+  // void _togglePasswordVisibility(BuildContext context) {
+  //   _obscureText = !_obscureText;
+  //   ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+  //     content: Text(_obscureText ? 'Password nascosta' : 'Password visibile'),
+  //     duration: Duration(seconds: 1),
+  //   ));
+  // }
+
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
   @override
   Widget build(BuildContext context) {
@@ -254,19 +266,28 @@ class RegistrationPage extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            const SizedBox(height: 20),
             TextField(
               controller: nameController,
-              decoration: InputDecoration(
-                labelText: 'Name',
-              ),
+              decoration: InputDecoration(labelText: 'Name'),
             ),
+            const SizedBox(height: 20),
             TextField(
               controller: emailController,
               decoration: const InputDecoration(labelText: 'Email'),
             ),
-            TextField(
+            const SizedBox(height: 20),
+            TextFormField(
               controller: passwordController,
-              decoration: const InputDecoration(labelText: 'Password'),
+              decoration: InputDecoration(
+                labelText: 'Password',
+                suffixIcon: GestureDetector(
+                  onTap: () {
+                    passwordController.clear();
+                  },
+                  child: Icon(Icons.visibility),
+                ),
+              ),
               obscureText: true,
             ),
             const SizedBox(height: 16),
@@ -314,6 +335,17 @@ class LoginPage extends StatelessWidget {
 
   LoginPage({Key? key}) : super(key: key);
 
+  // bool _obscureText = true;
+  //
+  // void _togglePasswordVisibility(BuildContext context) {
+  //   _obscureText = !_obscureText;
+  //   ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+  //     content: Text(_obscureText ? 'Password nascosta' : 'Password visibile'),
+  //     duration: Duration(seconds: 1),
+  //   ));
+  // }
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -326,13 +358,23 @@ class LoginPage extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            const SizedBox(height: 20),
             TextField(
               controller: emailController,
               decoration: const InputDecoration(labelText: 'Email'),
             ),
-            TextField(
+            const SizedBox(height: 20),
+            TextFormField(
               controller: passwordController,
-              decoration: const InputDecoration(labelText: 'Password'),
+              decoration: InputDecoration(
+                labelText: 'Password',
+                suffixIcon: GestureDetector(
+                  onTap: () {
+                    passwordController.clear();
+                  },
+                  child: Icon(Icons.visibility),
+                ),
+              ),
               obscureText: true,
             ),
             const SizedBox(height: 16),
@@ -404,7 +446,6 @@ class _MyHomePageState extends State<MyHomePage> {
     _initUniLinks();
 
     _loadUserPreferences();
-    _loadAndHandleSavedPreferences();
 
     // Popola la lista automaticamente all'avvio dell'app
     if (contentType == ContentType.tracks) {
@@ -630,22 +671,6 @@ class _MyHomePageState extends State<MyHomePage> {
     prefs.setInt('contentType', contentType.index);
 
     print('Preferenze utente salvate');
-  }
-
-  _loadAndHandleSavedPreferences() async {
-    print("Dentro _loadAndHandleSavedPreferences");
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String savedTerm = prefs.getString('term') ?? 'short_term';
-    String savedType = prefs.getString('type') ?? 'top tracks';
-
-    // Controllo se deve essere caricata la lista delle tracce o degli artisti
-    if (savedType == 'top tracks') {
-      print("Caricamento top tracks");
-      handleTrackButtonClicked(savedTerm);
-    } else {
-      print("Caricamento top artist");
-      handleArtistButtonClicked(savedTerm);
-    }
   }
 
   void applyFilter(String newFilter) async {

@@ -79,7 +79,7 @@ class _CercaUtentiPageState extends State<CercaUtentiPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Cerca Utenti'),
+        title: Text('See Your Music'),
         actions: [],
       ),
       body: Column(
