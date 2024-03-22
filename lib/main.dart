@@ -269,6 +269,16 @@ class _RegistrationPageState extends State<RegistrationPage> {
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            Center(
+              child: Text(
+                'Benvenuto su See Your Music',
+                style: TextStyle(
+                  fontSize: 25,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF1ED660), // Colore verde
+                ),
+              ),
+            ),
             const SizedBox(height: 20),
             TextField(
               controller: nameController,
@@ -369,6 +379,16 @@ class _LoginPage extends State<LoginPage> {
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            Center(
+              child: Text(
+                'Benvenuto su See Your Music',
+                style: TextStyle(
+                  fontSize: 25,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF1ED660), // Colore verde
+                ),
+              ),
+            ),
             const SizedBox(height: 20),
             TextField(
               controller: emailController,
