@@ -108,7 +108,7 @@ Future<void> registerWithEmailAndPassword(context, String name, String email, St
 }
 
 // Function to sign in a user with email and password
-Future<void> signInWithEmailAndPassword(BuildContext context, String email, String password) async {
+Future<bool> signInWithEmailAndPassword(BuildContext context, String email, String password) async {
   try {
     // Sign in the user with email and password
     final credential = await FirebaseAuth.instance.signInWithEmailAndPassword(
@@ -128,6 +128,7 @@ Future<void> signInWithEmailAndPassword(BuildContext context, String email, Stri
       context,
       MaterialPageRoute(builder: (context) => MyApp(initialPage: MyHomePage(title: 'Home'))),
     );
+    return true;
   } on FirebaseAuthException catch (e) {
     // Handle FirebaseAuthException errors
     if (e.code == 'user-not-found') {
@@ -138,9 +139,7 @@ Future<void> signInWithEmailAndPassword(BuildContext context, String email, Stri
       // Handle other FirebaseAuthException errors
       print('Error signing in: ${e.message}');
     }
-  } catch (e) {
-    // Handle other errors
-    print('Error signing in: $e');
+    return false;
   }
 }
 
@@ -187,8 +186,7 @@ class _MyAppState extends State<MyApp> {
       theme: darkTheme,*/
     // Utilizza una condizione per decidere quale pagina mostrare
     final Widget currentPage = isUserAuthenticated
-        ? IndexedStack(
-      index: _currentIndex,
+        ? IndexedStack(index: _currentIndex,
       children: [
         MyHomePage(title: 'See Your Music'),
         CercaUtentiPage(),
@@ -395,20 +393,28 @@ class _LoginPage extends State<LoginPage> {
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: () async {
-                // Chiamare la funzione signInWithEmailAndPassword con l'email e la password inserite dall'utente
-                try {
-                  await signInWithEmailAndPassword(
-                    context,
-                    emailController.text,
-                    passwordController.text,
-                  );
-                } catch (error) {
-                  print('Error during sign-in attempt: $error');
+                // Controlla se entrambi i campi email e password sono stati inseriti
+                if (emailController.text.isEmpty || passwordController.text.isEmpty) {
                   ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                    content: Text('Una tra mail e password è sbagliata'),
+                    content: Text('Inserire sia l\'email che la password'),
                     duration: Duration(seconds: 2),
                   ));
-                  print('Error snackbar shown');
+                  return;
+                }
+
+                // Effettua l'accesso con email e password e ottieni il risultato
+                bool signInSuccess = await signInWithEmailAndPassword(
+                  context,
+                  emailController.text,
+                  passwordController.text,
+                );
+
+                // Se l'accesso non ha avuto successo, mostra un messaggio di errore
+                if (!signInSuccess) {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    content: Text('Una tra email e password è sbagliata'),
+                    duration: Duration(seconds: 2),
+                  ));
                 }
               },
               child: const Text('Accedi'),
