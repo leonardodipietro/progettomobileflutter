@@ -50,15 +50,21 @@ class _ArtistaSelezionatoState extends State<ArtistaSelezionato> {
           children: <Widget>[
             widget.artist.images.isNotEmpty
                 ? fw.Image.network(
-                    widget.artist.images[0].url,
-                    height: 150,
-                    width: 150, // Utilizza l'alias fw per Image di Flutter
-                  )
-            :  fw.Image.asset(
-                   'assets/images/iconacantante.jpeg',
-                    height: 150,
-                    width: 150,
-      ),
+              widget.artist.images[0].url,
+              height: 150,
+              width: 150, // Utilizza l'alias fw per Image di Flutter
+            )
+                : Container(
+              decoration: BoxDecoration(
+                color: Colors.white, // Assicura contrasto con l'immagine scura
+                borderRadius: BorderRadius.circular(8), // Angoli arrotondati
+              ),
+              child: fw.Image.asset(
+                'assets/images/iconacantante.jpg',
+                height: 150,
+                width: 150,
+              ),
+            ),
             const SizedBox(height: 10),
             const Text(
               "recensioni",

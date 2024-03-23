@@ -185,11 +185,35 @@ class _BranoSelezionatoState extends State<BranoSelezionato> {
                 // Immagine dell'album
                 widget.track.album.images.isNotEmpty
                     ? fw.Image.network(
-                        widget.track.album.images[0].url,
+                  widget.track.album.images[0].url,
+                  height: 100,
+                  width: 100,
+                  errorBuilder: (BuildContext context, Object exception, StackTrace? stackTrace) {
+                    // Se c'è un errore nel caricamento, mostra un'immagine di default con una decorazione
+                    return Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white, // Sfondo bianco per il contrasto
+                        borderRadius: BorderRadius.circular(8), // Angoli arrotondati
+                      ),
+                      child: fw.Image.asset(
+                        'assets/images/iconabrano.jpg',
                         height: 150,
-                        width: 150, // Utilizza l'alias fw per Image di Flutter
-                      )
-                    : Container(height: 150, width: 150, color: Colors.grey),
+                        width: 150,
+                      ),
+                    );
+                  },
+                )
+                    : Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white, // Sfondo bianco per il contrasto
+                    borderRadius: BorderRadius.circular(8), // Angoli arrotondati
+                  ),
+                  child: fw.Image.asset(
+                    'assets/images/iconabrano.jpg',
+                    height: 150,
+                    width: 150,
+                  ),
+                ),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Column(
@@ -296,10 +320,21 @@ class _BranoSelezionatoState extends State<BranoSelezionato> {
                             width: 40,
                             height: 40,
                             fit: BoxFit.cover,
-                          )
-                              : const CircleAvatar(
+                            errorBuilder: (
+                                BuildContext context,
+                                Object error,
+                                StackTrace? stackTrace,
+                                ) {
+                              // In caso di errore, mostra un CircleAvatar con l'icona di default
+                              return const CircleAvatar(
                                 backgroundColor: Colors.white10,
                                 child: Icon(Icons.account_circle, color: Colors.white),
+                              );
+                            },
+                          )
+                              : const CircleAvatar(
+                            backgroundColor: Colors.white10,
+                            child: Icon(Icons.account_circle, color: Colors.white),
                           ),
                           title: Text(recensione.content),
                           subtitle: Text("Scritta da: ${utente?.name ?? 'Utente sconosciuto'}"),
