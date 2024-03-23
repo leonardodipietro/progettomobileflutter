@@ -43,7 +43,7 @@ void main() async {
   if (user != null) {
     initialPage = const MyApp(initialPage: MyHomePage(title: 'Home'));
   } else {
-    initialPage = RegistrationPage();
+    initialPage = RegistrationPage(); //OCCHIO
   }
 
   // Avvia l'applicazione Flutter passando la pagina iniziale
@@ -68,7 +68,7 @@ void main() async {
 }*/
 
 // Function to create a new user account with email and password
-void registerWithEmailAndPassword(context, String name, String email, String password) async {
+Future<void> registerWithEmailAndPassword(context, String name, String email, String password) async {
   try {
     final credential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
       email: email,
@@ -108,7 +108,7 @@ void registerWithEmailAndPassword(context, String name, String email, String pas
 }
 
 // Function to sign in a user with email and password
-void signInWithEmailAndPassword(BuildContext context, String email, String password) async {
+Future<bool> signInWithEmailAndPassword(BuildContext context, String email, String password) async {
   try {
     // Sign in the user with email and password
     final credential = await FirebaseAuth.instance.signInWithEmailAndPassword(
@@ -128,6 +128,7 @@ void signInWithEmailAndPassword(BuildContext context, String email, String passw
       context,
       MaterialPageRoute(builder: (context) => MyApp(initialPage: MyHomePage(title: 'Home'))),
     );
+    return true;
   } on FirebaseAuthException catch (e) {
     // Handle FirebaseAuthException errors
     if (e.code == 'user-not-found') {
@@ -138,9 +139,7 @@ void signInWithEmailAndPassword(BuildContext context, String email, String passw
       // Handle other FirebaseAuthException errors
       print('Error signing in: ${e.message}');
     }
-  } catch (e) {
-    // Handle other errors
-    print('Error signing in: $e');
+    return false;
   }
 }
 
@@ -187,10 +186,9 @@ class _MyAppState extends State<MyApp> {
       theme: darkTheme,*/
     // Utilizza una condizione per decidere quale pagina mostrare
     final Widget currentPage = isUserAuthenticated
-        ? IndexedStack(
-      index: _currentIndex,
+        ? IndexedStack(index: _currentIndex,
       children: [
-        MyHomePage(title: 'Home'),
+        MyHomePage(title: 'See Your Music'),
         CercaUtentiPage(),
         NotifichePage(),
         ProfiloPersonale(),
@@ -211,7 +209,7 @@ class _MyAppState extends State<MyApp> {
             BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
             BottomNavigationBarItem(icon: Icon(Icons.search), label: 'Search'),
             BottomNavigationBarItem(icon: Icon(Icons.notifications), label: 'Notifiche'),
-            BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
+            BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Impostazioni'),
           ],
           currentIndex: _currentIndex,
           onTap: (index) {
@@ -235,12 +233,29 @@ void checkUserLoggedIn() async {
   });
 }
 
-class RegistrationPage extends StatelessWidget {
+class RegistrationPage extends StatefulWidget {
+  const RegistrationPage({Key? key}) : super(key: key);
+
+  @override
+  _RegistrationPageState createState() => _RegistrationPageState();
+}
+
+class _RegistrationPageState extends State<RegistrationPage> {
   final TextEditingController nameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
 
-  RegistrationPage({super.key});
+  bool _obscureText = true;
+
+  void _togglePasswordVisibility(BuildContext context) {
+    setState(() {
+      _obscureText = !_obscureText;
+    });
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(_obscureText ? 'Password nascosta' : 'Password visibile'),
+      duration: Duration(seconds: 1),
+    ));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -254,25 +269,46 @@ class RegistrationPage extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            TextField(
-              controller: nameController,
-              decoration: InputDecoration(
-                labelText: 'Name',
+            Center(
+              child: Text(
+                'Benvenuto su See Your Music',
+                style: TextStyle(
+                  fontSize: 25,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF1ED660), // Colore verde
+                ),
               ),
             ),
+            const SizedBox(height: 20),
+            TextField(
+              controller: nameController,
+              decoration: InputDecoration(labelText: 'Name',),
+            ),
+            const SizedBox(height: 20),
             TextField(
               controller: emailController,
               decoration: const InputDecoration(labelText: 'Email'),
             ),
+            const SizedBox(height: 20),
             TextField(
               controller: passwordController,
-              decoration: const InputDecoration(labelText: 'Password'),
-              obscureText: true,
+              decoration: InputDecoration(
+                labelText: 'Password',
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    _obscureText ? Icons.visibility : Icons.visibility_off,
+                  ),
+                  onPressed: () {
+                    _togglePasswordVisibility(context);
+                  },
+                ),
+              ),
+              obscureText: _obscureText,
             ),
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: () {
-                // Call the registerWithEmailAndPassword function with name, email, and password entered by the user
+                // Chiamare la funzione registerWithEmailAndPassword con nome, email e password inserite dall'utente
                 registerWithEmailAndPassword(
                   context,
                   nameController.text,
@@ -308,11 +344,28 @@ class RegistrationPage extends StatelessWidget {
   }
 }
 
-class LoginPage extends StatelessWidget {
+class LoginPage extends StatefulWidget {
+  const LoginPage({Key? key}) : super(key: key);
+
+  @override
+  _LoginPage createState() => _LoginPage();
+}
+
+class _LoginPage extends State<LoginPage> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
 
-  LoginPage({Key? key}) : super(key: key);
+  bool _obscureText = true;
+
+  void _togglePasswordVisibility(BuildContext context) {
+    setState(() {
+      _obscureText = !_obscureText;
+    });
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(_obscureText ? 'Password nascosta' : 'Password visibile'),
+      duration: Duration(seconds: 1),
+    ));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -326,24 +379,63 @@ class LoginPage extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            Center(
+              child: Text(
+                'Benvenuto su See Your Music',
+                style: TextStyle(
+                  fontSize: 25,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF1ED660), // Colore verde
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
             TextField(
               controller: emailController,
               decoration: const InputDecoration(labelText: 'Email'),
             ),
+            const SizedBox(height: 20),
             TextField(
               controller: passwordController,
-              decoration: const InputDecoration(labelText: 'Password'),
-              obscureText: true,
+              decoration: InputDecoration(
+                labelText: 'Password',
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    _obscureText ? Icons.visibility : Icons.visibility_off,
+                  ),
+                  onPressed: () {
+                    _togglePasswordVisibility(context);
+                  },
+                ),
+              ),
+              obscureText: _obscureText,
             ),
             const SizedBox(height: 16),
             ElevatedButton(
-              onPressed: () {
-                // Call the signInWithEmailAndPassword function with the email and password entered by the user
-                signInWithEmailAndPassword(
+              onPressed: () async {
+                // Controlla se entrambi i campi email e password sono stati inseriti
+                if (emailController.text.isEmpty || passwordController.text.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    content: Text('Inserire sia l\'email che la password'),
+                    duration: Duration(seconds: 2),
+                  ));
+                  return;
+                }
+
+                // Effettua l'accesso con email e password e ottieni il risultato
+                bool signInSuccess = await signInWithEmailAndPassword(
                   context,
                   emailController.text,
                   passwordController.text,
                 );
+
+                // Se l'accesso non ha avuto successo, mostra un messaggio di errore
+                if (!signInSuccess) {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    content: Text('Una tra email e password è sbagliata'),
+                    duration: Duration(seconds: 2),
+                  ));
+                }
               },
               child: const Text('Accedi'),
             ),
@@ -367,7 +459,7 @@ class MyHomePage extends StatefulWidget {
 
   final String title;
 
- @override
+  @override
   State<MyHomePage> createState() => _MyHomePageState();
 }
 enum ContentType { tracks, artists }//per salvare l ultima delle lista selezionate tra tracks e artists
@@ -404,8 +496,7 @@ class _MyHomePageState extends State<MyHomePage> {
     _initUniLinks();
 
     _loadUserPreferences();
-    _loadAndHandleSavedPreferences();
-     initializeDataLoading();
+
     // Popola la lista automaticamente all'avvio dell'app
     if (contentType == ContentType.tracks) {
       print("Popolamento lista automatico: tracks, termine: $term");
@@ -413,18 +504,6 @@ class _MyHomePageState extends State<MyHomePage> {
 
     } else {
       print("Popolamento lista automatico: artists, termine: $term");
-      handleArtistButtonClicked(term);
-    }
-  }
-
-  void initializeDataLoading() async {
-    await _loadUserPreferences(); // Assicurati che questa funzione sia asincrona e utilizzi await per SharedPreferences
-
-    // Una volta completato il caricamento delle SharedPreferences, carica i dati.
-    // Questo assicura che il caricamento dei dati inizi solo dopo che le SharedPreferences sono state caricate.
-    if (contentType == ContentType.tracks) {
-      handleTrackButtonClicked(term);
-    } else {
       handleArtistButtonClicked(term);
     }
   }
@@ -539,36 +618,8 @@ class _MyHomePageState extends State<MyHomePage> {
                           child: Column(
                             children: [
                               track.album.images.isNotEmpty
-                                  ? fw.Image.network(
-                                track.album.images[0].url,
-                                height: 100,
-                                width: 100,
-                                errorBuilder: (BuildContext context, Object exception, StackTrace? stackTrace) {
-                                  // Se c'è un errore nel caricamento, mostra un'immagine di default con una decorazione
-                                  return Container(
-                                    decoration: BoxDecoration(
-                                      color: Colors.white, // Sfondo bianco per il contrasto
-                                      borderRadius: BorderRadius.circular(8), // Angoli arrotondati
-                                    ),
-                                    child: fw.Image.asset(
-                                      'assets/images/iconabrano.jpg',
-                                      height: 100,
-                                      width: 100,
-                                    ),
-                                  );
-                                },
-                              )
-                                  : Container(
-                                decoration: BoxDecoration(
-                                  color: Colors.white, // Sfondo bianco per il contrasto
-                                  borderRadius: BorderRadius.circular(8), // Angoli arrotondati
-                                ),
-                                child: fw.Image.asset(
-                                  'assets/images/iconabrano.jpg',
-                                  height: 100,
-                                  width: 100,
-                                ),
-                              ),
+                                  ? fw.Image.network(track.album.images[0].url, height: 100, width: 100) // Utilizza l'alias fw per Image di Flutter
+                                  : Container(height: 100, width: 100),
                               Flexible(
                                   child:Text(
                                     track.name,
@@ -595,36 +646,8 @@ class _MyHomePageState extends State<MyHomePage> {
                           child: Column(
                             children: [
                               artist.images.isNotEmpty
-                                  ? fw.Image.network(
-                                artist.images[0].url,
-                                height: 100,
-                                width: 100,
-                                errorBuilder: (BuildContext context, Object exception, StackTrace? stackTrace) {
-                                  // Se c'è un errore nel caricamento, mostra un'immagine di default con una decorazione
-                                  return Container(
-                                    decoration: BoxDecoration(
-                                      color: Colors.white, // Sfondo bianco per il contrasto
-                                      borderRadius: BorderRadius.circular(8), // Angoli arrotondati
-                                    ),
-                                    child: fw.Image.asset(
-                                      'assets/images/iconacantante.jpg',
-                                      height: 100,
-                                      width: 100,
-                                    ),
-                                  );
-                                },
-                              )
-                                  : Container(
-                                decoration: BoxDecoration(
-                                  color: Colors.white, // Sfondo bianco per il contrasto
-                                  borderRadius: BorderRadius.circular(8), // Angoli arrotondati
-                                ),
-                                child: fw.Image.asset(
-                                  'assets/images/iconacantante.jpg',
-                                  height: 100,
-                                  width: 100,
-                                ),
-                              ),
+                                  ? fw.Image.network(artist.images[0].url, height: 100, width: 100) // Utilizza l'alias fw per Image di Flutter
+                                  : Container(height: 100, width: 100),
                               Flexible(
                                 child: Text(
                                   artist.name,
@@ -700,22 +723,6 @@ class _MyHomePageState extends State<MyHomePage> {
     print('Preferenze utente salvate');
   }
 
-  _loadAndHandleSavedPreferences() async {
-    print("Dentro _loadAndHandleSavedPreferences");
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String savedTerm = prefs.getString('term') ?? 'short_term';
-    String savedType = prefs.getString('type') ?? 'top tracks';
-
-    // Controllo se deve essere caricata la lista delle tracce o degli artisti
-    if (savedType == 'top tracks') {
-      print("Caricamento top tracks");
-      handleTrackButtonClicked(savedTerm);
-    } else {
-      print("Caricamento top artist");
-      handleArtistButtonClicked(savedTerm);
-    }
-  }
-
   void applyFilter(String newFilter) async {
     showDialog(
       context: context,
@@ -780,9 +787,9 @@ class _MyHomePageState extends State<MyHomePage> {
     if (userId == null) return;
     _startAuthenticationProcess(context);
     _spotifyViewModel?.accessToken;
-    //getTopTracks(_spotifyViewModel?.accessToken,userId);
+    getTopTracks(_spotifyViewModel?.accessToken,userId);
     //_spotifyViewModel.fetchTopTracks(timeRange, limit)
-    //getTopArtists(_spotifyViewModel?.accessToken,userId);
+    getTopArtists(_spotifyViewModel?.accessToken,userId);
     //_observeToken();
 
   }
@@ -799,45 +806,6 @@ class _MyHomePageState extends State<MyHomePage> {
     launch(authUrl);
 
     print('Apertura URL di autenticazione: $authUrl');
-  }
-
-
-  void _initUniLinks() async {
-    // Ascolta gli URI in arrivo quando l'app è già aperta è UN LISTENER
-    _sub = getUriLinksStream().listen((Uri? uri) { //TODO IN FUTURO POTREBBE ESSERE DEPRECATA
-      print('URI in arrivo: $uri');
-      if (uri != null) {
-        // Esegui l'autenticazione con il codice di autorizzazione dopo che è arrivato l uri
-        _handleIncomingUri(uri);
-      }
-    }, onError: (err) {
-      print('Errore nel listener URI: $err');
-
-    });
-  }
-
-  void _handleIncomingUri(Uri uri) async {
-    print('Gestione URI: $uri');
-    // Estrai il codice di autorizzazione dall'URI
-    final code = uri.queryParameters['code'];
-    if (code != null) {
-      // Utilizza il ViewModel per autenticare con il codice
-      await _spotifyViewModel?.authenticate(code);
-      print('Autenticazione completata');
-      _onAuthenticationCompleted(); // Questo metodo viene chiamato qui
-    }
-  }
-  void _onAuthenticationCompleted() {
-    final userId = FirebaseAuth.instance.currentUser?.uid;
-    if (userId == null) return;
-
-    final accessToken = _spotifyViewModel?.accessToken;
-    if (accessToken != null) {
-      getTopTracks(accessToken, userId);
-      getTopArtists(accessToken, userId);
-    } else {
-      print("Token di accesso non disponibile.");
-    }
   }
   void getTopTracks(String? token, String userId) {
     print('gettotracks chiamato');
@@ -889,29 +857,7 @@ class _MyHomePageState extends State<MyHomePage> {
       });
     }
   }
-  void handleResponseTrack(trackResponse,userId,timeRange) {
-    print("trackresponse su handle $trackResponse");
-    print("userId $userId");
-    if(trackResponse!= null && userId != null) {
-      //vediamo qui
-      try {
-        print("trackResponse è nullo? ${trackResponse == null}");
-        print("userId è nullo? ${userId == null}");
-        print("trackResponse.items è nullo? ${trackResponse == null}");
-        print("trackResponse.items è vuoto? ${trackResponse.isEmpty}");
-      } catch (e) {
-        print("Si è verificata un'eccezione: $e");
-      }
 
-
-      print("altro per sicurezzaGGG $trackResponse ");
-      if(trackResponse.isNotEmpty) {
-        print("primo test contenuto $userId");
-        _firebaseViewModel.saveTracksToMainNode(trackResponse);
-        _firebaseViewModel.saveUserTopTracks(userId,trackResponse,timeRange);
-      }
-    }
-  }
   void getTopArtists(String? token, String userId) {
     print('gettoartists chiamato');
     List<String> timeRanges = ['short_term', 'medium_term', 'long_term'];
@@ -963,6 +909,58 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
+  void _initUniLinks() async {
+    // Ascolta gli URI in arrivo quando l'app è già aperta è UN LISTENER
+    _sub = getUriLinksStream().listen((Uri? uri) { //TODO IN FUTURO POTREBBE ESSERE DEPRECATA
+      print('URI in arrivo: $uri');
+      if (uri != null) {
+        // Esegui l'autenticazione con il codice di autorizzazione dopo che è arrivato l uri
+        _handleIncomingUri(uri);
+      }
+    }, onError: (err) {
+      print('Errore nel listener URI: $err');
+
+    });
+
+
+  }
+
+  void _handleIncomingUri(Uri uri) async {
+    print('Gestione URI: $uri');
+    // Estrai il codice di autorizzazione dall'URI
+    final code = uri.queryParameters['code'];
+    if (code != null) {
+      // Utilizza il ViewModel per autenticare con il codice
+      await _spotifyViewModel?.authenticate(code);
+      print('Autenticazione completata');//uso l await per aspettare che venga recuperato il codice prima di chiamare fetch
+      // _fetchAndDisplayTopTracks();
+      //_fetchAndDisplayTopArtists();
+    }
+  }
+
+  void handleResponseTrack(trackResponse,userId,timeRange) {
+    print("trackresponse su handle $trackResponse");
+    print("userId $userId");
+    if(trackResponse!= null && userId != null) {
+      //vediamo qui
+      try {
+        print("trackResponse è nullo? ${trackResponse == null}");
+        print("userId è nullo? ${userId == null}");
+        print("trackResponse.items è nullo? ${trackResponse == null}");
+        print("trackResponse.items è vuoto? ${trackResponse.isEmpty}");
+      } catch (e) {
+        print("Si è verificata un'eccezione: $e");
+      }
+
+
+      print("altro per sicurezzaGGG $trackResponse ");
+      if(trackResponse.isNotEmpty) {
+        print("primo test contenuto $userId");
+        _firebaseViewModel.saveTracksToMainNode(trackResponse);
+        _firebaseViewModel.saveUserTopTracks(userId,trackResponse,timeRange);
+      }
+    }
+  }
 
   void handleResponseArtist(artistResponse,userId,timeRange) {
     print("trackresponse su handle $artistResponse");

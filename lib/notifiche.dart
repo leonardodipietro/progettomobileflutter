@@ -556,7 +556,7 @@ class NotifichePageState extends State<NotifichePage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Notifiche'),
+        title: const Text('See Your Music'),
       ),
       body: ListView.builder(
         itemCount: notifiche.length,

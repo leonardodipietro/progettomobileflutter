@@ -66,7 +66,7 @@ class _ProfiloPersonaleState extends State<ProfiloPersonale> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Impostazioni'),
+        title: const Text('See Your Music'),
       ),
       body: SingleChildScrollView(
         child: Column(
