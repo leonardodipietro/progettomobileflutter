@@ -337,20 +337,41 @@ class _PaginaAmicoState extends State<PaginaAmico> {
                             child: Column(
                               children: [
                                 track.album.images.isNotEmpty
-                                    ? fw.Image.network( // Utilizza l'alias fw per Image di Flutter
+                                    ? fw.Image.network(
                                   track.album.images[0].url,
                                   height: 100,
                                   width: 100,
+                                  errorBuilder: (BuildContext context, Object exception, StackTrace? stackTrace) {
+                                    // Se c'è un errore nel caricamento, mostra un'immagine di default con una decorazione
+                                    return Container(
+                                      decoration: BoxDecoration(
+                                        color: Colors.white, // Sfondo bianco per il contrasto
+                                        borderRadius: BorderRadius.circular(8), // Angoli arrotondati
+                                      ),
+                                      child: fw.Image.asset(
+                                        'assets/images/iconabrano.jpg',
+                                        height: 100,
+                                        width: 100,
+                                      ),
+                                    );
+                                  },
                                 )
                                     : Container(
+                                  decoration: BoxDecoration(
+                                    color: Colors.white, // Sfondo bianco per il contrasto
+                                    borderRadius: BorderRadius.circular(8), // Angoli arrotondati
+                                  ),
+                                  child: fw.Image.asset(
+                                    'assets/images/iconabrano.jpg',
                                     height: 100,
                                     width: 100,
-                                    color: Colors.grey),
-                                Flexible(
-                                  child: Text(
-                                    track.name,
-                                    overflow: TextOverflow.ellipsis,
                                   ),
+                                ),
+                                Flexible(
+                                    child:Text(
+                                      track.name,
+                                      overflow: TextOverflow.ellipsis,//serve per evitare l overflow del testo
+                                    )
                                 )
                               ],
                             ),
@@ -372,15 +393,36 @@ class _PaginaAmicoState extends State<PaginaAmico> {
                             child: Column(
                               children: [
                                 artist.images.isNotEmpty
-                                    ? fw.Image.network( // Utilizza l'alias fw per Image di Flutter
+                                    ? fw.Image.network(
                                   artist.images[0].url,
                                   height: 100,
                                   width: 100,
+                                  errorBuilder: (BuildContext context, Object exception, StackTrace? stackTrace) {
+                                    // Se c'è un errore nel caricamento, mostra un'immagine di default con una decorazione
+                                    return Container(
+                                      decoration: BoxDecoration(
+                                        color: Colors.white, // Sfondo bianco per il contrasto
+                                        borderRadius: BorderRadius.circular(8), // Angoli arrotondati
+                                      ),
+                                      child: fw.Image.asset(
+                                        'assets/images/iconacantante.jpg',
+                                        height: 100,
+                                        width: 100,
+                                      ),
+                                    );
+                                  },
                                 )
                                     : Container(
+                                  decoration: BoxDecoration(
+                                    color: Colors.white, // Sfondo bianco per il contrasto
+                                    borderRadius: BorderRadius.circular(8), // Angoli arrotondati
+                                  ),
+                                  child: fw.Image.asset(
+                                    'assets/images/iconacantante.jpg',
                                     height: 100,
                                     width: 100,
-                                    color: Colors.grey),
+                                  ),
+                                ),
                                 Flexible(
                                   child: Text(
                                     artist.name,
