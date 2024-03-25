@@ -618,8 +618,36 @@ class _MyHomePageState extends State<MyHomePage> {
                           child: Column(
                             children: [
                               track.album.images.isNotEmpty
-                                  ? fw.Image.network(track.album.images[0].url, height: 100, width: 100) // Utilizza l'alias fw per Image di Flutter
-                                  : Container(height: 100, width: 100),
+                                  ? fw.Image.network(
+                                track.album.images[0].url,
+                                height: 100,
+                                width: 100,
+                                errorBuilder: (BuildContext context, Object exception, StackTrace? stackTrace) {
+                                  // Se c'è un errore nel caricamento, mostra un'immagine di default con una decorazione
+                                  return Container(
+                                    decoration: BoxDecoration(
+                                      color: Colors.white, // Sfondo bianco per il contrasto
+                                      borderRadius: BorderRadius.circular(8), // Angoli arrotondati
+                                    ),
+                                    child: fw.Image.asset(
+                                      'assets/images/iconabrano.jpg',
+                                      height: 100,
+                                      width: 100,
+                                    ),
+                                  );
+                                },
+                              )
+                                  : Container(
+                                decoration: BoxDecoration(
+                                  color: Colors.white, // Sfondo bianco per il contrasto
+                                  borderRadius: BorderRadius.circular(8), // Angoli arrotondati
+                                ),
+                                child: fw.Image.asset(
+                                  'assets/images/iconabrano.jpg',
+                                  height: 100,
+                                  width: 100,
+                                ),
+                              ),
                               Flexible(
                                   child:Text(
                                     track.name,
@@ -646,8 +674,36 @@ class _MyHomePageState extends State<MyHomePage> {
                           child: Column(
                             children: [
                               artist.images.isNotEmpty
-                                  ? fw.Image.network(artist.images[0].url, height: 100, width: 100) // Utilizza l'alias fw per Image di Flutter
-                                  : Container(height: 100, width: 100),
+                                  ? fw.Image.network(
+                                artist.images[0].url,
+                                height: 100,
+                                width: 100,
+                                errorBuilder: (BuildContext context, Object exception, StackTrace? stackTrace) {
+                                  // Se c'è un errore nel caricamento, mostra un'immagine di default con una decorazione
+                                  return Container(
+                                    decoration: BoxDecoration(
+                                      color: Colors.white, // Sfondo bianco per il contrasto
+                                      borderRadius: BorderRadius.circular(8), // Angoli arrotondati
+                                    ),
+                                    child: fw.Image.asset(
+                                      'assets/images/iconacantante.jpg',
+                                      height: 100,
+                                      width: 100,
+                                    ),
+                                  );
+                                },
+                              )
+                                  : Container(
+                                decoration: BoxDecoration(
+                                  color: Colors.white, // Sfondo bianco per il contrasto
+                                  borderRadius: BorderRadius.circular(8), // Angoli arrotondati
+                                ),
+                                child: fw.Image.asset(
+                                  'assets/images/iconacantante.jpg',
+                                  height: 100,
+                                  width: 100,
+                                ),
+                              ),
                               Flexible(
                                 child: Text(
                                   artist.name,
@@ -807,108 +863,6 @@ class _MyHomePageState extends State<MyHomePage> {
 
     print('Apertura URL di autenticazione: $authUrl');
   }
-  void getTopTracks(String? token, String userId) {
-    print('gettotracks chiamato');
-    List<String> timeRanges = ['short_term', 'medium_term', 'long_term'];
-    for (var timeRange in timeRanges) {
-      // Esegue fetchTopTracks in background
-      Future(() async {
-        await _spotifyViewModel?.fetchTopTracks(timeRange, 50);
-      }).then((_) {
-        // A seconda del timeRange, ascolta il rispettivo stream
-        switch (timeRange) {
-          case 'short_term':
-            _spotifyViewModel?.shortTermTracksStream.listen(
-                  (response) {
-                handleResponseTrack(response, userId, timeRange);
-              },
-              onError: (error) {
-                // Gestisci l'errore qui
-                print('Errore nello stream: $error');
-              },
-            );
-            break;
-          case 'medium_term':
-            _spotifyViewModel?.mediumTermTracksStream.listen(
-                  (response) {
-                handleResponseTrack(response, userId, timeRange);
-              },
-              onError: (error) {
-                // Gestisci l'errore qui
-                print('Errore nello stream: $error');
-              },
-            );
-            break;
-
-
-          case 'long_term':
-            _spotifyViewModel?.longTermTracksStream.listen(
-                  (response) {
-                handleResponseTrack(response, userId, timeRange);
-              },
-              onError: (error) {
-                // Gestisci l'errore qui
-                print('Errore nello stream: $error');
-              },
-            );
-            break;
-            break;
-        }
-      });
-    }
-  }
-
-  void getTopArtists(String? token, String userId) {
-    print('gettoartists chiamato');
-    List<String> timeRanges = ['short_term', 'medium_term', 'long_term'];
-    for (var timeRange in timeRanges) {
-      // Esegue fetchTopTracks in background
-      Future(() async {
-        await _spotifyViewModel?.fetchTopArtists(timeRange, 50);
-      }).then((_) {
-        // A seconda del timeRange, ascolta il rispettivo stream
-        switch (timeRange) {
-          case 'short_term':
-            _spotifyViewModel?.shortTermArtistsStream.listen(
-                  (response) {
-                handleResponseArtist(response, userId, timeRange);
-              },
-              onError: (error) {
-                // Gestisci l'errore qui
-                print('Errore nello stream: $error');
-              },
-            );
-            break;
-          case 'medium_term':
-            _spotifyViewModel?.mediumTermArtistsStream.listen(
-                  (response) {
-                handleResponseArtist(response, userId, timeRange);
-              },
-              onError: (error) {
-                // Gestisci l'errore qui
-                print('Errore nello stream: $error');
-              },
-            );
-            break;
-
-
-          case 'long_term':
-            _spotifyViewModel?.longTermArtistsStream.listen(
-                  (response) {
-                handleResponseArtist(response, userId, timeRange);
-              },
-              onError: (error) {
-                // Gestisci l'errore qui
-                print('Errore nello stream: $error');
-              },
-            );
-            break;
-            break;
-        }
-      });
-    }
-  }
-
   void _initUniLinks() async {
     // Ascolta gli URI in arrivo quando l'app è già aperta è UN LISTENER
     _sub = getUriLinksStream().listen((Uri? uri) { //TODO IN FUTURO POTREBBE ESSERE DEPRECATA
@@ -932,12 +886,34 @@ class _MyHomePageState extends State<MyHomePage> {
     if (code != null) {
       // Utilizza il ViewModel per autenticare con il codice
       await _spotifyViewModel?.authenticate(code);
-      print('Autenticazione completata');//uso l await per aspettare che venga recuperato il codice prima di chiamare fetch
-      // _fetchAndDisplayTopTracks();
-      //_fetchAndDisplayTopArtists();
+      print('Autenticazione completata');
+      _onAuthenticationCompleted(); // Questo metodo viene chiamato qui
+    }
+  }
+  void _onAuthenticationCompleted() {
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+    if (userId == null) return;
+
+    final accessToken = _spotifyViewModel?.accessToken;
+    if (accessToken != null) {
+      getTopTracks(accessToken, userId);
+      getTopArtists(accessToken, userId);
+    } else {
+      print("Token di accesso non disponibile.");
     }
   }
 
+  void getTopTracks(String? accessToken, String userId) {
+    print('getTopTracks chiamato');
+    List<String> timeRanges = ['short_term', 'medium_term', 'long_term'];
+
+    for (var timeRange in timeRanges) {
+      // Non è più necessario avvolgere la chiamata in un Future separato.
+      _spotifyViewModel?.fetchTopTracks(accessToken!, timeRange, 50, (response, fetchedTimeRange) {
+        handleResponseTrack(response, userId, fetchedTimeRange);
+      });
+    }
+  }
   void handleResponseTrack(trackResponse,userId,timeRange) {
     print("trackresponse su handle $trackResponse");
     print("userId $userId");
@@ -959,6 +935,19 @@ class _MyHomePageState extends State<MyHomePage> {
         _firebaseViewModel.saveTracksToMainNode(trackResponse);
         _firebaseViewModel.saveUserTopTracks(userId,trackResponse,timeRange);
       }
+    }
+  }
+
+
+  void getTopArtists(String? accessToken, String userId) {
+    print('getTopArtists chiamato');
+    List<String> timeRanges = ['short_term', 'medium_term', 'long_term'];
+
+    for (var timeRange in timeRanges) {
+      _spotifyViewModel?.fetchTopArtists(accessToken!, timeRange, 50, (response, fetchedTimeRange) {
+        // Questa callback viene chiamata dopo il fetch dei dati e l'aggiornamento degli stream.
+        handleResponseArtist(response, userId, fetchedTimeRange);
+      });
     }
   }
 
