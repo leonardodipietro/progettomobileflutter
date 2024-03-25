@@ -17,7 +17,7 @@ class Notifica {
   final String userId;
   final String testo;
   final String? immagineProfilo;
-  final IconData immagineDefault;// Icona di default nel caso in cui non ci sia un'immagine del profilo
+  final IconData immagineDefault;// Icona di default nel caso in cui non ci sia un'immagine profilo
   bool isFollowing; // Indica se l'utente corrente sta già seguendo il mittente della notifica
   final DateTime? timestamp;
   final String? trackId;
@@ -53,18 +53,13 @@ class NotifichePageState extends State<NotifichePage> {
     User? user = FirebaseAuth.instance.currentUser;
     if (user != null) {
       currentUser = user;
-      // Avvia i listener o altre operazioni qui dopo aver ottenuto l'utente corrente
       startFollowerListener();
       startFollowingListener();
       startReviewListener();
-    } else {
-      // Se l'utente non è loggato, esegui un'azione, come tornare alla schermata di accesso
-      // Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => PaginaDiAccesso()));
     }
   }
 
   void addNewFollowerNotification(String followerId, bool isFollowing) {
-    // Aggiungi la notifica contenente l'ID dell'utente alla lista
     setState(() {
       notifiche.add(
         Notifica(
@@ -73,7 +68,6 @@ class NotifichePageState extends State<NotifichePage> {
           testo: "Ha iniziato a seguirti.",
           userId: followerId,
           immagineProfilo: null,
-          // Immagine del profilo (puoi aggiungere se necessario)
           immagineDefault: Icons.account_circle,
           isFollowing: isFollowing,
         ),
@@ -83,20 +77,19 @@ class NotifichePageState extends State<NotifichePage> {
 
   void checkNewFollower(String followerId) {
     // Query per controllare se il followerId è un nuovo follower
-    // Esegui la logica per verificare se followerId è un nuovo follower
-    bool isNewFollower = true; // Esempio di logica di controllo per determinare se il followerId è un nuovo follower
+    bool isNewFollower = true;
     if (isNewFollower) {
-      // Se followerId è un nuovo follower, aggiungi la notifica
+      // Se followerId è un nuovo follower, aggiunge la notifica
       checkFollowingStatus(followerId);
       print(
-          'Nuovo utente: $followerId'); // Stampa l'id del nuovo utente nella console
-      // Controlla se il follower è tra i tuoi following
+          'Nuovo utente: $followerId');
+      // Controlla se il nuovo follower è tra i following dell'utente corrente
       checkFollowingStatus(followerId);
     }
   }
 
   Future<void> checkFollowingStatus(String followerId) async {
-    // Controlla se l'ID del follower è presente tra i tuoi following
+    // Controlla se l'ID del follower è presente tra i following dell'utente corrente
     DataSnapshot snapshot = await FirebaseDatabase.instance
         .ref()
         .child('users')
@@ -106,19 +99,13 @@ class NotifichePageState extends State<NotifichePage> {
         .once().then((event) => event.snapshot);
     bool isFollowing = snapshot.exists;
 
-    // Aggiungi la notifica dopo aver ottenuto lo stato di seguimento
+    // Aggiunge la notifica dopo aver ottenuto lo stato di isFollowing
     addNewFollowerNotification(followerId, isFollowing);
-
-    // Qui puoi fare ciò che vuoi con il valore di isFollowing
-    // Ad esempio, puoi aggiornare lo stato del pulsante o fare altre azioni in base al risultato
     if (isFollowing) {
       print('Il follower $followerId è già tra i tuoi following');
-      // Qui puoi fare altre azioni come aggiornare lo stato del pulsante a "unfollow"
-      // Qui puoi fare altre azioni come aggiornare lo stato del pulsante a "unfollow"
-      getReviewData(followerId); // Aggiungi questa riga qui
+      getReviewData(followerId);
     } else {
       print('Il follower $followerId non è tra i tuoi following');
-      // Qui puoi fare altre azioni come aggiornare lo stato del pulsante a "follow"
     }
   }
 
@@ -130,8 +117,8 @@ class NotifichePageState extends State<NotifichePage> {
         .child('followers')
         .onChildAdded
         .listen((event) {
-      String followerId = event.snapshot.key ?? ""; // Ottieni l'ID del nuovo follower
-      // Ottieni le informazioni del follower in modo asincrono
+      String followerId = event.snapshot.key ?? ""; // Ottiene l'ID del nuovo follower
+      // Ottiene le informazioni del follower in modo asincrono
       getFollowerData(followerId);
     });
 
@@ -142,7 +129,7 @@ class NotifichePageState extends State<NotifichePage> {
         .child('followers')
         .onChildRemoved
         .listen((event) {
-      String followerId = event.snapshot.key ?? ""; // Ottieni l'ID del follower rimosso
+      String followerId = event.snapshot.key ?? ""; // Ottiene l'ID del follower rimosso
       removeFollowerNotification(followerId);
     });
   }
@@ -155,8 +142,8 @@ class NotifichePageState extends State<NotifichePage> {
         .child('following')
         .onChildAdded
         .listen((event) {
-      String followingUserId = event.snapshot.key ?? ""; // Ottieni l'ID dell'utente che sta seguendo
-      // Aggiorna lo stato di seguimento nelle notifiche
+      String followingUserId = event.snapshot.key ?? ""; // Ottiene l'ID dell'utente che sta seguendo
+      // Aggiorna lo stato di isFollowing nelle notifiche
       updateFollowingStatusInNotification(followingUserId, true);
     });
 
@@ -168,9 +155,9 @@ class NotifichePageState extends State<NotifichePage> {
         .onChildRemoved
         .listen((event) {
       String removedUserId = event.snapshot.key ?? ""; // Ottieni l'ID dell'utente rimosso dai following
-      // Rimuovi le notifiche relative alle recensioni dell'utente rimosso
+      // Rimuove le notifiche relative alle recensioni dell'utente rimosso
       removeReviewsByUserId(removedUserId);
-      // Aggiorna lo stato di seguimento nelle notifiche
+      // Aggiorna lo stato di isFollowing nelle notifiche
       updateFollowingStatusInNotification(removedUserId, false);
     });
   }
@@ -186,7 +173,7 @@ class NotifichePageState extends State<NotifichePage> {
   }
 
   void getFollowerData(String followerId) async {
-    // Ottieni le informazioni del follower
+    // Ottiene le informazioni del follower
     DatabaseReference followerRef = FirebaseDatabase.instance
         .ref()
         .child('users')
@@ -195,9 +182,9 @@ class NotifichePageState extends State<NotifichePage> {
     Map<dynamic, dynamic>? followerData = followerSnapshot.value as Map<dynamic, dynamic>?;
 
     if (followerData != null) {
-      // Estrai le informazioni necessarie dal nodo del follower
-      String followerName = followerData['name'] ?? ''; // Esempio: nome del follower
-      String followerProfileImage = followerData['profile image'] ?? ''; // Esempio: immagine del profilo del follower
+      // Estrae le informazioni necessarie dal nodo del follower
+      String followerName = followerData['name'] ?? '';
+      String followerProfileImage = followerData['profile image'] ?? '';
 
       // Verifica se followerProfileImage è una stringa non vuota
       String? immagineProfilo;
@@ -205,7 +192,7 @@ class NotifichePageState extends State<NotifichePage> {
         immagineProfilo = followerProfileImage;
       }
 
-      // Verifica se il follower è tra i tuoi following
+      // Verifica se il follower è tra i following dell'utente corrente
       DataSnapshot followingSnapshot = await FirebaseDatabase.instance
           .ref()
           .child('users')
@@ -241,7 +228,7 @@ class NotifichePageState extends State<NotifichePage> {
     bool isFollowing = notifiche[index].isFollowing;
 
     if (isFollowing) {
-      // Se è già seguito, rimuovi dalla lista dei following
+      // Se è nello stato isFollowing true al click rimuove l'utente dalla lista dei following
       await FirebaseDatabase.instance
           .ref()
           .child('users')
@@ -261,7 +248,7 @@ class NotifichePageState extends State<NotifichePage> {
       await decrementFollowingCounter();
       await decrementFollowersCounter(followerId);
     } else {
-      // Altrimenti, aggiungilo ai following
+      // Altrimenti, lo aggiunge ai following
       await FirebaseDatabase.instance
           .ref()
           .child('users')
@@ -282,19 +269,11 @@ class NotifichePageState extends State<NotifichePage> {
       await incrementFollowingCounter();
       await incrementFollowersCounter(followerId);
     }
-    // Aggiorna lo stato di seguimento nella lista
+    // Aggiorna lo stato di isFollowing nella lista
     setState(() {
       notifiche[index].isFollowing = !isFollowing;
     });
   }
-
-/*  void reloadNotifications() {
-    // Funzione per ricaricare le notifiche delle recensioni dei nuovi following
-    notifiche.clear(); // Pulisci la lista delle notifiche
-    startFollowerListener();
-    startFollowingListener();
-    startReviewListener(); // Riavvia il listener delle recensioni per ottenere le notifiche aggiornate
-  }*/
 
   Future<void> incrementFollowingCounter() async {
     // Ottieni il valore attuale del contatore dei following
@@ -345,7 +324,7 @@ class NotifichePageState extends State<NotifichePage> {
       int newCount = currentCount + 1;
       counterRef.set(newCount);
     } catch (error) {
-      print('Error retrieving following counter: $error');
+      print('Error retrieving followers counter: $error');
     }
   }
 
@@ -362,7 +341,7 @@ class NotifichePageState extends State<NotifichePage> {
       int newCount = currentCount - 1;
       counterRef.set(newCount);
     } catch (error) {
-      print('Error retrieving following counter: $error');
+      print('Error retrieving follower counter: $error');
     }
   }
 
@@ -372,10 +351,10 @@ class NotifichePageState extends State<NotifichePage> {
         .child('reviews')
         .onChildAdded
         .listen((event) {
-      // Ottieni l'ID della recensione
+      // Ottiene l'ID della recensione
       String reviewId = event.snapshot.key ?? "";
-      // Ottieni le informazioni sulla recensione in modo asincrono
-      getReviewData(reviewId); // Passa l'ID della recensione invece dell'ID del follower
+      // Ottiene le informazioni sulla recensione in modo asincrono
+      getReviewData(reviewId);
     });
 
     FirebaseDatabase.instance
@@ -385,7 +364,7 @@ class NotifichePageState extends State<NotifichePage> {
         .listen((event) {
       // Ottieni l'ID della recensione
       String reviewId = event.snapshot.key ?? "";
-      // Rimuovi la notifica relativa alla recensione
+      // Rimuove la notifica relativa alla recensione
       removeReviewNotification(reviewId);
     });
   }
@@ -416,7 +395,7 @@ class NotifichePageState extends State<NotifichePage> {
       String reviewerId = reviewData['userId'] ?? "";
       String trackId = reviewData['trackId'] ?? "";
       String timestampString = reviewData['timestamp'] ?? "";
-      // Converti la stringa del timestamp in un oggetto DateTime
+      // Converte la stringa del timestamp in un oggetto DateTime
       DateTime timestamp = DateTime.parse(timestampString);
 
       DatabaseReference trackRef = FirebaseDatabase.instance
@@ -490,16 +469,16 @@ class NotifichePageState extends State<NotifichePage> {
 
       // Verifica che i dati esistano
       if (dataSnapshot.exists) {
-        // Ottieni i dati come mappa generica
+        // Ottiene i dati come mappa generica
         Map<dynamic, dynamic> trackDataDynamic = dataSnapshot.value as Map<dynamic, dynamic>;
-        // Converti la mappa in una mappa di tipo String, dynamic
+        // Converte la mappa in una mappa di tipo String, dynamic
         Map<String, dynamic> trackDataStringKeys = trackDataDynamic.map((key, value) => MapEntry(key.toString(), value));
 
 
 
 
-        // DAL DB RECUPERO DELLE LISTE DI ID DELL ARTISTA CHE NON SONO COMPATIBILI CON IL METODO FROM
-        //JSON DI TRACK PERCIO TRASFORMO LA LISTA DI STRINGA IN UNA AD OGGETTI
+        // Recupero dal db della lista degli artistId non compatibili con il metodo
+        //from json e trasormazione della lista di stringhe in lista di oggetti
         List<String> artistIds = List<String>.from(trackDataStringKeys['artists']);
 
 
@@ -509,11 +488,11 @@ class NotifichePageState extends State<NotifichePage> {
           Artist? artist = await retrieveArtistById(artistId);
           if (artist != null) {
             artists.add(artist);
-            print("vediamo cosa c è nelle notifiche ${artists.first.name}");
+            print("vediamo cosa c'è nelle notifiche ${artists.first.name}");
           }
         }
 
-// Assegna la lista degli artisti con tutti i dati all'oggetto Track
+        // Assegna la lista degli artisti con tutti i dati all'oggetto Track
         trackDataStringKeys['artists'] = artists;
 
         trackDataStringKeys['artists'] = artistIds.map((id) => {"id": id}).toList();
@@ -521,7 +500,7 @@ class NotifichePageState extends State<NotifichePage> {
         // Crea un'istanza di Track utilizzando i dati ottenuti dal database
         Track track = Track.fromJson(trackDataStringKeys);
 
-        // Aggiungi un log per visualizzare i dati della traccia convertita
+        // Log per visualizzare i dati della traccia convertita
         print('Converted track data: ${track.artists.first.name}');
 
         return track;
@@ -540,9 +519,9 @@ class NotifichePageState extends State<NotifichePage> {
     DatabaseEvent event = await artistRef.once();
 
     if (event.snapshot.exists) {
-      // Converti il dataSnapshot in un Map<String, dynamic>
+      // Converte il dataSnapshot in un Map<String, dynamic>
       Map<String, dynamic> artistData = Map<String, dynamic>.from(event.snapshot.value as Map);
-      artistData['id'] = artistId; // Assicurati che l'ID sia incluso nei dati, se necessario
+      artistData['id'] = artistId;
       return Artist.fromJson(artistData);
     }
     return null;
@@ -563,10 +542,9 @@ class NotifichePageState extends State<NotifichePage> {
         itemBuilder: (context, index) {
           return GestureDetector(
               onTap: () {
-            // Logic to handle tap based on notification type
+            // Logica di clickbasata sul tipo di notifica
             if (notifiche[index].tipo == TipoNotifica.nuovoFollower) {
-              // Navigate to follower profile
-              // Replace the code below with your navigation logic
+              // Naviga al profilo del follower
               Navigator.push(
                 context,
                 MaterialPageRoute(
@@ -574,20 +552,18 @@ class NotifichePageState extends State<NotifichePage> {
                 ),
               );
             } else if (notifiche[index].tipo == TipoNotifica.nuovaRecensione) {
-              // Navigate to track page
-              // Replace the code below with your navigation logic
               Navigator.push(
                 context,
                 MaterialPageRoute(
                   builder: (context) => FutureBuilder<Track?>(
-                    future: fetchTrack(notifiche[index].trackId!), // Assuming reviewId is the trackId
+                    future: fetchTrack(notifiche[index].trackId!),
                     builder: (context, snapshot) {
                       if (snapshot.connectionState == ConnectionState.waiting) {
-                        return CircularProgressIndicator(); // Or a loading indicator
+                        return Center( child: SizedBox(height: 40, width: 40, child: CircularProgressIndicator(),),);
                       } else if (snapshot.hasError || snapshot.data == null) {
-                        return Text('Error fetching track'); // Handle errors or null track
+                        return Text('Error fetching track');
                       } else {
-                        return BranoSelezionato(track: snapshot.data!); // Use the fetched track
+                        return BranoSelezionato(track: snapshot.data!);
                       }
                     },
                   ),
