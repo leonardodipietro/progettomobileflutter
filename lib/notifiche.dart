@@ -59,6 +59,7 @@ class NotifichePageState extends State<NotifichePage> {
     }
   }
 
+  // Aggiunge una nuova notifica per ogni nuovo follower
   void addNewFollowerNotification(String followerId, bool isFollowing) {
     setState(() {
       notifiche.add(
@@ -75,6 +76,7 @@ class NotifichePageState extends State<NotifichePage> {
     });
   }
 
+  // Controlla se il follower è nuovo a aggiunge la notifica se lo è
   void checkNewFollower(String followerId) {
     // Query per controllare se il followerId è un nuovo follower
     bool isNewFollower = true;
@@ -88,6 +90,7 @@ class NotifichePageState extends State<NotifichePage> {
     }
   }
 
+  // Controlla se l'ID del follower è presente tra i following dell'utente corrente nel database Firebase
   Future<void> checkFollowingStatus(String followerId) async {
     // Controlla se l'ID del follower è presente tra i following dell'utente corrente
     DataSnapshot snapshot = await FirebaseDatabase.instance
@@ -109,6 +112,7 @@ class NotifichePageState extends State<NotifichePage> {
     }
   }
 
+  // Avvia il listener per i nuovi follower e i follower rimossi
   void startFollowerListener() {
     FirebaseDatabase.instance
         .ref()
@@ -134,6 +138,7 @@ class NotifichePageState extends State<NotifichePage> {
     });
   }
 
+  // Avvia il listener per i nuovi following e i following rimossi
   void startFollowingListener() {
     FirebaseDatabase.instance
         .ref()
@@ -162,6 +167,7 @@ class NotifichePageState extends State<NotifichePage> {
     });
   }
 
+  // Aggiorna lo stato di follow nelle notifiche
   void updateFollowingStatusInNotification(String userId, bool isFollowing) {
     setState(() {
       for (var notification in notifiche) {
@@ -172,6 +178,7 @@ class NotifichePageState extends State<NotifichePage> {
     });
   }
 
+  // Ottiene i dati del follower e aggiunge una notifica corrispondente
   void getFollowerData(String followerId) async {
     // Ottiene le informazioni del follower
     DatabaseReference followerRef = FirebaseDatabase.instance
@@ -218,12 +225,14 @@ class NotifichePageState extends State<NotifichePage> {
     }
   }
 
+  // Rimuove la notifica relativa a un follower rimosso
   void removeFollowerNotification(String followerId) {
     setState(() {
       notifiche.removeWhere((notifica) => notifica.userId == followerId);
     });
   }
 
+  // Cambia lo stato di follow/unvfollow e aggiorna la notifica corrispondente
   void toggleFollowStatus(String followerId, int index) async {
     bool isFollowing = notifiche[index].isFollowing;
 
@@ -275,6 +284,7 @@ class NotifichePageState extends State<NotifichePage> {
     });
   }
 
+  // Incrementa il contatore dei following
   Future<void> incrementFollowingCounter() async {
     // Ottieni il valore attuale del contatore dei following
     DatabaseReference counterRef = FirebaseDatabase.instance
@@ -289,10 +299,11 @@ class NotifichePageState extends State<NotifichePage> {
       int newCount = currentCount + 1;
       counterRef.set(newCount);
     } catch (error) {
-      print('Error retrieving following counter: $error');
+      print('Errore nel recupero del following counter: $error');
     }
   }
 
+  // Decrementa il contatore dei following
   Future<void> decrementFollowingCounter() async {
     DatabaseReference counterRef = FirebaseDatabase.instance
         .ref()
@@ -306,10 +317,11 @@ class NotifichePageState extends State<NotifichePage> {
       int newCount = currentCount - 1;
       counterRef.set(newCount);
     } catch (error) {
-      print('Error retrieving following counter: $error');
+      print('Errore nel recupero del following counter: $error');
     }
   }
 
+  // Incrementa il contatore dei followers per l'utente della notifica
   Future<void> incrementFollowersCounter(String followerId) async {
     // Ottieni il valore attuale del contatore dei following
     DatabaseReference counterRef = FirebaseDatabase.instance
@@ -324,10 +336,11 @@ class NotifichePageState extends State<NotifichePage> {
       int newCount = currentCount + 1;
       counterRef.set(newCount);
     } catch (error) {
-      print('Error retrieving followers counter: $error');
+      print('Errore nel recupero del followers counter: $error');
     }
   }
 
+  // Decrementa il contatore dei followers per l'utente della notifica
   Future<void> decrementFollowersCounter(String followerId) async {
     DatabaseReference counterRef = FirebaseDatabase.instance
         .ref()
@@ -341,10 +354,11 @@ class NotifichePageState extends State<NotifichePage> {
       int newCount = currentCount - 1;
       counterRef.set(newCount);
     } catch (error) {
-      print('Error retrieving follower counter: $error');
+      print('Errore nel recupero del follower counter: $error');
     }
   }
 
+  // Avvia il listener per le nuove recensioni e le recensioni rimosse
   void startReviewListener() {
     FirebaseDatabase.instance
         .ref()
@@ -369,12 +383,14 @@ class NotifichePageState extends State<NotifichePage> {
     });
   }
 
+  // Rimuove le notifica reletiva ad una recensione rimossa
   void removeReviewNotification(String reviewId) {
     setState(() {
       notifiche.removeWhere((notifica) => notifica.reviewId == reviewId);
     });
   }
 
+  // Rimuove le notifiche relative alle recensioni di un utente rimosso dai following
   void removeReviewsByUserId(String userId) {
     setState(() {
       notifiche.removeWhere((notifica) =>
@@ -383,6 +399,7 @@ class NotifichePageState extends State<NotifichePage> {
     });
   }
 
+  // Ottiene i dati della recensione e aggiunge una notifica corrispondente
   void getReviewData(String reviewId) async {
     DatabaseReference reviewRef = FirebaseDatabase.instance
         .ref()
@@ -455,8 +472,10 @@ class NotifichePageState extends State<NotifichePage> {
       }
     }
   }
+
+  // Recupera i dati della traccia dal database
   Future<Track> fetchTrack(String trackId) async {
-    print('Fetching track with ID: $trackId');
+    print('Recupero track con ID: $trackId');
 
     try {
       // Interroga il database per ottenere i dati della traccia
@@ -501,17 +520,19 @@ class NotifichePageState extends State<NotifichePage> {
         Track track = Track.fromJson(trackDataStringKeys);
 
         // Log per visualizzare i dati della traccia convertita
-        print('Converted track data: ${track.artists.first.name}');
+        print('Conversione dati della track: ${track.artists.first.name}');
 
         return track;
       } else {
-        throw Exception('Track data not found for ID: $trackId');
+        throw Exception('Non è stata trovata la Track con ID: $trackId');
       }
     } catch (error) {
-      print('Error fetching track: $error');
+      print('Errore nel recupero della track: $error');
       rethrow;
     }
   }
+
+  // Recupera i dati dell'artista dal database
   Future<Artist?> retrieveArtistById(String artistId) async {
     final database = FirebaseDatabase.instance.ref();
     final artistRef = database.child('artists').child(artistId);
@@ -559,9 +580,9 @@ class NotifichePageState extends State<NotifichePage> {
                     future: fetchTrack(notifiche[index].trackId!),
                     builder: (context, snapshot) {
                       if (snapshot.connectionState == ConnectionState.waiting) {
-                        return Center( child: SizedBox(height: 40, width: 40, child: CircularProgressIndicator(),),);
+                        return const Center( child: SizedBox(height: 40, width: 40, child: CircularProgressIndicator(),),);
                       } else if (snapshot.hasError || snapshot.data == null) {
-                        return Text('Error fetching track');
+                        return const Text('Errore nel recupero della track');
                       } else {
                         return BranoSelezionato(track: snapshot.data!);
                       }
@@ -570,7 +591,7 @@ class NotifichePageState extends State<NotifichePage> {
                 ),
               );
             } else {
-              print('Track ID is null');
+              print('Track ID è null');
             }
           },
             child: ListTile(
