@@ -79,8 +79,22 @@ Future<void> registerWithEmailAndPassword(context, String name, String email, St
       print("Error: User update failed.");
     }
   } on FirebaseAuthException catch (e) {
-    // Handle FirebaseAuthException errors
-    // Your existing error handling
+    if (e.code == 'weak-password') {
+      // Password troppo debole
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('La password deve contenere almeno 6 caratteri'),
+        duration: Duration(seconds: 2),
+      ));
+    } else if (e.code == 'email-already-in-use') {
+      // Indirizzo email già utilizzato
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Questo indirizzo email è già stato utilizzato.'),
+        duration: Duration(seconds: 2),
+      ));
+    } else {
+      // Handle other FirebaseAuthException errors
+      print('Error creating account: ${e.message}');
+    }
   } catch (e) {
     // Handle other errors
     print('Error creating account: $e');
@@ -297,7 +311,15 @@ class _RegistrationPageState extends State<RegistrationPage> {
                 ),
                 SizedBox(height: 16),
                 ElevatedButton(
-                  onPressed: () {
+                  onPressed: () async {
+                    // Verifica se gli altri campi sono stati compilati
+                    if (nameController.text.isEmpty || emailController.text.isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                        content: Text('Si prega di compilare tutti i campi'),
+                        duration: Duration(seconds: 2),
+                      ));
+                      return;
+                    }
                     registerWithEmailAndPassword(
                       context,
                       nameController.text,
