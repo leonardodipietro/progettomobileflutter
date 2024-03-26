@@ -26,8 +26,6 @@ class Utente {
     );
   }
 
-
-
   Map<String, dynamic> toMap() {
     return {
       'userId': userId ?? '',
