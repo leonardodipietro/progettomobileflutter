@@ -138,6 +138,26 @@ Future<bool> signInWithEmailAndPassword(BuildContext context, String email, Stri
   }
 }
 
+// Funzione per avviare il processo di recupero della password
+Future<void> resetPassword(BuildContext context, String email) async {
+  try {
+    await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
+    // Mostra un messaggio di successo all'utente
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text('Una email con istruzioni per il ripristino della password è stata inviata al tuo indirizzo email.'),
+      duration: Duration(seconds: 2),
+    ));
+  } catch (e) {
+    // Gestisci gli errori
+    print('Errore durante il recupero della password: $e');
+    // Mostra un messaggio di errore all'utente
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text('Si è verificato un errore durante il recupero della password. Si prega di riprovare più tardi.'),
+      duration: Duration(seconds: 2),
+    ));
+  }
+}
+
 class MyApp extends StatefulWidget {
   final Widget initialPage; // Pagina iniziale dell'applicazione
 
@@ -421,6 +441,16 @@ class _LoginPage extends State<LoginPage> {
                 ),
               ),
               obscureText: _obscureText,
+            ),
+            const SizedBox(height: 0),
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton(
+                onPressed: () {
+                  resetPassword(context, emailController.text);
+                },
+                child: Text('Password dimenticata?', style: TextStyle(fontSize: 14, color: Colors.grey),),
+              ),
             ),
             const SizedBox(height: 16),
             ElevatedButton(

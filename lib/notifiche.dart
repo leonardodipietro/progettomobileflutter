@@ -582,7 +582,7 @@ class NotifichePageState extends State<NotifichePage> {
                       if (snapshot.connectionState == ConnectionState.waiting) {
                         return const Center( child: SizedBox(height: 40, width: 40, child: CircularProgressIndicator(),),);
                       } else if (snapshot.hasError || snapshot.data == null) {
-                        return const Text('Errore nel recupero della track');
+                        return const Text('Errore nel recupero della traccia');
                       } else {
                         return BranoSelezionato(track: snapshot.data!);
                       }
@@ -614,7 +614,7 @@ class NotifichePageState extends State<NotifichePage> {
                           toggleFollowStatus(notifiche[index].userId, index);
                         });
                       },
-                      child: Text(notifiche[index].isFollowing ? "Unfollow" : "Follow"),
+                      child: Text(notifiche[index].isFollowing ? "Smetti di \n seguire" : "Segui"),
                     )
                   : null,
             ),

@@ -106,41 +106,40 @@ class _ProfiloPersonaleState extends State<ProfiloPersonale> {
             ),
             SizedBox(height: 30,),
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
+                Spacer(), // Spacer a sinistra del contatore delle recensioni
                 GestureDetector(
                   onTap: () {
-                    // Azione da eseguire quando viene cliccato il contatore delle recensioni
-                    // Per esempio, potresti navigare a una pagina di recensioni
                     Navigator.push(
                       context,
                       MaterialPageRoute(builder: (context) => ReviewsList()),
                     );
                   },
-                  child: _buildCounter(context, 'Reviews', reviewCounter),
+                  child: _buildCounter(context, 'Recensioni', reviewCounter),
                 ),
+                Spacer(), // Spacer tra il contatore delle recensioni e il contatore dei seguaci
                 GestureDetector(
                   onTap: () {
-                    // Azione da eseguire quando viene cliccato il contatore dei follower
-                    // Per esempio, puoi navigare alla pagina dei follower
                     Navigator.push(
                       context,
                       MaterialPageRoute(builder: (context) => FollowersList()),
                     );
                   },
-                  child: _buildCounter(context, 'Followers', followersCounter),
+                  child: _buildCounter(context, 'Seguaci', followersCounter),
                 ),
+                Spacer(), // Spacer tra il contatore dei seguaci e il contatore dei seguiti
                 GestureDetector(
                   onTap: () {
-                    // Azione da eseguire quando viene cliccato il contatore dei seguiti
-                    // Per esempio, potresti navigare a una pagina dei seguiti
                     Navigator.push(
                       context,
                       MaterialPageRoute(builder: (context) => FollowingList()),
                     );
                   },
-                  child: _buildCounter(context, 'Following', followingCounter),
-                ),              ],
+                  child: _buildCounter(context, 'Seguiti', followingCounter),
+                ),
+                Spacer(), // Spacer a destra del contatore dei seguiti
+              ],
             ),
             SizedBox(height: 50,),
             _buildUsername(context, 'Nome utente', 'JohnDoe'),
@@ -149,12 +148,12 @@ class _ProfiloPersonaleState extends State<ProfiloPersonale> {
             SizedBox(height: 80),
             ElevatedButton(
               onPressed: () => _signOut(context),
-              child: Text('Sign Out'),
+              child: Text('LogOut'),
             ),
             SizedBox(height: 10,),
             ElevatedButton(
               onPressed: () => _deleteAccount(context),
-              child: Text('Delete Account'),
+              child: Text('Elimina Account'),
             ),
           ],
         ),

@@ -315,23 +315,25 @@ class _BranoSelezionatoState extends State<BranoSelezionato> {
                         },
                         child: ListTile(
                           leading: utente?.profile_image != null
-                              ? Image.network(
-                            utente!.profile_image!,
-                            width: 40,
-                            height: 40,
-                            fit: BoxFit.cover,
-                            errorBuilder: (
-                                BuildContext context,
-                                Object error,
-                                StackTrace? stackTrace,
-                                ) {
-                              // In caso di errore, mostra un CircleAvatar con l'icona di default
-                              return const CircleAvatar(
-                                backgroundColor: Colors.white10,
-                                child: Icon(Icons.account_circle, color: Colors.white),
-                              );
-                            },
-                          )
+                              ? ClipOval(
+                                child: Image.network(
+                                  utente!.profile_image!,
+                                  width: 40,
+                                  height: 40,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (
+                                      BuildContext context,
+                                      Object error,
+                                      StackTrace? stackTrace,
+                                      ) {
+                                    // In caso di errore, mostra un CircleAvatar con l'icona di default
+                                    return const CircleAvatar(
+                                      backgroundColor: Colors.white10,
+                                      child: Icon(Icons.account_circle, color: Colors.white),
+                                    );
+                                  },
+                                )
+                              )
                               : const CircleAvatar(
                             backgroundColor: Colors.white10,
                             child: Icon(Icons.account_circle, color: Colors.white),
@@ -353,78 +355,78 @@ class _BranoSelezionatoState extends State<BranoSelezionato> {
                         ),
                       ),
                       if (mostraRisposte)
-                        FutureBuilder<List<Risposta>>(
-                          future: _risposteViewModel.fetchCommentFromRecensione(recensione.commentId),
-                          builder: (context, snapshot) {
-                            if (snapshot.connectionState == ConnectionState.waiting) {
-                              return const CircularProgressIndicator();
-                            } else if (snapshot.hasError) {
-                              return Text("Errore nel caricamento delle risposte: ${snapshot.error}");
-                            } else if (snapshot.hasData && snapshot.data!.isNotEmpty) {
-                              return Padding(
-                                padding: const EdgeInsets.only(left: 20.0),
-                                child: ListView.builder(
-                                  shrinkWrap: true,
-                                  physics: NeverScrollableScrollPhysics(),
-                                  itemCount: snapshot.data!.length,
-                                  itemBuilder: (context, rispostaIndex) {
-                                    final risposta = snapshot.data![rispostaIndex];
-                                    final utenteRisposta =  usersMapRisp[risposta.userId];
-                                    print("prova qui $utenteRisposta") ;
-                                    return ListTile(
-                                      title: Text(risposta.answercontent),
-                                      subtitle: Text("Risposta di: ${utenteRisposta?.name ?? 'Utente sconosciuto'}"),
-                                      leading: utenteRisposta?.profile_image != null
-                                          ? Image.network(
-                                        utenteRisposta!.profile_image!,
-                                        width: 40,
-                                        height: 40,
-                                        fit: BoxFit.cover,
-                                      )
-                                          : const CircleAvatar(
-                                        backgroundColor: Colors.white10,
-                                        child: Icon(Icons.account_circle, color: Colors.white),
-                                      ),
+                      FutureBuilder<List<Risposta>>(
+                        future: _risposteViewModel.fetchCommentFromRecensione(recensione.commentId),
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState == ConnectionState.waiting) {
+                            return const CircularProgressIndicator();
+                          } else if (snapshot.hasError) {
+                            return Text("Errore nel caricamento delle risposte: ${snapshot.error}");
+                          } else if (snapshot.hasData && snapshot.data!.isNotEmpty) {
+                            return Padding(
+                              padding: const EdgeInsets.only(left: 20.0),
+                              child: ListView.builder(
+                                shrinkWrap: true,
+                                physics: NeverScrollableScrollPhysics(),
+                                itemCount: snapshot.data!.length,
+                                itemBuilder: (context, rispostaIndex) {
+                                  final risposta = snapshot.data![rispostaIndex];
+                                  final utenteRisposta =  usersMapRisp[risposta.userId];
+                                  print("prova qui $utenteRisposta") ;
+                                  return ListTile(
+                                    title: Text(risposta.answercontent),
+                                    subtitle: Text("Risposta di: ${utenteRisposta?.name ?? 'Utente sconosciuto'}"),
+                                    leading: utenteRisposta?.profile_image != null
+                                        ? ClipOval(
+                                          child: Image.network(
+                                            utenteRisposta!.profile_image!,
+                                            width: 40,
+                                            height: 40,
+                                            fit: BoxFit.cover,
+                                          ),
+                                        )
+                                        : const CircleAvatar(
+                                            backgroundColor: Colors.white10,
+                                            child: Icon(Icons.account_circle, color: Colors.white),
+                                          ),
                                       onLongPress: () {
                                         if (risposta.userId == actualuser?.userId) {
-                                        // Mostra un AlertDialog quando l'utente mantiene premuta una risposta
-                                        showDialog(
+                                          // Mostra un AlertDialog quando l'utente mantiene premuta una risposta
+                                          showDialog(
                                             context: context,
                                             builder: (BuildContext context) {
                                               return AlertDialog(
-                                                  title: Text("Vuoi cancellare questa risposta?"),
-                                                  actions: <Widget>[
-                                                    TextButton(
-                                                        child: Text("Annulla"),
-                                                        onPressed: () {
-                                                         Navigator.of(context).pop(); // Chiudi il dialogo
-                                                         },
-                                                      ),
-                                                    TextButton(
-                                                       child: Text("Elimina"),
-                                                       onPressed: () {
-                                                       // Chiama il metodo per cancellare la risposta
-                                                        _risposteViewModel.deleteRisposta(risposta.answerId);
-                                                       Navigator.of(context).pop(); // Chiudi il dialogo
-
-                                                       },
-                                                    ),
-                                                    ],
+                                                title: Text("Vuoi cancellare questa risposta?"),
+                                                actions: <Widget>[
+                                                  TextButton(
+                                                    child: Text("Annulla"),
+                                                    onPressed: () {
+                                                     Navigator.of(context).pop(); // Chiudi il dialogo
+                                                     },
+                                                  ),
+                                                  TextButton(
+                                                     child: Text("Elimina"),
+                                                     onPressed: () {
+                                                     // Chiama il metodo per cancellare la risposta
+                                                      _risposteViewModel.deleteRisposta(risposta.answerId);
+                                                     Navigator.of(context).pop(); // Chiudi il dialogo
+                                                     },
+                                                  ),
+                                                ],
                                               );
                                             },
-                                        );
+                                          );
                                         }  //qui
-                                    }
-
-                                    );
-                                  },
-                                ),
-                              );
-                            } else {
-                              return const Text("Nessuna risposta trovata.");
-                            }
-                          },
-                        ),
+                                      },
+                                  );
+                                },
+                              ),
+                            );
+                          } else {
+                            return const Text("Nessuna risposta trovata.");
+                          }
+                        },
+                      ),
                     ],
                   );
                 },
