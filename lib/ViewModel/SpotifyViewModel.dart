@@ -69,41 +69,36 @@ class SpotifyViewModel with ChangeNotifier {
     return _spotifyTokenResponse?.accessToken;
   }
 
-  Future<void> fetchTopTracks(String timeRange, int limit) async {
-    print('fetchtoptracks chiamato');
-    String? accessToken = _spotifyTokenResponse?.accessToken;
+  Future<void> fetchTopTracks(String accessToken, String timeRange, int limit, Function(dynamic response, String timeRange) onTracksFetched) async {
+    print('fetchTopTracks chiamato');
     if (accessToken == null) {
-      throw Exception('Access Token is null');
-    } else {
-      try {
-        final response = await _spotifyRepository.getTopTracks(accessToken, timeRange, limit);
-        print ( "contenuto responde $response");
-        // In base al timeRange, aggiorniamo lo stato appropriato.
-        switch (timeRange) {
-          case "short_term":
-            print('Aggiornamento dello stream per short_term con: $response');
-            _shortTermTracksController.sink.add(response);
-            break;
-          case "medium_term":
-            print('Aggiornamento dello stream per short_term con: $response');
-            _mediumTermTracksController.sink.add(response);
-            break;
-          case "long_term":
-            _longTermTracksController.sink.add(response);
-            break;
-          default:
-            throw Exception('Time range non valido: $timeRange');
-        }
-        // Aggiorna tutti i top tracks, se necessario
-        _topTracksController.sink.add(response);
+      print('Access Token is null');
+      return;
+    }
+    try {
+      final response = await _spotifyRepository.getTopTracks(accessToken, timeRange, limit);
+      print("Contenuto risposta: $response");
 
-
-        print ( "vediamo se qui arriva $_topTracksController");
-      } catch (e) {
-        // Gestione degli errori
-        print('Errore durante la fetchTopTracks: $e');
-        _errorController.sink.add(e as Exception);
+      // Aggiorna lo stato appropriato tramite gli stream.
+      switch (timeRange) {
+        case "short_term":
+          _shortTermTracksController.sink.add(response);
+          break;
+        case "medium_term":
+          _mediumTermTracksController.sink.add(response);
+          break;
+        case "long_term":
+          _longTermTracksController.sink.add(response);
+          break;
+        default:
+          throw Exception('Time range non valido: $timeRange');
       }
+
+      // Invoca il callback passando la risposta e il timeRange.
+      onTracksFetched(response, timeRange);
+    } catch (e) {
+      print('Errore durante la fetchTopTracks: $e');
+      // Qui potresti voler gestire l'errore in modo appropriato.
     }
   }
 
@@ -116,41 +111,35 @@ class SpotifyViewModel with ChangeNotifier {
     }
   }
    */
-  Future<void> fetchTopArtists(String timeRange, int limit) async {
-    print('fetchtopartists chiamato');
-    String? accessToken = _spotifyTokenResponse?.accessToken;
+  Future<void> fetchTopArtists(String accessToken, String timeRange, int limit, Function(dynamic response, String timeRange) onArtistsFetched) async {
+    print('fetchTopArtists chiamato');
     if (accessToken == null) {
-      throw Exception('Access Token is null');
-    } else {
-      try {
-        final response = await _spotifyRepository.getTopArtists(accessToken, timeRange, limit);
-        print ( "contenuto responde $response");
-        // In base al timeRange, aggiorniamo lo stato appropriato.
-        switch (timeRange) {
-          case "short_term":
-            print('Aggiornamento dello stream per short_term con: $response');
-            _shortTermArtistsController.sink.add(response);
-            break;
-          case "medium_term":
-            print('Aggiornamento dello stream per short_term con: $response');
-            _mediumTermArtistsController.sink.add(response);
-            break;
-          case "long_term":
-            _longTermArtistsController.sink.add(response);
-            break;
-          default:
-            throw Exception('Time range non valido: $timeRange');
-        }
-        // Aggiorna tutti i top tracks, se necessario
-        _topArtistsController.sink.add(response);
+      print('Access Token is null');
+      return;
+    }
+    try {
+      final response = await _spotifyRepository.getTopArtists(accessToken, timeRange, limit);
+      print("Contenuto risposta: $response");
 
-
-        print ( "vediamo se qui arriva $_topArtistsController");
-      } catch (e) {
-        // Gestione degli errori
-        print('Errore durante la fetchTopARtist: $e');
-        _errorControllerART.sink.add(e as Exception);
+      // Aggiorna lo stato appropriato tramite gli stream.
+      switch (timeRange) {
+        case "short_term":
+          _shortTermArtistsController.sink.add(response);
+          break;
+        case "medium_term":
+          _mediumTermArtistsController.sink.add(response);
+          break;
+        case "long_term":
+          _longTermArtistsController.sink.add(response);
+          break;
+        default:
+          throw Exception('Time range non valido: $timeRange');
       }
+
+      // Invoca il callback passando la risposta e il timeRange.
+      onArtistsFetched(response, timeRange);
+    } catch (e) {
+      print('Errore durante la fetchTopArtists: $e');
     }
   }
 }
