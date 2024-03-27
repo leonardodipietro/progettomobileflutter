@@ -207,9 +207,13 @@ class _PaginaAmicoState extends State<PaginaAmico> {
 
     try {
       DataSnapshot snapshot = await counterRef.once().then((event) => event.snapshot);
+      if(snapshot.value != null) {
       int currentCount = snapshot.value as int;
       int newCount = currentCount + 1;
       counterRef.set(newCount);
+      } else {
+        counterRef.set(1);
+      }
       print('Contatore dei followers incrementato per l\'utente con ID $userId');
     } catch (error) {
       print('Errore durante l\'incremento del contatore dei followers per l\'utente con ID $userId: $error');
@@ -227,9 +231,15 @@ class _PaginaAmicoState extends State<PaginaAmico> {
 
     try {
       DataSnapshot snapshot = await counterRef.once().then((event) => event.snapshot);
-      int currentCount = snapshot.value as int;
-      int newCount = currentCount + 1;
-      counterRef.set(newCount);
+      if (snapshot.value != null) {
+        // Se esiste, aggiorna il contatore
+        int currentCount = snapshot.value as int;
+        int newCount = currentCount + 1;
+        counterRef.set(newCount);
+      } else {
+        // Se non esiste, crea il nodo e impostalo a 1
+        counterRef.set(1);
+      }
       print('Contatore dei followers incrementato per l\'utente con ID $userId');
     } catch (error) {
       print('Errore durante l\'incremento del contatore dei followers per l\'utente con ID $userId: $error');
