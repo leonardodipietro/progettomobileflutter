@@ -616,7 +616,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 Center(
                   child: ElevatedButton(
                     onPressed: () => _onHandleStartAuthButtonClick(),
-                    child: const Text('Autentica con Spotify'),
+                    child: const Text('Inizia autenticazione Spotify'),
                   ),
                 ),
                 Container(
@@ -637,10 +637,6 @@ class _MyHomePageState extends State<MyHomePage> {
                         onPressed: () => handleArtistButtonClicked(term),
                         child: Text('Top Artist'),
                       ),
-                      /*DA METTERE ElevatedButton(
-                    child:Text('stile'),
-                    onPressed:() => print('bottone premuto'),
-                  ),*/
                     ],
                   ),
                 ),
@@ -834,8 +830,6 @@ class _MyHomePageState extends State<MyHomePage> {
       _tracksToShow = _firebaseViewModel.tracksFromDb;
       _artistsToShow =_firebaseViewModel.artistsFromDb;
     });
-
-
   }
 
   Future<void> handleTrackButtonClicked(String filter) async {

@@ -343,46 +343,6 @@ class FirebaseViewModel extends ChangeNotifier{
     onComplete(artists);
   }
 
-  /*void retrieveArtistsDetails(List<String> artistIds, Function(List<Artist>) onComplete) async {
-    final artistsRef = FirebaseDatabase.instance.ref('artists');
-    List<Artist> artists = [];
-
-    List<Future<void>> artistFutures = artistIds.map((artistId) async {
-      final artistSnapshot = await artistsRef.child(artistId).get();
-
-      if (artistSnapshot.exists) {
-        // Evitiamo il cast diretto utilizzando dynamic e accedendo ai valori con un approccio più sicuro
-        var artistData = artistSnapshot.value as dynamic;
-
-        /*// Estrazione sicura dell'URL dell'immagine
-        String imageUrl = '';
-        if (artistData['images'] != null && artistData['images'] is List && artistData['images'].isNotEmpty) {
-          var firstImage = artistData['images'][0];
-          if (firstImage is Map && firstImage.containsKey('url')) {
-            imageUrl = firstImage['url'] as String;
-          }
-        }*/
-
-        // Creiamo un'istanza di Artist usando i dati recuperati con un approccio che evita il cast diretto
-        Artist artist = Artist.fromJson({
-          'name': artistData['name'],
-          'id': artistId,
-          'genres': artistData['genres'] ?? [],
-          'images': [{'url': artistData['image_url'] ?? 'immagine mancante'}],
-        });
-
-        artists.add(artist);
-      }
-    }).toList();
-
-    // Attendi il completamento di tutte le future
-    await Future.wait(artistFutures);
-
-    // Esegui la callback con la lista di artisti recuperata
-    onComplete(artists);
-  }
-*/
-
   Future<void> fetchTopTracksFromFirebase(String filter) async {
     final userId = auth.FirebaseAuth.instance.currentUser?.uid;
     print("DDDD ${userId}");
@@ -513,8 +473,3 @@ class FirebaseViewModel extends ChangeNotifier{
   }
 
 }
-
-
-
-
-

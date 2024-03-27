@@ -12,6 +12,7 @@ import 'package:progettomobileflutter/ArtistaSelezionato.dart';
 import 'amico_reviews.dart';
 import 'amico_followers.dart';
 import 'amico_following.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class PaginaAmico extends StatefulWidget {
   final String userId;
@@ -38,11 +39,12 @@ class _PaginaAmicoState extends State<PaginaAmico> {
   // Dichiarazione di _firebaseViewModel
   FirebaseViewModel _firebaseViewModel = FirebaseViewModel();
 
-  String filter='short_term';
+  String term = 'short_term';
+  String type = 'top tracks';
+  ContentType contentType = ContentType.tracks;
 
   List<Spotify.Track> _tracksToShow = []; // Dichiarazione di _tracksToShow
   List<Artist> _artistsToShow = []; // Dichiarazione di _artistsToShow
-  ContentType _contentType = ContentType.tracks;
 
   bool _isFollowing = false;
 
@@ -69,6 +71,42 @@ class _PaginaAmicoState extends State<PaginaAmico> {
 
     // Controlla se l'utente sta seguendo l'utente attuale al momento dell'inizializzazione della pagina
     checkFollowingStatus();
+
+    _loadUserPreferences();
+
+    // Popola la lista automaticamente all'avvio dell'app
+    if (contentType == ContentType.tracks) {
+      print("Popolamento lista automatico: tracks, termine: $term");
+      handleTrackButtonClicked(term);
+
+    } else {
+      print("Popolamento lista automatico: artists, termine: $term");
+      handleArtistButtonClicked(term);
+    }
+  }
+
+  _loadUserPreferences() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    // Carica le preferenze dell'utente, se presenti
+    String savedTerm = prefs.getString('term') ?? 'short_term';
+    String savedType = prefs.getString('type') ?? 'top tracks';
+    int savedContentTypeIndex = prefs.getInt('contentType') ?? 0;
+
+    // Imposta le preferenze predefinite se non sono state salvate
+    term = savedTerm;
+    type = savedType;
+    contentType = ContentType.values[savedContentTypeIndex];
+
+    // Stampa le preferenze caricate per controllo
+    print('Termine selezionato: $term');
+    print('Tipo selezionato: $type');
+    print('Tipo di contenuto selezionato: $contentType');
+
+    // Se non ci sono preferenze salvate, salva le impostazioni predefinite
+    if (savedTerm == 'short_term' && savedType == 'top tracks' && savedContentTypeIndex == 0) {
+      _saveUserPreferences();
+    }
   }
 
   @override
@@ -307,23 +345,22 @@ class _PaginaAmicoState extends State<PaginaAmico> {
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
                         ElevatedButton(
-                          onPressed: () => selectFilter(context),
+                          onPressed: () => selectFilter(),
                           child: Text('Filtro'),
                         ),
                         ElevatedButton(
-                          onPressed: () => handleTrackButtonClicked(context),
+                          onPressed: () => handleTrackButtonClicked(term),
                           child: Text('Top Tracks'),
                         ),
                         ElevatedButton(
-                          onPressed: () => handleArtistButtonClicked(context),
+                          onPressed: () => handleArtistButtonClicked(term),
                           child: Text('Top Artist'),
                         ),
                       ],
                     ),
                   ),
                   Expanded(
-                    child: _contentType == ContentType.tracks
-                        ? GridView.count(
+                    child: contentType == ContentType.tracks ? GridView.count(
                       crossAxisCount: 3,
                       children: List.generate(_tracksToShow.length, (index) {
                         // Widget per tracce
@@ -469,7 +506,7 @@ class _PaginaAmicoState extends State<PaginaAmico> {
   }
 
   // Gestisce la selezione del filtro temporale
-  Future<void> selectFilter(BuildContext context) async {
+  Future<void> selectFilter() async {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -481,24 +518,30 @@ class _PaginaAmicoState extends State<PaginaAmico> {
                 GestureDetector(
                   child: Text('Short Term'),
                   onTap: () async {
-                    applyFilter(context, 'short_term'); // Passa il contesto corrente
+                    applyFilter(context, 'short_term');
                     Navigator.of(context).pop(); // Chiude la finestra di dialogo dopo l'azione
+                    _saveUserPreferences();
+                    print('Termine selezionato: $term');
                   },
                 ),
                 Padding(padding: EdgeInsets.all(8.0)),
                 GestureDetector(
                   child: Text('Medium Term'),
                   onTap: () async {
-                    applyFilter(context, 'medium_term'); // Passa il contesto corrente
+                    applyFilter(context, 'medium_term');
                     Navigator.of(context).pop(); // Chiude la finestra di dialogo dopo l'azione
+                    _saveUserPreferences();
+                    print('Termine selezionato: $term');
                   },
                 ),
                 Padding(padding: EdgeInsets.all(8.0)),
                 GestureDetector(
                   child: Text('Long Term'),
                   onTap: () async{
-                    applyFilter(context, 'long_term'); // Passa il contesto corrente
+                    applyFilter(context, 'long_term');
                     Navigator.of(context).pop(); // Chiude la finestra di dialogo dopo l'azione
+                    _saveUserPreferences();
+                    print('Termine selezionato: $term');
                   },
                 ),
               ],
@@ -507,6 +550,15 @@ class _PaginaAmicoState extends State<PaginaAmico> {
         );
       },
     );
+  }
+
+  _saveUserPreferences() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.setString('term', term);
+    prefs.setString('type', type);
+    prefs.setInt('contentType', contentType.index);
+
+    print('Preferenze utente salvate');
   }
 
   // Applica il filtro temporale scelto
@@ -532,7 +584,7 @@ class _PaginaAmicoState extends State<PaginaAmico> {
   }
 
   // Gestisce il click su Top Tracks
-  Future<void> handleTrackButtonClicked(BuildContext context) async {
+  Future<void> handleTrackButtonClicked(String filter) async {
     print("Handle track button clicked chiamata");
     // Utilizza widget.userId per ottenere lo userId necessario
     String userId = widget.userId;
@@ -540,20 +592,20 @@ class _PaginaAmicoState extends State<PaginaAmico> {
     await _firebaseViewModel.fetchTopTracksFriend(userId, filter);
 
     setState(() {
-      _contentType = ContentType.tracks;
+      contentType = ContentType.tracks;
       _tracksToShow= _firebaseViewModel.tracksFromDb;
     });
   }
 
   // Gestisce il click su Top Artist
-  Future<void> handleArtistButtonClicked(BuildContext context) async {
+  Future<void> handleArtistButtonClicked(String filter) async {
     // Utilizza widget.userId per ottenere lo userId necessario
     String userId = widget.userId;
 
     await _firebaseViewModel.fetchTopArtistsFriend(userId, filter);
 
     setState(() {
-      _contentType = ContentType.artists;
+      contentType = ContentType.artists;
       _artistsToShow= _firebaseViewModel.artistsFromDb;
     });
   }
