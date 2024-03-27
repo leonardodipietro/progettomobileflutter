@@ -289,7 +289,7 @@ class FirebaseViewModel extends ChangeNotifier{
         print("Tentativo di recupero tracce per l'utente $userId con filtro $filter");
         DatabaseEvent event = await userTopArtistsRef.once();
         print("DatabaseEvent recuperato con successo");
-        // Assumendo che i valori siano gli ID delle tracce e possano essere trattati come String
+
         final artistIds = event.snapshot.children.map((child) => child.value.toString()).toList();
         retrieveArtistsDetails(artistIds,(List<Artist> artists) {
           for(var artist in artists)
@@ -392,14 +392,14 @@ class FirebaseViewModel extends ChangeNotifier{
         print("Tentativo di recupero tracce per l'utente $userId con filtro $filter");
         DatabaseEvent event = await userTopTracksRef.once();
         print("DatabaseEvent recuperato con successo");
-        // Assumendo che i valori siano gli ID delle tracce e possano essere trattati come String
+
         //map prence i child e ne recupera il value che poi viene convertito in una stringa e poi inserito in una lista
         final trackIds = event.snapshot.children.map((child) => child.value.toString()).toList();
         print("prechiamata ${trackIds}");
         // Ora passiamo una funzione di callback a retrieveTracksDetails
         retrieveTracksDetails(trackIds, (List<Track> tracks) {
           print("Numero di tracce recuperate: ${trackIds.length}");
-          // Qui puoi stampare i dettagli delle tracce come desideri
+
           for (var track in tracks) {
             for (var artist in track.artists) {
               print("Artist: ${artist.name}");
@@ -428,14 +428,14 @@ class FirebaseViewModel extends ChangeNotifier{
         print("Tentativo di recupero tracce per l'utente $userId con filtro $filter");
         DatabaseEvent event = await userTopTracksRef.once();
         print("DatabaseEvent recuperato con successo");
-        // Assumendo che i valori siano gli ID delle tracce e possano essere trattati come String
+
         // map prende i child e ne recupera il value che poi viene convertito in una stringa e poi inserito in una lista
         final trackIds = event.snapshot.children.map((child) => child.value.toString()).toList();
         print("prechiamata ${trackIds}");
         // Ora passiamo una funzione di callback a retrieveTracksDetails
         retrieveTracksDetails(trackIds, (List<Track> tracks) {
           print("Numero di tracce recuperate: ${trackIds.length}");
-          // Qui puoi stampare i dettagli delle tracce come desideri
+
           for (var track in tracks) {
             for (var artist in track.artists) {
               print("Artist: ${artist.name}");

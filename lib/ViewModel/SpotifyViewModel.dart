@@ -60,7 +60,7 @@ class SpotifyViewModel with ChangeNotifier {
 
       notifyListeners();
     } catch (e) {
-      // Gestisci l'errore
+
     }
   }
 
@@ -98,7 +98,7 @@ class SpotifyViewModel with ChangeNotifier {
       onTracksFetched(response, timeRange);
     } catch (e) {
       print('Errore durante la fetchTopTracks: $e');
-      // Qui potresti voler gestire l'errore in modo appropriato.
+
     }
   }
 

@@ -249,7 +249,7 @@ class Artist {
     return {
       'name': name,
       'id': id,
-      'images': images.isNotEmpty ? [{'url': images.first.url}] : [], // Assumendo che vuoi solo l'URL della prima immagine
+      'images': images.isNotEmpty ? [{'url': images.first.url}] : [],
       'genres': genres,
     };
   }

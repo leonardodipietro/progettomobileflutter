@@ -12,7 +12,7 @@ class RecensioneViewModel with ChangeNotifier {
   List<Recensione> recensioniList = [];
   Set<String> userIds = Set();
   late Artist artist;
-//vedere se mettere artists
+
   Future<void> saveRecensione(String? userId, String trackId,
       String commentContent, String artistId) async {
     print('saveRecensione chiamata');
@@ -72,7 +72,7 @@ class RecensioneViewModel with ChangeNotifier {
       print('Decremento del contatore recensioni. Nuovo valore: $currentCount');
     }
 
-    // Imposta il nuovo valore del contatore
+
     await userRef.child('reviews counter').set(currentCount);
     print('Il contatore recensioni è stato aggiornato a: $currentCount');
   }
@@ -103,7 +103,7 @@ class RecensioneViewModel with ChangeNotifier {
       commentId: commentId,
       userId: userId,
       trackId: trackId,
-      timestamp: formattedDateTime, // Aggiorna il timestamp se necessario, altrimenti rimuovi questa riga
+      timestamp: formattedDateTime,
       content: commentContent,
       artistId: artistId,
     );
@@ -117,17 +117,6 @@ class RecensioneViewModel with ChangeNotifier {
       print("Errore nell'aggiornamento della recensione: $error");
     });
   }
-
-
-
-
-
-
-
-
-
-
-
 
 
   void fetchTracksReviewedByArtistAndRetrieveDetails(String artistId,
@@ -163,7 +152,7 @@ class RecensioneViewModel with ChangeNotifier {
           final recensione = Recensione.fromMap(
               child.value as Map<dynamic, dynamic>);
           String trackId = recensione
-              .trackId; // Assumendo che Recensione abbia un campo `trackId` che è una stringa
+              .trackId;
           if (!tracksReviewedIds.contains(trackId)) {
             tracksReviewedIds.add(trackId);
           }
@@ -184,7 +173,7 @@ class RecensioneViewModel with ChangeNotifier {
     DatabaseEvent event = await artistRef.once();
 
     if (event.snapshot.exists) {
-      // Converti il dataSnapshot in un Map<String, dynamic>
+      // Converte il dataSnapshot in un Map<String, dynamic>
       Map<String, dynamic> artistData = Map<String, dynamic>.from(event.snapshot.value as Map);
       artistData['id'] = artistId; // Assicurati che l'ID sia incluso nei dati, se necessario
       return Artist.fromJson(artistData);
@@ -281,8 +270,7 @@ class RecensioneViewModel with ChangeNotifier {
         });
       }
       fetchUsers(userIds.toList()).then((Map<String, Utente> usersMap) {
-        // Qui hai sia le recensioni che la mappa degli utenti
-        // Puoi combinare questi dati come necessario per la tua UI
+
         print("SIAMO QUI");
         print(
             "Dettagli utenti recuperati. Numero di utenti: ${usersMap.length}");

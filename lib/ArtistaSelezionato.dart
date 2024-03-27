@@ -28,8 +28,7 @@ class _ArtistaSelezionatoState extends State<ArtistaSelezionato> {
     print("Pre-chiamata recensione");
     _recensioneViewModel.fetchTracksReviewedByArtistAndRetrieveDetails(widget.artist.id, (List<Track> tracks) {
       setState(() {
-        // Assumendo che tu abbia definito una variabile _tracks nel tuo stato del widget
-        // per tenere traccia delle tracce recensite recuperate e dei loro dettagli
+
         _tracks = tracks;
         print("Dettagli di tutte le tracce recensite recuperati: ${_tracks.length}");
       });
@@ -102,7 +101,7 @@ class _ArtistaSelezionatoState extends State<ArtistaSelezionato> {
                       },
                       child: SizedBox(
                         height: 120, // Fornisce una dimensione esplicita
-                        child: Row( // Usa Row invece di Column
+                        child: Row(
                           children: [
                             // Immagine a sinistra
                             if (track.album.images.isNotEmpty)

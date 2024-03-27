@@ -81,7 +81,7 @@ class RisposteViewModel {
   Future<List<Risposta>> fetchCommentFromRecensione(String commentIdFather) async {
     final databaseRef = FirebaseDatabase.instance.ref();
     List<Risposta> commentiList = [];
-    List<String> userIds = []; // Assicurati che questa lista sia dichiarata qui se non è già gestita altrove
+    List<String> userIds = [];
 
     try {
       DataSnapshot dataSnapshot = await databaseRef.child("answers").get();
@@ -101,7 +101,7 @@ class RisposteViewModel {
       print("Errore nel recuperare i commenti: $error");
     }
 
-    // Opzionalmente, potresti voler restituire anche gli userIds se necessario
+
     return commentiList;
   }
 

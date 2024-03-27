@@ -119,11 +119,10 @@ Future<bool> signInWithEmailAndPassword(BuildContext context, String email, Stri
     final FirebaseViewModel _firebaseViewModel = FirebaseViewModel();
     await _firebaseViewModel.saveUserIdToFirebase(credential.user!.uid);
 
-    // Optionally, you can handle additional steps after successful sign-in here.
+
 
     print('User signed in successfully! User ID: ${credential.user?.uid}');
 
-    // After signing in, navigate to the home page or any other desired screen
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(builder: (context) => MyApp(initialPage: MyHomePage(title: 'Home'))),
@@ -184,7 +183,7 @@ class _MyAppState extends State<MyApp> {
       navigatorKey: navigatorKey, // Assegna la chiave globale al navigatore
       title: 'Flutter Demo',
       theme: darkTheme,*/
-    // Utilizza una condizione per decidere quale pagina mostrare
+
     final Widget currentPage = isUserAuthenticated
         ? IndexedStack(index: _currentIndex,
       children: [
@@ -511,7 +510,7 @@ class _MyHomePageState extends State<MyHomePage> {
   _loadUserPreferences() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
 
-    // Carica le preferenze dell'utente, se presenti
+    // Carica le preferenze dell'utente
     String savedTerm = prefs.getString('term') ?? 'short_term';
     String savedType = prefs.getString('type') ?? 'top tracks';
     int savedContentTypeIndex = prefs.getInt('contentType') ?? 0;
@@ -865,7 +864,7 @@ class _MyHomePageState extends State<MyHomePage> {
   }
   void _initUniLinks() async {
     // Ascolta gli URI in arrivo quando l'app è già aperta è UN LISTENER
-    _sub = getUriLinksStream().listen((Uri? uri) { //TODO IN FUTURO POTREBBE ESSERE DEPRECATA
+    _sub = getUriLinksStream().listen((Uri? uri) {
       print('URI in arrivo: $uri');
       if (uri != null) {
         // Esegui l'autenticazione con il codice di autorizzazione dopo che è arrivato l uri

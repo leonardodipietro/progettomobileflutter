@@ -63,7 +63,7 @@ class _BranoSelezionatoState extends State<BranoSelezionato> {
         });
       }
     } catch (error) {
-      // Gestisci l'errore come preferisci
+
       print("Errore nel recupero dei dettagli dell'artista: $error");
     }
   }
@@ -85,14 +85,14 @@ class _BranoSelezionatoState extends State<BranoSelezionato> {
       });
     }
 
-    // Opzionale: Sposta il focus sul campo di testo
+
     FocusScope.of(context).requestFocus(FocusNode());
   }
   void _fetchRispostePerRecensione(String commentIdFather) {
     _risposteViewModel.fetchCommentFromRecensione(commentIdFather).then((commentiList) {
       // Recupera gli ID utente dalle risposte
       List<String> userIds = commentiList.map((risposta) => risposta.userId).toList();
-      // Assicurati che il tuo ViewModel abbia un metodo fetchUsers che accetta una lista di userIds
+
       _risposteViewModel.fetchUsers(userIds).then((usersMap) {
         setState(() {
           _risposte = commentiList;
@@ -230,7 +230,7 @@ class _BranoSelezionatoState extends State<BranoSelezionato> {
                               print("vediamo SE c è AAA ${artist.name}");
                             } else {
                               print("nessun artista trovato");
-                              // Gestisci il caso in cui l'artista non è stato trovato o c'è stato un errore
+
                             }
                           });
                         },
@@ -457,11 +457,11 @@ class _BranoSelezionatoState extends State<BranoSelezionato> {
                         ).then((_) {
                           // Chiamata alla funzione di aggiornamento dopo il successo
                           _updateRisposte(commentIdFather);
-                          _replyingToCommentId = null; // Resetta l'ID della risposta dopo l'invio
+                         // _replyingToCommentId = null; // Resetta l'ID della risposta dopo l'invio
                         });
-                        _replyingToCommentId = null; // Resetta l'ID della risposta dopo l'invio
+                        //_replyingToCommentId = null; // Resetta l'ID della risposta dopo l'invio
                       } else if (_editingCommentId != null) {
-                        // Modalità modifica recensione (utilizza `updateRecensione`)
+
                         _recensioneViewModel.updateRecensione(
                           _editingCommentId!,
                           actualuser?.userId ?? "",
@@ -471,7 +471,7 @@ class _BranoSelezionatoState extends State<BranoSelezionato> {
                         );
                         _editingCommentId = null; // Resetta l'ID della recensione in modifica dopo l'invio
                       }  else {
-                        // Modalità recensione (utilizza il metodo esistente `saveRecensione`)
+
                         _recensioneViewModel.saveRecensione(
                           actualuser?.userId ?? "",
                           widget.track.id,
@@ -480,7 +480,7 @@ class _BranoSelezionatoState extends State<BranoSelezionato> {
                         );
                       }
 
-                      _controller.clear(); // Pulisci il campo di testo dopo l'invio
+                      _controller.clear();
                     }
                   },
                   style: ElevatedButton.styleFrom(
@@ -516,7 +516,7 @@ class _BranoSelezionatoState extends State<BranoSelezionato> {
       return userData?.cast<String, dynamic>(); // Cast a <String, dynamic>
     } catch (e) {
       print('Errore durante il recupero dei dati dell\'utente: $e');
-      return null; // Gestisci l'errore in modo appropriato
+      return null;
     }
   }
 }
