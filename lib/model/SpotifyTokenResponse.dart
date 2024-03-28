@@ -1,8 +1,8 @@
 class SpotifyTokenResponse {
   final String accessToken; // Token effettivo
-  final String tokenType; // Con Spotify sarà sempre di tipo bearer
-  final String scope; // Dati a cui puoi accedere con il token
-  final int expiresIn; // Tempo di durata del token
+  final String tokenType;
+  final String scope;
+  final int expiresIn;
   final String? refreshToken;
 
   SpotifyTokenResponse({

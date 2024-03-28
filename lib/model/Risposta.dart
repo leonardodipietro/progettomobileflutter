@@ -13,7 +13,7 @@ class Risposta {
     this.answercontent = "",
   });
 
-  // Converts object into a map for Firebase
+
   Map<String, dynamic> toMap() {
     return {
       'commentIdfather': commentIdfather,
@@ -24,7 +24,7 @@ class Risposta {
     };
   }
 
-  // Factory constructor to create a Risposta from a map
+
   factory Risposta.fromMap(Map<dynamic, dynamic> map) {
     return Risposta(
       commentIdfather: map['commentIdfather'] ?? "",

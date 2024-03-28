@@ -40,7 +40,7 @@ class _ArtistaSelezionatoState extends State<ArtistaSelezionato> {
     return Scaffold(
       appBar: AppBar(
         title:
-            Text(widget.artist.name), // Mostra il nome dell'artista come titolo
+            Text(widget.artist.name),
       ),
       body: Center(
         child: Column(
@@ -51,7 +51,7 @@ class _ArtistaSelezionatoState extends State<ArtistaSelezionato> {
                 ? fw.Image.network(
               widget.artist.images[0].url,
               height: 150,
-              width: 150, // Utilizza l'alias fw per Image di Flutter
+              width: 150, // Utilizza fw per Image di Flutter
               errorBuilder: (
                   BuildContext context,
                   Object error,
@@ -61,7 +61,7 @@ class _ArtistaSelezionatoState extends State<ArtistaSelezionato> {
                 // mostra l'immagine di default con la decorazione.
                 return Container(
                   decoration: BoxDecoration(
-                    color: Colors.white, // Assicura contrasto con l'immagine scura
+                    color: Colors.white,
                     borderRadius: BorderRadius.circular(8), // Angoli arrotondati
                   ),
                   child: fw.Image.asset(
@@ -74,7 +74,7 @@ class _ArtistaSelezionatoState extends State<ArtistaSelezionato> {
             )
                 : Container(
               decoration: BoxDecoration(
-                color: Colors.white, // Assicura contrasto con l'immagine scura
+                color: Colors.white,
                 borderRadius: BorderRadius.circular(8), // Angoli arrotondati
               ),
               child: fw.Image.asset(
@@ -110,12 +110,12 @@ class _ArtistaSelezionatoState extends State<ArtistaSelezionato> {
                               Container(height: 100, width: 100, color: Colors.grey),
                             const SizedBox(width: 10), // Aggiunge spazio tra l'immagine e il testo
                             // Testo (nome del brano) a destra
-                            Expanded( // Usa Expanded per far sì che il testo occupi lo spazio rimanente
+                            Expanded(
                               child: Text(
                                 track.name,
                                 overflow: TextOverflow.ellipsis,
                                 style: const TextStyle( fontSize: 20
-                                  // Aggiungi qui eventuali stili per il testo
+
                                 ),
                               ),
                             ),
