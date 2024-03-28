@@ -19,12 +19,10 @@ import 'profilo_personale.dart';
 import 'notifiche.dart';
 import 'package:progettomobileflutter/BranoSelezionato.dart';
 import 'package:progettomobileflutter/ArtistaSelezionato.dart';
-//Importante
 import 'package:flutter/material.dart' hide Image;//Utilizza un alias per non avere conflitto con l'Image di SpotifyModel
 import 'package:flutter/widgets.dart' as fw;
 import 'model/themes.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-//import 'package:google_sign_in/google_sign_in.dart';
 
 void main() async {
   // Assicura che i binding Flutter siano inizializzati correttamente
@@ -49,23 +47,6 @@ void main() async {
   // Avvia l'applicazione Flutter passando la pagina iniziale
   runApp(MyApp(initialPage: initialPage));
 }
-
-/*Future<UserCredential> signInWithGoogle(BuildContext context) async {
-  // Avvia il flusso di autenticazione
-  final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
-
-  // Ottieni i dettagli di autenticazione dalla richiesta
-  final GoogleSignInAuthentication? googleAuth = await googleUser?.authentication;
-
-  // Crea una nuova credenziale
-  final credential = GoogleAuthProvider.credential(
-    accessToken: googleAuth?.accessToken,
-    idToken: googleAuth?.idToken,
-  );
-
-  // Una volta autenticato, restituisci il UserCredential
-  return await FirebaseAuth.instance.signInWithCredential(credential);
-}*/
 
 // Function to create a new user account with email and password
 Future<void> registerWithEmailAndPassword(context, String name, String email, String password) async {
@@ -98,8 +79,22 @@ Future<void> registerWithEmailAndPassword(context, String name, String email, St
       print("Error: User update failed.");
     }
   } on FirebaseAuthException catch (e) {
-    // Handle FirebaseAuthException errors
-    // Your existing error handling
+    if (e.code == 'weak-password') {
+      // Password troppo debole
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('La password deve contenere almeno 6 caratteri'),
+        duration: Duration(seconds: 2),
+      ));
+    } else if (e.code == 'email-already-in-use') {
+      // Indirizzo email già utilizzato
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Questo indirizzo email è già stato utilizzato.'),
+        duration: Duration(seconds: 2),
+      ));
+    } else {
+      // Handle other FirebaseAuthException errors
+      print('Error creating account: ${e.message}');
+    }
   } catch (e) {
     // Handle other errors
     print('Error creating account: $e');
@@ -139,6 +134,26 @@ Future<bool> signInWithEmailAndPassword(BuildContext context, String email, Stri
       print('Error signing in: ${e.message}');
     }
     return false;
+  }
+}
+
+// Funzione per avviare il processo di recupero della password
+Future<void> resetPassword(BuildContext context, String email) async {
+  try {
+    await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
+    // Mostra un messaggio di successo all'utente
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text('Una email con istruzioni per il ripristino della password è stata inviata al tuo indirizzo email.'),
+      duration: Duration(seconds: 2),
+    ));
+  } catch (e) {
+    // Gestisci gli errori
+    print('Errore durante il recupero della password: $e');
+    // Mostra un messaggio di errore all'utente
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text('Si è verificato un errore durante il recupero della password. Si prega di riprovare più tardi.'),
+      duration: Duration(seconds: 2),
+    ));
   }
 }
 
@@ -262,81 +277,90 @@ class _RegistrationPageState extends State<RegistrationPage> {
       appBar: AppBar(
         title: const Text('Registrazione'),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Center(
-              child: Text(
-                'Benvenuto su See Your Music',
-                style: TextStyle(
-                  fontSize: 25,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF1ED660), // Colore verde
-                ),
-              ),
-            ),
-            const SizedBox(height: 20),
-            TextField(
-              controller: nameController,
-              decoration: InputDecoration(labelText: 'Name',),
-            ),
-            const SizedBox(height: 20),
-            TextField(
-              controller: emailController,
-              decoration: const InputDecoration(labelText: 'Email'),
-            ),
-            const SizedBox(height: 20),
-            TextField(
-              controller: passwordController,
-              decoration: InputDecoration(
-                labelText: 'Password',
-                suffixIcon: IconButton(
-                  icon: Icon(
-                    _obscureText ? Icons.visibility : Icons.visibility_off,
+      body: Center(
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  'Benvenuto su',
+                  style: TextStyle(
+                    fontSize: 25,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF1ED660), // Colore verde
                   ),
-                  onPressed: () {
-                    _togglePasswordVisibility(context);
-                  },
+                  textAlign: TextAlign.center,
                 ),
-              ),
-              obscureText: _obscureText,
+                Text(
+                  'See Your Music',
+                  style: TextStyle(
+                    fontSize: 25,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF1ED660), // Colore verde
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                SizedBox(height: 20),
+                TextField(
+                  controller: nameController,
+                  decoration: InputDecoration(labelText: 'Name',),
+                ),
+                SizedBox(height: 20),
+                TextField(
+                  controller: emailController,
+                  decoration: InputDecoration(labelText: 'Email'),
+                ),
+                SizedBox(height: 20),
+                TextField(
+                  controller: passwordController,
+                  decoration: InputDecoration(
+                    labelText: 'Password',
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _obscureText ? Icons.visibility : Icons.visibility_off,
+                      ),
+                      onPressed: () {
+                        _togglePasswordVisibility(context);
+                      },
+                    ),
+                  ),
+                  obscureText: _obscureText,
+                ),
+                SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: () async {
+                    // Verifica se gli altri campi sono stati compilati
+                    if (nameController.text.isEmpty || emailController.text.isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                        content: Text('Si prega di compilare tutti i campi'),
+                        duration: Duration(seconds: 2),
+                      ));
+                      return;
+                    }
+                    registerWithEmailAndPassword(
+                      context,
+                      nameController.text,
+                      emailController.text,
+                      passwordController.text,
+                    );
+                  },
+                  child: Text('Registrati'),
+                ),
+                SizedBox(height: 16),
+                TextButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => LoginPage()),
+                    );
+                  },
+                  child: Text("Sei già registrato? Accedi"),
+                ),
+              ],
             ),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: () {
-                // Chiamare la funzione registerWithEmailAndPassword con nome, email e password inserite dall'utente
-                registerWithEmailAndPassword(
-                  context,
-                  nameController.text,
-                  emailController.text,
-                  passwordController.text,
-                );
-              },
-              child: const Text('Registrati'),
-            ),
-            const SizedBox(height: 16),
-            TextButton(
-              onPressed: () {
-                // Navigate to the login page
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => LoginPage()),
-                );
-              },
-              child: const Text("Sei già registrato? Accedi"),
-            ),
-            // const SizedBox(height: 16),
-            // ElevatedButton(
-            //   onPressed: () {
-            //     // Call the registerWithGoogle function
-            //     signInWithGoogle(context);
-            //   },
-            //   child: const Text('Registrati con Google'),
-            // ),
-          ],
+          ),
         ),
       ),
     );
@@ -378,15 +402,23 @@ class _LoginPage extends State<LoginPage> {
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Center(
-              child: Text(
-                'Benvenuto su See Your Music',
-                style: TextStyle(
-                  fontSize: 25,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF1ED660), // Colore verde
-                ),
+            Text(
+              'Benvenuto su',
+              style: TextStyle(
+                fontSize: 25,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF1ED660), // Colore verde
               ),
+              textAlign: TextAlign.center,
+            ),
+            Text(
+              'See Your Music',
+              style: TextStyle(
+                fontSize: 25,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF1ED660), // Colore verde
+              ),
+              textAlign: TextAlign.center,
             ),
             const SizedBox(height: 20),
             TextField(
@@ -408,6 +440,16 @@ class _LoginPage extends State<LoginPage> {
                 ),
               ),
               obscureText: _obscureText,
+            ),
+            const SizedBox(height: 0),
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton(
+                onPressed: () {
+                  resetPassword(context, emailController.text);
+                },
+                child: Text('Password dimenticata?', style: TextStyle(fontSize: 14, color: Colors.grey),),
+              ),
             ),
             const SizedBox(height: 16),
             ElevatedButton(
@@ -573,7 +615,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 Center(
                   child: ElevatedButton(
                     onPressed: () => _onHandleStartAuthButtonClick(),
-                    child: const Text('Autentica con Spotify'),
+                    child: const Text('Inizia autenticazione Spotify'),
                   ),
                 ),
                 Container(
@@ -594,10 +636,6 @@ class _MyHomePageState extends State<MyHomePage> {
                         onPressed: () => handleArtistButtonClicked(term),
                         child: Text('Top Artist'),
                       ),
-                      /*DA METTERE ElevatedButton(
-                    child:Text('stile'),
-                    onPressed:() => print('bottone premuto'),
-                  ),*/
                     ],
                   ),
                 ),
@@ -791,8 +829,6 @@ class _MyHomePageState extends State<MyHomePage> {
       _tracksToShow = _firebaseViewModel.tracksFromDb;
       _artistsToShow =_firebaseViewModel.artistsFromDb;
     });
-
-
   }
 
   Future<void> handleTrackButtonClicked(String filter) async {

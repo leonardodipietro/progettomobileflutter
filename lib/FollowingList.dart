@@ -178,7 +178,7 @@ class _FollowingListState extends State<FollowingList> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Following'),
+        title: Text('Seguiti'),
       ),
       body: followingInfo
           .isEmpty // Mostra l'indicatore di caricamento solo se la lista dei seguiti è vuota
@@ -235,19 +235,19 @@ class _FollowingListState extends State<FollowingList> {
                       builder: (BuildContext context) {
                         return AlertDialog(
                           title: Text(isFollowing
-                              ? "Unfollow User"
-                              : "Follow User"),
+                              ? "Smetti di seguire l'utente"
+                              : "Segui l'utente"),
                           // Aggiorna il titolo del dialogo in base allo stato corrente
                           content: Text(isFollowing
-                              ? "Are you sure you want to unfollow this user?"
-                              : "Are you sure you want to follow this user?"),
+                              ? "Sei sicuro di voler smettere di seguire questo utente?"
+                              : "Sei sicuro di voler seguire questo utente?"),
                           // Aggiorna il testo del dialogo in base allo stato corrente
                           actions: <Widget>[
                             TextButton(
                               onPressed: () {
                                 Navigator.of(context).pop(); // Chiudi il dialog
                               },
-                              child: Text("Cancel"),
+                              child: Text("Cancella"),
                             ),
                             TextButton(
                               onPressed: () {
@@ -256,8 +256,8 @@ class _FollowingListState extends State<FollowingList> {
                                 Navigator.of(context).pop(); // Chiudi il dialog
                               },
                               child: Text(isFollowing
-                                  ? "Unfollow"
-                                  : "Follow"), // Aggiorna il testo del pulsante in base allo stato corrente
+                                  ? "Smetti di \n seguire"
+                                  : "Segui"), // Aggiorna il testo del pulsante in base allo stato corrente
                             ),
                           ],
                         );
@@ -265,8 +265,8 @@ class _FollowingListState extends State<FollowingList> {
                     );
                   },
                   child: Text(isFollowing
-                      ? "Unfollow"
-                      : "Follow"), // Aggiorna il testo del pulsante in base allo stato corrente
+                      ? "Smetti di \n seguire"
+                      : "Segui"), // Aggiorna il testo del pulsante in base allo stato corrente
                 ),
               ),
           );

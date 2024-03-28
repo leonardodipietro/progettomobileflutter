@@ -3,6 +3,7 @@ import 'package:progettomobileflutter/model/SpotifyTokenResponse.dart';
 import 'package:progettomobileflutter/api/SpotifyRepository.dart';
 import 'package:progettomobileflutter/model/SpotifyModel.dart';
 import 'dart:async';
+
 class SpotifyViewModel with ChangeNotifier {
   final SpotifyRepository _spotifyRepository;
   final String _clientId;
@@ -40,9 +41,6 @@ class SpotifyViewModel with ChangeNotifier {
       this._clientId,
       this._clientSecret,
       this._redirectUri,
-
-
-
       );
 
   SpotifyTokenResponse? get spotifyTokenResponse => _spotifyTokenResponse;
@@ -143,17 +141,3 @@ class SpotifyViewModel with ChangeNotifier {
     }
   }
 }
-
-
-// String? token = spotifyViewModel.accessToken; SE LO USO FUORI
-
-// ESEMPIO DI USO DEL TOKEN QUI DENTRO PER DOPO
-/*Future<void> fetchUserData() async {
-    if (_spotifyTokenResponse?.accessToken == null) {
-      // Gestire il caso in cui il token non sia disponibile
-      return;
-    }*/
-
-/*String? get accessToken {
-  print("Token di Accesso: ${_spotifyTokenResponse?.accessToken}");
-  return _spotifyTokenResponse?.accessToken;*/

@@ -142,7 +142,7 @@ class _FollowersListState extends State<FollowersList> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Followers'),
+        title: Text('Seguaci'),
       ),
       body: followersInfo
           .isEmpty // Mostra l'indicatore di caricamento solo se la lista dei follower è vuota
@@ -203,15 +203,15 @@ class _FollowersListState extends State<FollowersList> {
                     context: context,
                     builder: (BuildContext context) {
                       return AlertDialog(
-                        title: Text("Remove Follower"),
+                        title: Text("Rimuovi Seguace"),
                         content: Text(
-                            "Are you sure you want to remove this follower?"),
+                            "Sei sicuro di voler rimuovere questo utente dai seguaci?"),
                         actions: <Widget>[
                           TextButton(
                             onPressed: () {
                               Navigator.of(context).pop(); // Chiudi il dialog
                             },
-                            child: Text("Cancel"),
+                            child: Text("Cancella"),
                           ),
                           TextButton(
                             onPressed: () {
@@ -219,14 +219,14 @@ class _FollowersListState extends State<FollowersList> {
                               removeFollower(followerId);
                               Navigator.of(context).pop(); // Chiudi il dialog
                             },
-                            child: Text("Remove"),
+                            child: Text("Rimuovi"),
                           ),
                         ],
                       );
                     },
                   );
                 },
-                child: Text("Remove"),
+                child: Text("Rimuovi"),
               ),
             ),
           );

@@ -109,7 +109,7 @@ class _amicoFollowersListState extends State<amicoFollowersList> {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return CircularProgressIndicator();
             } else {
-              return Text("Non hai ancora nessun follower");
+              return Text("Non hai ancora nessun seguace");
             }
           },
         ),
