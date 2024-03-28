@@ -12,6 +12,7 @@ class CercaUtentiPage extends StatefulWidget {
 class _CercaUtentiPageState extends State<CercaUtentiPage> {
   late final TextEditingController _searchController;
   late final DatabaseReference _databaseRef;
+  // Per memorizzare le associazioni tra nome utente, userId e immagine di profilo
   Map<String, dynamic> _users = {};
   List<String> _name = [];
   int? _selectedIndex; // Indice dell'elemento selezionato
@@ -60,11 +61,10 @@ class _CercaUtentiPageState extends State<CercaUtentiPage> {
       }
     } catch (e) {
       print('Errore durante il recupero dei dati: $e');
-
     }
   }
 
-
+  // Per navigare alla pagina amico
   void navigateToFriendPage(BuildContext context, String userId) {
     Navigator.push(
       context,
@@ -130,7 +130,7 @@ class _CercaUtentiPageState extends State<CercaUtentiPage> {
                     leading: profileImage != null && profileImage.isNotEmpty
                         ? CircleAvatar(
                       backgroundColor: profileImage != null
-                      ? Colors.grey[800] : Colors.transparent,
+                          ? Colors.grey[800] : Colors.transparent,
                       backgroundImage: NetworkImage(profileImage),
                     )
                         : CircleAvatar(
@@ -139,15 +139,14 @@ class _CercaUtentiPageState extends State<CercaUtentiPage> {
                       child: Icon(Icons.account_circle, color: Colors.white),
                     ),
                     tileColor: _selectedIndex == index ? Colors.blue.withOpacity(0.5) : null,
-
                   ),
                 );
               },
             ) : _searchController.text.isNotEmpty // Controlla se il campo di ricerca non è vuoto
-              ? Center(
-                child: Text('Nessun utente trovato'),
+                ? Center(
+              child: Text('Nessun utente trovato'),
             )
-                : SizedBox(),
+                : SizedBox(), // Se il campo di ricerca è vuoto, non mostra nulla
           ),
         ],
       ),

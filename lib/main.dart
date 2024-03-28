@@ -194,11 +194,6 @@ class _MyAppState extends State<MyApp> {
   }
   @override
   Widget build(BuildContext context) {
-    /*return MaterialApp(
-      navigatorKey: navigatorKey, // Assegna la chiave globale al navigatore
-      title: 'Flutter Demo',
-      theme: darkTheme,*/
-
     final Widget currentPage = isUserAuthenticated
         ? IndexedStack(index: _currentIndex,
       children: [
@@ -214,8 +209,6 @@ class _MyAppState extends State<MyApp> {
       navigatorKey: navigatorKey,
       title: 'Flutter Demo',
       theme: darkTheme,
-
-
       home: Scaffold(
         body: currentPage,
         bottomNavigationBar: isUserAuthenticated ? BottomNavigationBar(

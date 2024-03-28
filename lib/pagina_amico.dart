@@ -176,25 +176,25 @@ class _PaginaAmicoState extends State<PaginaAmico> {
 
   // Funzione per recuperare i contatori dal database
   void fetchCounters(String userId) {
-      try {
-        DatabaseReference counterRef = FirebaseDatabase.instance.ref().child('users').child(userId);
-        counterRef.onValue.listen((event) {
-          DataSnapshot snapshot = event.snapshot;
-          dynamic counters = snapshot.value;
-          if (counters != null) {
-            setState(() {
-              _reviewsCount = counters['reviews counter'] ?? 0;
-              _followersCount = counters['followers counter'] ?? 0;
-              _followingCount = counters['following counter'] ?? 0;
-              print('Contatori: Reviews=$_reviewsCount, Followers=$_followersCount, Following=$_followingCount');
-            });
-          }
-        }, onError: (error) {
-          print('Errore durante il recupero dei contatori: $error');
-        });
-      } catch (error) {
+    try {
+      DatabaseReference counterRef = FirebaseDatabase.instance.ref().child('users').child(userId);
+      counterRef.onValue.listen((event) {
+        DataSnapshot snapshot = event.snapshot;
+        dynamic counters = snapshot.value;
+        if (counters != null) {
+          setState(() {
+            _reviewsCount = counters['reviews counter'] ?? 0;
+            _followersCount = counters['followers counter'] ?? 0;
+            _followingCount = counters['following counter'] ?? 0;
+            print('Contatori: Reviews=$_reviewsCount, Followers=$_followersCount, Following=$_followingCount');
+          });
+        }
+      }, onError: (error) {
         print('Errore durante il recupero dei contatori: $error');
-      }
+      });
+    } catch (error) {
+      print('Errore durante il recupero dei contatori: $error');
+    }
   }
 
   // Funzione che incrementa followers counter di userId (amico cercato)
@@ -208,9 +208,9 @@ class _PaginaAmicoState extends State<PaginaAmico> {
     try {
       DataSnapshot snapshot = await counterRef.once().then((event) => event.snapshot);
       if(snapshot.value != null) {
-      int currentCount = snapshot.value as int;
-      int newCount = currentCount + 1;
-      counterRef.set(newCount);
+        int currentCount = snapshot.value as int;
+        int newCount = currentCount + 1;
+        counterRef.set(newCount);
       } else {
         counterRef.set(1);
       }
@@ -327,7 +327,7 @@ class _PaginaAmicoState extends State<PaginaAmico> {
                       if (_profileImage.isNotEmpty)
                         CircleAvatar(
                           backgroundColor: _profileImage.isNotEmpty
-                          ? Colors.grey[800] : Colors.transparent,
+                              ? Colors.grey[800] : Colors.transparent,
                           backgroundImage: NetworkImage(_profileImage),
                           radius: 40,
                         )
@@ -486,7 +486,7 @@ class _PaginaAmicoState extends State<PaginaAmico> {
                 ],
               ),
             );
-        }
+          }
         },
       ),
     );
