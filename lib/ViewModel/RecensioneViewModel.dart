@@ -7,7 +7,7 @@ import 'package:progettomobileflutter/model/SpotifyModel.dart';
 import '../model/Utente.dart';
 
 class RecensioneViewModel with ChangeNotifier {
-//TODO RIVEDERE IL NOME DEL CAMPO ID DELLA TRACCIA
+
   final FirebaseDatabase _database = FirebaseDatabase.instance;
   List<Recensione> recensioniList = [];
   Set<String> userIds = Set();
@@ -16,12 +16,12 @@ class RecensioneViewModel with ChangeNotifier {
   Future<void> saveRecensione(String? userId, String trackId,
       String commentContent, String artistId) async {
     print('saveRecensione chiamata');
-    // Genera un identificativo univoco per Firebase
+
     final commentId = FirebaseDatabase.instance
         .ref()
         .push()
         .key!;
-    // Ottieni la data e l'ora attuali e formattale
+
     final currentTimestamp = DateTime.now();
     final formattedDateTime = DateFormat('yyyy-MM-dd HH:mm:ss').format(
         currentTimestamp);
@@ -57,7 +57,6 @@ class RecensioneViewModel with ChangeNotifier {
 
     print('Aggiornamento del contatore recensioni per l\'utente: $userId');
 
-    // Ottieni il valore corrente del contatore delle recensioni
     final snapshot = await userRef.child('reviews counter').get();
     int currentCount = snapshot.exists ? int.parse(snapshot.value.toString()) : 0;
 
@@ -93,8 +92,6 @@ class RecensioneViewModel with ChangeNotifier {
   }
   Future<void> updateRecensione(String commentId, String userId, String trackId, String commentContent, String artistId) async {
     print('updateRecensione chiamata');
-
-    // Ottieni la data e l'ora attuali e formattale
     final currentTimestamp = DateTime.now();
     final formattedDateTime = DateFormat('yyyy-MM-dd HH:mm:ss').format(currentTimestamp);
 

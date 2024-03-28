@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 final ThemeData lightTheme = ThemeData(
   primaryColor: Colors.blue,
   hintColor: Color(0xFF1ED660),
-  // Altri attributi del tema chiaro...
+
 );
 
 // Definizione del tema scuro
@@ -62,7 +62,7 @@ final ThemeData darkTheme = ThemeData(
     primary: Color(0xFF1ED660),
   ),
 
-  // Altri attributi del tema scuro...
+
 );
 
 // Definizione di colori personalizzati
@@ -76,7 +76,7 @@ class AppColors {
 class AppTextStyles {
   static const TextStyle heading1 = TextStyle(fontSize: 24, fontWeight: FontWeight.bold);
   static const TextStyle body = TextStyle(fontSize: 16);
-// Altri stili di testo personalizzati...
+
 }
 
 // Definizione di padding e margini personalizzati
@@ -84,5 +84,5 @@ class AppSpacing {
   static const double paddingSmall = 8.0;
   static const double paddingMedium = 16.0;
   static const double paddingLarge = 24.0;
-// Altri padding e margini personalizzati...
+
 }

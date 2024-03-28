@@ -157,7 +157,7 @@ class _amicoReviewsListState extends State<amicoReviewsList> {
             );
             review.track = track;
 
-            // Fetch artist names
+
             List<String> artistNames =
             await fetchArtistNames(track.artistIds);
             review.track.artistNames =
