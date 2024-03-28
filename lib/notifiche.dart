@@ -323,7 +323,7 @@ class NotifichePageState extends State<NotifichePage> {
 
   // Incrementa il contatore dei followers per l'utente della notifica
   Future<void> incrementFollowersCounter(String followerId) async {
-    // Ottieni il valore attuale del contatore dei following
+
     DatabaseReference counterRef = FirebaseDatabase.instance
         .ref()
         .child('users')

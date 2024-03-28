@@ -152,11 +152,11 @@ class _ReviewsListState extends State<ReviewsList> {
             );
             review.track = track;
 
-            // Fetch artist names
+
             List<String> artistNames =
             await fetchArtistNames(track.artistIds);
             review.track.artistNames =
-                artistNames; // Update artistIds with artist names
+                artistNames;
           }
         }
       } catch (error) {

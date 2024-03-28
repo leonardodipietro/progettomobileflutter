@@ -175,7 +175,7 @@ class RecensioneViewModel with ChangeNotifier {
     if (event.snapshot.exists) {
       // Converte il dataSnapshot in un Map<String, dynamic>
       Map<String, dynamic> artistData = Map<String, dynamic>.from(event.snapshot.value as Map);
-      artistData['id'] = artistId; // Assicurati che l'ID sia incluso nei dati, se necessario
+      artistData['id'] = artistId;
       return Artist.fromJson(artistData);
     }
     return null;
@@ -348,7 +348,6 @@ class RecensioneViewModel with ChangeNotifier {
             snapshot.value as Map);
         final review = Recensione.fromMap(valueMap);
         if (review.userId == userId) {
-          // Se l'ID dell'utente corrisponde, restituisci la recensione trovata
           return review;
         }
       }
@@ -366,16 +365,14 @@ class RecensioneViewModel with ChangeNotifier {
     final DatabaseReference database = FirebaseDatabase.instance.ref();
     final DatabaseReference userReviewsRef = database.child("users").child(userId).child("reviews");
 
-    // Ottieni tutte le recensioni dell'utente
-    final snapshot = await userReviewsRef.get();
 
-    // Cerca attraverso le recensioni per trovare l'ID della recensione da rimuovere
+    final snapshot = await userReviewsRef.get();
     for (final child in snapshot.children) {
       if (child.value == commentId) {
-        // Quando trovi una corrispondenza, rimuovi quella recensione specifica
+
         await child.ref.remove();
         await updateReviewsCounter(userId, false);
-        break; // Interrompi il ciclo se hai trovato e rimosso l'ID della recensione
+        break;
       }
     }
 

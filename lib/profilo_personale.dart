@@ -58,7 +58,7 @@ class _ProfiloPersonaleState extends State<ProfiloPersonale> {
 
   @override
   void dispose() {
-    _authSubscription.cancel(); // Rimuovi il listener
+    _authSubscription.cancel();
     super.dispose();
   }
 
@@ -333,7 +333,7 @@ class _ProfiloPersonaleState extends State<ProfiloPersonale> {
   //Inserisce l'immagine profilo nello storage
   Future<String> uploadImageToStorage(File imageFile) async {
     try {
-      // Ottieni l'utente corrente
+
       User? user = FirebaseAuth.instance.currentUser;
       if (user != null) {
         // Crea un riferimento al percorso di destinazione nel cloud storage
@@ -342,10 +342,8 @@ class _ProfiloPersonaleState extends State<ProfiloPersonale> {
         // Carica l'immagine nel cloud storage
         UploadTask uploadTask = storageRef.putFile(imageFile);
 
-        // Attendi il completamento del caricamento
-        await uploadTask.whenComplete(() => null);
 
-        // Ottieni l'URL dell'immagine caricata
+        await uploadTask.whenComplete(() => null);
         String imageUrl = await storageRef.getDownloadURL();
 
         return imageUrl;
@@ -354,17 +352,16 @@ class _ProfiloPersonaleState extends State<ProfiloPersonale> {
       }
     } catch (e) {
       print('Errore durante il caricamento dell\'immagine nel cloud storage: $e');
-      throw e; // Rilancia l'eccezione per gestirla nel chiamante
+      throw e;
     }
   }
 
   // Funzione per inserire l'URL dell'immagine scattata nel database dell'utente (Firebase Realtime Database)
   void updateProfileImageUrl(String imageUrl) {
     try {
-      // Ottieni l'utente corrente
       User? user = FirebaseAuth.instance.currentUser;
       if (user != null) {
-        // Ottieni il riferimento al nodo dell'immagine del profilo dell'utente nel database
+
         DatabaseReference imageUrlRef = FirebaseDatabase.instance.ref().child('users').child(user.uid).child('profile image');
 
         // Aggiorna l'URL dell'immagine nel database
@@ -373,7 +370,6 @@ class _ProfiloPersonaleState extends State<ProfiloPersonale> {
           print('URL dell\'immagine del profilo aggiornato con successo nel database');
           fetchProfileImage();
         }).catchError((error) {
-          // Gestisci gli errori nell'aggiornamento
           print('Errore durante l\'aggiornamento dell\'URL dell\'immagine del profilo nel database: $error');
         });
       } else {
@@ -385,7 +381,7 @@ class _ProfiloPersonaleState extends State<ProfiloPersonale> {
     }
   }
 
-  // Funzione per inserire l'URL dell'immagine presa dalla galleria nel database dell'utente (Firebase Realtime Database)
+  // Funzione per inserire l'URL dell'immagine presa dalla galleria nel database
   void _updateProfileImage(File imageFile) async {
     try {
       // Carica l'immagine nel cloud storage (ad esempio, Firebase Storage)
@@ -395,7 +391,7 @@ class _ProfiloPersonaleState extends State<ProfiloPersonale> {
       updateProfileImageUrl(imageUrl);
       fetchProfileImage();
     } catch (e) {
-      // Gestisci eventuali errori
+
       print('Errore durante il caricamento dell\'immagine del profilo dalla galleria: $e');
     }
   }
@@ -406,22 +402,20 @@ class _ProfiloPersonaleState extends State<ProfiloPersonale> {
     User? user = FirebaseAuth.instance.currentUser;
     if (user != null) {
       try {
-        // Ottieni il riferimento al nodo dell'immagine del profilo dell'utente nel database
+
         DatabaseReference imageUrlRef = FirebaseDatabase.instance.ref().child('users').child(user.uid).child('profile image');
 
-        // Rimuovi completamente il nodo "profile image" dal database
         imageUrlRef.remove().then((_) {
           // Aggiorna anche la variabile locale profileImageUrl
           setState(() {
             profileImageUrl = null; // Imposta l'URL dell'immagine del profilo su vuoto
           });
-          // Visualizza un messaggio di successo o effettua altre azioni necessarie
+
         }).catchError((error) {
-          // Gestisci gli errori in caso di fallimento nell'eliminazione dal database
-          print('Errore durante l\'eliminazione del nodo "profile image" dal database: $error');
+          print('Errore durante l\'eliminazione del nodo "profile image" dal : database $error');
         });
       } catch (error) {
-        // Gestisci eventuali errori durante il recupero del riferimento nel database
+
         print('Errore durante il recupero del riferimento nel database: $error');
       }
     }
@@ -505,18 +499,16 @@ class _ProfiloPersonaleState extends State<ProfiloPersonale> {
               onPressed: () {
                 // Verifica se il nuovo nome utente non è vuoto
                 if (newName.isNotEmpty) {
-                  // Ottieni l'utente attualmente autenticato
+
                   User? user = FirebaseAuth.instance.currentUser;
 
-                  // Ottieni il riferimento al campo 'name' nel database
                   DatabaseReference userRef = FirebaseDatabase.instance.ref().child('users').child(user!.uid).child('name');
 
-                  // Effettua l'aggiornamento del nome utente nel database
                   userRef.set(newName).then((_) {
                     setState(() {
-                      profileUsername = newName; // Aggiorna il nome utente visualizzato nell'UI
+                      profileUsername = newName;
                     });
-                    Navigator.of(context).pop(); // Chiudi il dialogo dopo l'aggiornamento
+                    Navigator.of(context).pop();
                   }).catchError((error) {
                     print("Errore durante l'aggiornamento del nome utente: $error");
                   });
@@ -559,7 +551,7 @@ class _ProfiloPersonaleState extends State<ProfiloPersonale> {
   void _signOut(BuildContext context) async {
     try {
       await FirebaseAuth.instance.signOut();
-      // Reset dello stato dell'autenticazione
+
       setState(() {
         _isLoggedIn = false;
       });
@@ -569,7 +561,7 @@ class _ProfiloPersonaleState extends State<ProfiloPersonale> {
         MaterialPageRoute(builder: (context) => RegistrationPage()),
       );
     } catch (e) {
-      // Gestione degli errori
+
       print('Errore durante il sign-out: $e');
     }
   }
@@ -610,18 +602,17 @@ class _ProfiloPersonaleState extends State<ProfiloPersonale> {
         // Elimina l'account dell'utente
         await user?.delete();
 
-        // Rimuovi anche il nodo relativo all'utente corrente dal Realtime Database
+        // Rimuovi anche il nodo relativo all'utente
         final reference = FirebaseDatabase.instance.ref().child('users').child(user!.uid);
         await reference.remove();
 
-        // Dopo l'eliminazione dell'account, puoi navigare l'utente alla pagina di login o ad altre schermate
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => RegistrationPage()), // Esempio di navigazione alla pagina di login
+          MaterialPageRoute(builder: (context) => RegistrationPage()),
         );
       }
     } catch (e) {
-      // Gestisci eventuali errori durante l'eliminazione dell'account
+
       print('Errore durante l\'eliminazione dell\'account: $e');
     }
   }

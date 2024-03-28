@@ -62,9 +62,9 @@ Future<void> registerWithEmailAndPassword(context, String name, String email, St
     final userUpdated = FirebaseAuth.instance.currentUser; // Re-fetch updated user
 
     if (userUpdated != null) {
-      // Proceed with saving the user details
+
       await FirebaseFirestore.instance.collection('users').doc(userUpdated.uid).set({
-        'name': name, // Use the name directly from the parameter
+        'name': name,
       });
 
       final FirebaseViewModel _firebaseViewModel = FirebaseViewModel();
@@ -80,32 +80,32 @@ Future<void> registerWithEmailAndPassword(context, String name, String email, St
     }
   } on FirebaseAuthException catch (e) {
     if (e.code == 'weak-password') {
-      // Password troppo debole
+
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('La password deve contenere almeno 6 caratteri'),
         duration: Duration(seconds: 2),
       ));
     } else if (e.code == 'email-already-in-use') {
-      // Indirizzo email già utilizzato
+
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('Questo indirizzo email è già stato utilizzato.'),
         duration: Duration(seconds: 2),
       ));
     } else {
-      // Handle other FirebaseAuthException errors
+
       print('Error creating account: ${e.message}');
     }
   } catch (e) {
-    // Handle other errors
+
     print('Error creating account: $e');
   }
 
 }
 
-// Function to sign in a user with email and password
+
 Future<bool> signInWithEmailAndPassword(BuildContext context, String email, String password) async {
   try {
-    // Sign in the user with email and password
+
     final credential = await FirebaseAuth.instance.signInWithEmailAndPassword(
       email: email,
       password: password,

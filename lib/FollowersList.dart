@@ -77,23 +77,21 @@ class _FollowersListState extends State<FollowersList> {
           print('Follower Object: $follower');
 
           setState(() {
-            // Add follower info to followersInfo map, not to followerIds list
             followersInfo[followerId] = followerData;
           });
         }
       } catch (error) {
-        print('Error fetching follower info: $error');
+
       }
     }
   }
 
   void removeFollower(String followerId) async {
     setState(() {
-      // Rimuovi il follower dalla mappa followersInfo
+
       followersInfo.remove(followerId);
     });
 
-    // Aggiorna anche il database per riflettere la rimozione del follower
     User? user = FirebaseAuth.instance.currentUser;
     if (user != null) {
       DatabaseReference followersRef = FirebaseDatabase.instance.ref().child(
@@ -102,7 +100,6 @@ class _FollowersListState extends State<FollowersList> {
         await followersRef.child(followerId).remove();
         print("Follower removed successfully");
 
-        // Aggiorna il contatore dei follower nel database
         DatabaseReference userRef = FirebaseDatabase.instance.ref().child(
             'users').child(user.uid);
         DataSnapshot snapshot = await userRef.child('followers counter')
@@ -115,14 +112,12 @@ class _FollowersListState extends State<FollowersList> {
         print("Error removing follower: $error");
       }
 
-      // Rimuovi te stesso dalla lista dei "following" del follower
       DatabaseReference followingRef = FirebaseDatabase.instance.ref().child(
           'users').child(followerId).child('following');
       try {
         await followingRef.child(user.uid).remove();
         print("You removed from follower's following list successfully");
 
-        // Aggiorna il contatore dei following del follower nel database
         DatabaseReference followerRef = FirebaseDatabase.instance.ref().child(
             'users').child(followerId);
         DataSnapshot snapshot = await followerRef.child('following counter')

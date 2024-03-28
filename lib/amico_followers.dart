@@ -76,13 +76,13 @@ class _amicoFollowersListState extends State<amicoFollowersList> {
             profileImageUrl: followerData['profile image'],
           );
 
-          // Log follower information
+
           print('Follower ID: $followerId');
           print('Follower Data: $followerData');
           print('Follower Object: $follower');
 
           setState(() {
-            // Add follower info to followersInfo map, not to followerIds list
+
             followersInfo[followerId] = followerData;
           });
         }
@@ -146,7 +146,7 @@ class _amicoFollowersListState extends State<amicoFollowersList> {
                 child: followerData['profile image'] == null ||
                     followerData['profile image'].isEmpty
                     ? Icon(Icons
-                    .account_circle, color: Colors.white,) // Mostra l'icona predefinita se non c'è un'immagine del profilo
+                    .account_circle, color: Colors.white,)
                     : null,
               ),
               title: Text(follower.username),

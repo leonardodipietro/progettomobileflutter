@@ -497,7 +497,7 @@ class _PaginaAmicoState extends State<PaginaAmico> {
     return GestureDetector(
       onTap: onTap, // Chiamata alla funzione onTap per la navigazione
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8.0), // Aggiungi spaziatura orizzontale tra i contatori
+        padding: const EdgeInsets.symmetric(horizontal: 8.0),
         child: Column(
           children: [
             Text(
@@ -663,7 +663,7 @@ Future<Map<String, dynamic>?> fetchUserData(String userId) async {
     return userData?.cast<String, dynamic>(); // Cast a <String, dynamic>
   } catch (e) {
     print('Errore durante il recupero dei dati dell\'utente: $e');
-    return null; // Gestisci l'errore in modo appropriato
+    return null;
   }
 }
 

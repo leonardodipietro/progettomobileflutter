@@ -12,7 +12,6 @@ class CercaUtentiPage extends StatefulWidget {
 class _CercaUtentiPageState extends State<CercaUtentiPage> {
   late final TextEditingController _searchController;
   late final DatabaseReference _databaseRef;
-  // Memorizza le associazioni tra nome utente e userId e immagine di profilo
   Map<String, dynamic> _users = {};
   List<String> _name = [];
   int? _selectedIndex; // Indice dell'elemento selezionato
@@ -37,7 +36,7 @@ class _CercaUtentiPageState extends State<CercaUtentiPage> {
         _name.clear(); // Se il campo di ricerca è vuoto, svuota la lista
         _users.clear();
         setState(() {});
-        return; // Esci dal metodo per evitare di eseguire la ricerca nel database
+        return;
       }
 
       final DataSnapshot snapshot = (await _databaseRef.once()).snapshot;
@@ -48,11 +47,11 @@ class _CercaUtentiPageState extends State<CercaUtentiPage> {
         _users.clear();
         users.forEach((userId, userData) {
           if (userData['name'] != null && userData['name'].toString().toLowerCase().contains(query.toLowerCase())) {
-            final profileImage = userData['profile image'] ?? ''; // Definisci profileImage qui
+            final profileImage = userData['profile image'] ?? '';
             _name.add(userData['name']);
             _users[userData['name']] = {
               'userId': userId,
-              'profileImage': profileImage, // Utilizza profileImage qui
+              'profileImage': profileImage,
             };
             print('Immagine di profilo per ${userData['name']}: $profileImage');
           }
@@ -61,11 +60,11 @@ class _CercaUtentiPageState extends State<CercaUtentiPage> {
       }
     } catch (e) {
       print('Errore durante il recupero dei dati: $e');
-      // Gestisci l'errore in modo appropriato
+
     }
   }
 
-  // Naviga alla pagina amico
+
   void navigateToFriendPage(BuildContext context, String userId) {
     Navigator.push(
       context,
@@ -140,7 +139,7 @@ class _CercaUtentiPageState extends State<CercaUtentiPage> {
                       child: Icon(Icons.account_circle, color: Colors.white),
                     ),
                     tileColor: _selectedIndex == index ? Colors.blue.withOpacity(0.5) : null,
-                    // Aggiungi altri dettagli dell'utente se necessario
+
                   ),
                 );
               },
@@ -148,7 +147,7 @@ class _CercaUtentiPageState extends State<CercaUtentiPage> {
               ? Center(
                 child: Text('Nessun utente trovato'),
             )
-                : SizedBox(), // Se il campo di ricerca è vuoto, non mostrare nulla
+                : SizedBox(),
           ),
         ],
       ),

@@ -11,12 +11,11 @@ class RisposteViewModel {
 
   Future<void> saveRisposta(
       String userId, String commentIdfather, String answercontent) async {
-    // Generate a unique identifier for Firebase
     DatabaseReference databaseRef =
         FirebaseDatabase.instance.ref().child('answers').push();
     String answerId = databaseRef.key!;
 
-    // Get current date and time
+
     final currentTimestamp = DateTime.now();
     final formatter = DateFormat('yyyy-MM-dd HH:mm:ss');
     final formattedDateTime = formatter.format(currentTimestamp);

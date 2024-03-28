@@ -199,7 +199,6 @@ class FirebaseViewModel extends ChangeNotifier{
           });
         }
       }).catchError((error) {
-        // Gestisci gli errori qui
         debugPrint("Errore durante il recupero dell'artista $artistId: ${error.message}");
       });
     }
@@ -336,10 +335,9 @@ class FirebaseViewModel extends ChangeNotifier{
       }
     }).toList();
 
-    // Attendi il completamento di tutte le future
+
     await Future.wait(artistFutures);
 
-    // Esegui la callback con la lista di artisti recuperata
     onComplete(artists);
   }
 
