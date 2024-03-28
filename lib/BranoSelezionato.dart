@@ -297,6 +297,8 @@ class _BranoSelezionatoState extends State<BranoSelezionato> {
                                       onTap: () {
                                         _recensioneViewModel.deleteRecensione(recensione.commentId);
                                         _recensioneViewModel.deleteRecensioneFromUser(recensione.commentId, recensione.userId);
+                                        _replyingToCommentId = null;
+                                        _textFieldHint = 'Scrivi una recensione...';
                                         Navigator.of(context).pop(); // Chiudi il dialogo dopo il tap
                                       },
                                     ),
